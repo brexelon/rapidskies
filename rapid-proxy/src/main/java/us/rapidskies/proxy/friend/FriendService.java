@@ -32,12 +32,14 @@ import us.rapidskies.common.profile.ProfileRepository;
 import us.rapidskies.proxy.queue.QueueService;
 import us.rapidskies.proxy.queue.QueueTarget;
 import us.rapidskies.proxy.rank.ProxyRanks;
+import us.rapidskies.proxy.session.VanishedStaff;
 
 /**
  * Friends (PLAN.md §7): requests, the list with who's online where, join/leave notices,
  * and joining a friend's server. List size depends on rank (PLAN.md §6.1).
  *
  * <p>Online players' friend ids are cached so join and leave notices need no query.
+ * Vanished staff count as offline to anyone who can't see them ({@link VanishedStaff}).
  * Everything that touches the database runs on {@link Database#async}.
  */
 public final class FriendService {
@@ -53,10 +55,11 @@ public final class FriendService {
     private final FriendRepository friends;
     private final ProfileRepository profiles;
     private final Logger logger;
+    private final VanishedStaff vanish;
     private final Map<UUID, Set<UUID>> online = new ConcurrentHashMap<>();
 
     public FriendService(ProxyServer proxy, Lang lang, FriendSettings settings, ProxyRanks ranks, QueueService queue,
-                         Database db, ProfileRepository profiles, Logger logger) {
+                         Database db, ProfileRepository profiles, VanishedStaff vanish, Logger logger) {
         this.proxy = proxy;
         this.lang = lang;
         this.settings = settings;
@@ -66,6 +69,7 @@ public final class FriendService {
         this.friends = new FriendRepository(db);
         this.profiles = profiles;
         this.logger = logger;
+        this.vanish = vanish;
     }
 
     private record Target(UUID uuid, String name) {
@@ -90,8 +94,13 @@ public final class FriendService {
             int on = 0;
             for (UUID f : ids) {
                 Optional<Player> friend = proxy.getPlayer(f);
-                if (friend.isPresent()) {
+                if (friend.isEmpty()) {
+                    continue;
+                }
+                if (!vanish.hiddenFrom(f, player)) {
                     on++;
+                }
+                if (!vanish.hiddenFrom(id, friend.get())) {
                     lang.send(friend.get(), "friend.joined", name(player));
                 }
             }
@@ -117,7 +126,8 @@ public final class FriendService {
             return;
         }
         for (UUID f : ids) {
-            proxy.getPlayer(f).ifPresent(p -> lang.send(p, "friend.left", name(event.getPlayer())));
+            proxy.getPlayer(f).filter(p -> !vanish.hiddenFrom(event.getPlayer().getUniqueId(), p))
+                    .ifPresent(p -> lang.send(p, "friend.left", name(event.getPlayer())));
         }
     }
 
@@ -218,7 +228,7 @@ public final class FriendService {
             }
             // Online friends first, then by name.
             List<Entry> sorted = new ArrayList<>(list);
-            sorted.sort(Comparator.comparing((Entry f) -> proxy.getPlayer(f.uuid()).isEmpty())
+            sorted.sort(Comparator.comparing((Entry f) -> visible(f.uuid(), player).isEmpty())
                     .thenComparing(f -> f.name().toLowerCase(java.util.Locale.ROOT)));
             int pages = (sorted.size() + PAGE_SIZE - 1) / PAGE_SIZE;
             int p = Math.max(1, Math.min(page, pages));
@@ -229,7 +239,7 @@ public final class FriendService {
                     Placeholder.unparsed("page", Integer.toString(p)),
                     Placeholder.unparsed("pages", Integer.toString(pages))));
             for (Entry f : sorted.subList((p - 1) * PAGE_SIZE, Math.min(sorted.size(), p * PAGE_SIZE))) {
-                lines.add(line(f));
+                lines.add(line(f, player));
             }
             if (p < pages) {
                 lines.add(lang.get("friend.list-next", Placeholder.unparsed("next", Integer.toString(p + 1)))
@@ -239,11 +249,11 @@ public final class FriendService {
         }).exceptionally(e -> failed(player, "list", e));
     }
 
-    private Component line(Entry f) {
+    private Component line(Entry f, Player viewer) {
         TagResolver who = Placeholder.unparsed("player", f.name());
-        Optional<String> server = proxy.getPlayer(f.uuid()).flatMap(Player::getCurrentServer)
-                .map(c -> c.getServerInfo().getName());
-        if (proxy.getPlayer(f.uuid()).isEmpty()) {
+        Optional<Player> online = visible(f.uuid(), viewer);
+        Optional<String> server = online.flatMap(Player::getCurrentServer).map(c -> c.getServerInfo().getName());
+        if (online.isEmpty()) {
             return lang.get("friend.list-offline", who);
         }
         String where = server.map(id -> queue.displayName(QueueTarget.server(id))).orElse("?");
@@ -276,7 +286,7 @@ public final class FriendService {
 
     /** Queues the player for the server a friend is on. */
     void join(Player player, String input) {
-        Optional<Player> friend = proxy.getPlayer(input);
+        Optional<Player> friend = proxy.getPlayer(input).filter(f -> !vanish.hiddenFrom(f.getUniqueId(), player));
         Set<UUID> mine = online.getOrDefault(player.getUniqueId(), Set.of());
         if (friend.isEmpty() || !mine.contains(friend.get().getUniqueId())) {
             lang.send(player, "friend.join-not-online", Placeholder.unparsed("player", input));
@@ -293,11 +303,16 @@ public final class FriendService {
     /** Names of a player's online friends, for tab completion. */
     List<String> onlineFriendNames(Player player) {
         return online.getOrDefault(player.getUniqueId(), Set.of()).stream()
-                .map(proxy::getPlayer).flatMap(Optional::stream).map(Player::getUsername)
+                .map(f -> visible(f, player)).flatMap(Optional::stream).map(Player::getUsername)
                 .collect(Collectors.toList());
     }
 
     // ------------------------------------------------------------------ helpers
+
+    /** The player if they're online and {@code viewer} may know it. */
+    private Optional<Player> visible(UUID id, Player viewer) {
+        return proxy.getPlayer(id).filter(p -> !vanish.hiddenFrom(id, viewer));
+    }
 
     private void befriended(Player player, Target t) {
         cache(player.getUniqueId(), t.uuid(), true);

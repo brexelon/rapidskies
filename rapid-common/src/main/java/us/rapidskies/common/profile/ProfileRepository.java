@@ -29,14 +29,25 @@ public final class ProfileRepository {
      * have changed), last join time and server. Returns the profile as stored.
      */
     public PlayerProfile recordLogin(UUID uuid, String name, String server) throws SQLException {
+        return recordLogin(uuid, name, server, 0);
+    }
+
+    /**
+     * Like {@link #recordLogin(UUID, String, String)}; a brand-new player also starts with
+     * {@code starterTailwindSeconds} of Tailwind (PLAN.md §5.3, catch-up for new players).
+     */
+    public PlayerProfile recordLogin(UUID uuid, String name, String server, long starterTailwindSeconds)
+            throws SQLException {
         return db.withConnection(c -> {
+            // The INSERT values only apply to a new row; an existing one keeps its bank.
             try (PreparedStatement ps = c.prepareStatement(
-                    "INSERT INTO players (uuid, name, last_server) VALUES (?, ?, ?)"
+                    "INSERT INTO players (uuid, name, last_server, tailwind_banked) VALUES (?, ?, ?, ?)"
                             + " ON DUPLICATE KEY UPDATE name = VALUES(name), last_server = VALUES(last_server),"
                             + " last_join = CURRENT_TIMESTAMP(3)")) {
                 ps.setString(1, uuid.toString());
                 ps.setString(2, name);
                 ps.setString(3, server);
+                ps.setLong(4, Math.max(0, starterTailwindSeconds));
                 ps.executeUpdate();
             }
             return find(c, uuid).orElseThrow(() -> new SQLException("players row vanished for " + uuid));

@@ -30,8 +30,8 @@ motd:
   # Line 2 of the server list MOTD rotates through lang `motd.rotation` this often.
   rotate-seconds: 8
 
-# Oldest client protocol allowed in (47 = 1.8). Older clients get lang `kick.version`.
-minimum-protocol: 47
+# Oldest client protocol allowed in (763 = 1.20 / 1.20.1). Older clients get lang `kick.version`.
+minimum-protocol: 763
 
 # Every value below also has a built-in default, so a config.yml written by an older
 # build keeps working; add a section here only to change it.
@@ -70,3 +70,11 @@ friends:
     rapidplus: 150
     rapidplusplus: 250
     rapidplusplusplus: 500
+
+# Tailwind, the rested bonus (PLAN.md §5.3). Time away from the network banks bonus time
+# that's spent while playing a gamemode (+50% mode XP and Trade income). Tune in beta.
+tailwind:
+  # Bonus banked per full day away.
+  minutes-per-offline-day: 120
+  # Days of absence that count at most, so the bank tops out at 3 x 120 min = 6 hours.
+  max-offline-days: 3

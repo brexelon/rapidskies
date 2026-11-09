@@ -116,4 +116,16 @@ class LedgerIT {
         assertEquals(3, bolts.balance(steve));
         assertEquals(new Result.Insufficient(70), coins.debit(steve, 71, "x", "x", null));
     }
+
+    @Test
+    void earnedSinceCountsOneReasonsCreditsInTheWindow() throws Exception {
+        java.time.Instant start = java.time.Instant.now().minusSeconds(60);
+        bolts.credit(steve, 2, "playtime", "hub-1", null);
+        bolts.credit(steve, 2, "playtime", "smp-1", null);
+        bolts.credit(steve, 50, "store", "tebex", null);
+        bolts.debit(steve, 10, "playtime", "hub-1", null); // only credits count
+        assertEquals(4, bolts.earnedSince(steve, "playtime", start));
+        assertEquals(0, bolts.earnedSince(steve, "playtime", java.time.Instant.now().plusSeconds(60)));
+        assertEquals(0, bolts.earnedSince(UUID.randomUUID(), "playtime", start));
+    }
 }

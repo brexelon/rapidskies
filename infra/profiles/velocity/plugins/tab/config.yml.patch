@@ -1,8 +1,9 @@
 # TAB (Velocity): header/footer and tab-list sorting for every client version (plan §2, §4).
-# TAB handles 1.8's limits itself. Each mapping below replaces TAB's whole example section.
+# Each mapping below replaces TAB's whole example section.
 #
-# Rank prefixes in the tab list come later: rapid-core's PlaceholderAPI expansion
-# (%rapid_prefix%) needs TAB-Bridge on the backends to reach a proxy-side TAB.
+# Rank prefixes in the tab list and nametags are set in groups.yml.patch: rapid-core's
+# %rapid_prefix%, read from the backends through TAB-Bridge. Scoreboard teams need
+# VelocityScoreboardAPI next to TAB (proxy plugin set).
 header-footer:
   enabled: true
   designs:

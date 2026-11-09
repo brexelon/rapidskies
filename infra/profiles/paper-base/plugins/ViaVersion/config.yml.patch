@@ -1,8 +1,8 @@
 # ViaVersion 5.12 on each backend (plan §3: the Via stack lives on Paper, not the proxy).
 check-for-updates: false
-# Version gate: 1.8 is the oldest supported client. Velocity itself accepts 1.7.2+,
-# so this is where 1.7 players get the branded kick. (rapid-proxy takes this over in phase 1.)
-block-versions: ["<1.8"]
-block-disconnect-msg: "§6§lRAPID§f§lSKIES\n\n§7RapidSkies supports Minecraft §61.8 §7to §626.3§7.\n§7Please update your game to join."
+# Version gate: 1.20 is the oldest supported client. rapid-proxy already kicks older
+# clients at login; this is the backstop if a backend is ever reached directly.
+block-versions: ["<1.20"]
+block-disconnect-msg: "§6§lRAPID§f§lSKIES\n\n§7RapidSkies supports Minecraft §61.20 §7to §626.3§7.\n§7Please update your game to join."
 reload-disconnect-msg: "§6§lRAPID§f§lSKIES §8» §7Server reloading, please rejoin."
 logging.log-blocked-joins: true

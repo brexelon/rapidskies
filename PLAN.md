@@ -1,14 +1,14 @@
 # RapidSkies Network — Development Plan
 
-> Velocity proxy + Paper 26.3 backends · Java clients 1.8 → 26.3 · Hosted on Pterodactyl (VPS/dedicated)
+> Velocity proxy + Paper 26.3 backends · Java clients 1.20 → 26.3 · Hosted on Pterodactyl (VPS/dedicated)
 > Server address: **rapidskies.us** · Store: **store.rapidskies.us**
-> Status: Phase 1 in progress (see §11) · Last updated 2026-11-08
+> Status: Phase 1 code complete, in-game checks pending (see §11) · Last updated 2026-11-09
 
 ---
 
 ## 1. Goals & guiding rules
 
-1. **Every player from 1.8 to 26.3 gets a fair, working experience.** Gameplay never depends on something an old client can't see or do.
+1. **Every player from 1.20 to 26.3 gets a fair, working experience.** Gameplay never depends on something an older supported client can't see or do.
 2. **No pay-to-win.** Anything that can be obtained with real money, directly or through the purchasable currency, must be cosmetic or pure convenience that doesn't change the outcome of any competitive or economic interaction. (See §8, compliance.)
 3. **Long-term play without burnout.** Both launch gamemodes are persistent. Progress is never wiped, novelty comes from rotating content, and the design rewards consistent play over marathon grinding (see §5.3).
 4. **Buy where mature, build where differentiating.** Use proven plugins for permissions, punishments, anti-cheat, the island engine, holograms and tab. Build custom code for each mode's unique features, **claims & towns**, the **auction house**, the currency, cosmetics, parties, and staff tooling.
@@ -19,17 +19,17 @@
 
 Colors are sampled from `assets/RapidIcon.png` and `assets/RapidBlackIcon.png`.
 
-| Token | Hex | Legacy fallback (1.8–1.15 clients) | Use |
-|---|---|---|---|
-| `rapid.primary` | `#FFD800` | `§6` gold* | Brand name, highlights, prefixes, primary buttons |
-| `rapid.accent` | `#FFAA00` | `§6` gold | Secondary highlight, numbers, currency amounts |
-| `rapid.text` | `#FFFFFF` | `§f` white | Body text |
-| `rapid.muted` | `#AAAAAA` | `§7` gray | Secondary text, hints |
-| `rapid.dark` | `#555555` | `§8` dark gray | Separators (`»`, `┃`, `•`) |
-| `rapid.success` | `#55FF55` | `§a` | Confirmations |
-| `rapid.error` | `#FF5555` | `§c` | Errors, punishments |
+| Token | Hex | Use |
+|---|---|---|
+| `rapid.primary` | `#FFD800` | Brand name, highlights, prefixes, primary buttons |
+| `rapid.accent` | `#FFAA00` | Secondary highlight, numbers, currency amounts |
+| `rapid.text` | `#FFFFFF` | Body text |
+| `rapid.muted` | `#AAAAAA` | Secondary text, hints |
+| `rapid.dark` | `#555555` | Separators (`»`, `┃`, `•`) |
+| `rapid.success` | `#55FF55` | Confirmations |
+| `rapid.error` | `#FF5555` | Errors, punishments |
 
-\* Hex colors only exist on 1.16+. ViaBackwards downsamples `#FFD800` to the nearest legacy color, which is gold (`§6`), not yellow (`§e`). That's acceptable, but **test every message on 1.8.9**.
+Every supported client (1.20+) renders hex colors and gradients exactly, so there is no legacy-color fallback to design around.
 
 **Message format** (MiniMessage, centralized in one `lang/` bundle; no hard-coded strings in plugins):
 
@@ -37,7 +37,7 @@ Colors are sampled from `assets/RapidIcon.png` and `assets/RapidBlackIcon.png`.
 <#FFD800><bold>RAPID</bold></#FFD800><white><bold>SKIES</bold></white> <#555555>»</#555555> <white>Your message, with <#FFAA00>highlights</#FFAA00>.</white>
 ```
 
-- Short prefixes per context: `⚡ Bolts`, `Party »`, `Staff »`, `Queue »`. Avoid fancy Unicode beyond the BMP; 1.8 renders some glyphs poorly.
+- Short prefixes per context: `⚡ Bolts`, `Party »`, `Staff »`, `Queue »`. Stick to glyphs in Minecraft's default font; emoji outside it render as boxes.
 - Sidebar title: `RAPIDSKIES` in bold primary color. Footer line: `rapidskies.us` in primary color.
 - MOTD line 2 rotates between news, the current Season or Frontier name, and `store.rapidskies.us`.
 - Logo and MOTD icon: `server-icon.png` (64×64) is generated from `RapidBlackIcon.png`.
@@ -45,10 +45,10 @@ Colors are sampled from `assets/RapidIcon.png` and `assets/RapidBlackIcon.png`.
 **Build palette** (hub and lobbies are floating sky islands, which ties to the "Skies" name):
 
 - Primary: gold block, yellow wool/terracotta, glowstone, sponge for texture variety.
-- Contrast: coal block, black wool/stained clay, polished blackstone and deepslate (newer; see note).
+- Contrast: coal block, black wool/stained clay, polished blackstone and deepslate.
 - Highlights: quartz, white wool, sea lantern, snow.
 - Natural: grass, stone, clouds made of white wool and cobweb.
-- **Note:** blocks added after 1.8 (concrete, deepslate, copper, etc.) appear as Via substitutes for old clients. Use them only for decoration. Anything that affects gameplay (parkour, map edges, bridges) uses blocks that exist in 1.8.
+- **Note:** blocks added after 1.20 (tuff bricks, copper bulbs and grates, pale oak, resin, etc.) appear as ViaBackwards substitutes for 1.20 clients. Use them only for decoration. Anything that affects gameplay (parkour, map edges, bridges) uses blocks that exist in 1.20.
 
 ---
 
@@ -57,7 +57,7 @@ Colors are sampled from `assets/RapidIcon.png` and `assets/RapidBlackIcon.png`.
 ```
                          ┌────────────────────────────┐
   rapidskies.us ───────▶ │  Velocity 4.3.x  (proxy)    │  :25565 (only public game port)
-  Players 1.8 → 26.3     │  LuckPerms · LiteBans · TAB │
+  Players 1.20 → 26.3    │  LuckPerms · LiteBans · TAB │
                          │  rapid-proxy (custom)       │
                          └─────────────┬──────────────┘
           modern forwarding (secret)   │  internal network only
@@ -76,7 +76,7 @@ Colors are sampled from `assets/RapidIcon.png` and `assets/RapidBlackIcon.png`.
 | Record | Points to | Purpose |
 |---|---|---|
 | `rapidskies.us` A/AAAA | Website host (can be Cloudflare-proxied) | Website, news, rules, appeals |
-| `_minecraft._tcp.rapidskies.us` SRV → `mc.rapidskies.us:25565` | — | Players type **`rapidskies.us`** in the client and get routed to the game server. SRV is supported back to 1.3, so it covers 1.8. |
+| `_minecraft._tcp.rapidskies.us` SRV → `mc.rapidskies.us:25565` | — | Players type **`rapidskies.us`** in the client and get routed to the game server. SRV is supported back to 1.3, so it covers every supported client. |
 | `mc.rapidskies.us` A | Dedicated server IP (**DNS-only, not proxied**) | Game traffic target |
 | `store.rapidskies.us` CNAME | Tebex custom-domain target | Webstore |
 | `panel.rapidskies.us` A | Panel host (Cloudflare-proxied + access rules) | Pterodactyl panel |
@@ -85,21 +85,21 @@ If the website will be hosted on the same box, the apex A record can point strai
 
 ### Version support
 
-- Velocity accepts every client protocol from 1.7.2 onward natively. Backends run **Paper 26.3** (Java 25).
-- **ViaVersion + ViaBackwards + ViaRewind are installed on each Paper backend**, not on the proxy. That gives the best accuracy: 1.8 sword-blocking emulation, correct per-world block and item mappings, and anti-cheat that sees the real client version. Add **ViaRewind-Legacy-Support** for 1.8 fixes (sounds, hitboxes, elytra and similar).
-- Allowed versions are pinned in Velocity: reject anything below 1.8, and show a branded kick message.
-- ViaRewind 4.2.x supports 1.8 clients on 26.3. Re-check Via, Paper and Velocity compatibility before every upgrade, and never upgrade backends on the day a Minecraft version releases.
+- **Supported clients: 1.20 (protocol 763) through 26.3.** Velocity accepts every client protocol from 1.7.2 onward natively; backends run **Paper 26.3** (Java 25).
+- **ViaVersion + ViaBackwards are installed on each Paper backend**, not on the proxy. That gives correct per-world block and item mappings and anti-cheat that sees the real client version. ViaRewind is not used: it only exists for 1.7–1.8 clients.
+- Allowed versions are pinned in Velocity (`rapid-proxy` `minimum-protocol: 763`): anything below 1.20 gets a branded kick message. ViaVersion's `block-versions: ["<1.20"]` is the backstop on each backend.
+- Re-check Via, Paper and Velocity compatibility before every upgrade, and never upgrade backends on the day a Minecraft version releases.
 
 ### Cross-version design rules (apply to all custom plugins)
 
 | Area | Rule |
 |---|---|
-| Combat | **No attack cooldown in either mode** (1.8-style timing via item attribute modifiers or OldCombatMechanics), because 1.8 clients can't use the 1.9+ cooldown and would be weaker in PvE and PvP. Shields work against mobs but are disabled in PvP: in duels, in the SMP Wildlands, and for players who have PvP toggled on. |
-| GUIs | Chest menus, 6 rows at most. No anvil or text input for core flows (use chat prompts or signs instead). |
-| Display | Text up to 32 characters per sidebar line, using TAB's legacy handling. No crucial information only in boss bars (1.8 emulates those with a wither). Titles and action bars are fine. |
-| Holograms/NPCs | Use armor-stand-based holograms (DecentHolograms), not display entities, which old clients can't render. |
-| Items | No gameplay that relies on `custom_model_data`, item models or resource packs. A resource pack can be optional polish for 1.21.4+ only. |
-| Blocks/items | Progression-critical blocks and items must exist in 1.8 or map cleanly through Via. Newer content (copper, cherry wood, etc.) is fine as decoration or optional content, but never as a required step. |
+| Combat | **Vanilla combat in both modes**: attack cooldown, sweeping edge and shields all work as normal, in PvE and PvP. Every client from 1.20 up has the same mechanics, so no mode changes the timing. Combat items added after 1.20 (mace, wind charges) are optional or mode-specific, never required. |
+| GUIs | Chest menus, 6 rows at most. No anvil or text input for core flows (use chat prompts or signs instead). Don't build core flows on server dialogs (1.21.6+), which 1.20 clients don't have. |
+| Display | Sidebar, tab list, boss bars, titles and action bars are all fine, with hex colors and gradients. Sidebar score numbers can only be hidden on 1.20.3+, so layouts must still read well with the red numbers on 1.20–1.20.2. |
+| Holograms/NPCs | Display entities (text, item and block displays) and interaction entities are fine; every supported client renders them. |
+| Items | No gameplay that relies on a resource pack, or on item model components newer than 1.20 (`item_model`, string `custom_model_data`), which ViaBackwards drops for older clients. A resource pack is optional polish. |
+| Blocks/items | Progression-critical blocks and items must exist in 1.20 or map cleanly through ViaBackwards. Newer content (trial chambers, the crafter, pale oak, resin, etc.) is fine as decoration or optional content, but never as a required step. |
 | Chat | Set `enforce-secure-profile=false` on backends, and handle formatting server-side. |
 
 ### Hosting on Pterodactyl
@@ -131,7 +131,7 @@ The **Panel runs on its own server**, separate from the **game node** (one dedic
 
 | Purpose | Plugin | Where | Notes |
 |---|---|---|---|
-| Version support | ViaVersion, ViaBackwards, ViaRewind, ViaRewind-Legacy-Support | Paper | See §3 |
+| Version support | ViaVersion, ViaBackwards | Paper | See §3 |
 | Permissions | **LuckPerms** | Velocity + Paper | MariaDB storage, Redis messaging, temp parents for timed ranks |
 | Punishments | **LiteBans** (paid) | Velocity | Network-wide bans, mutes and warnings, history, web interface for appeals |
 | Anti-cheat | **Grim** (prediction-based, multi-version) + evaluate **Polar** or **Vulcan** (paid) during beta | Paper | Grim is the base layer. Add a paid secondary for X-ray, autoclicker and aim detection after alpha. Alerts go to staff chat and Discord. |
@@ -139,8 +139,8 @@ The **Panel runs on its own server**, separate from the **game node** (one dedic
 | Island engine | **SuperiorSkyblock2** (open source) | skyrealms | Islands, co-op, upgrades, missions, multi-server support. Unique features are built on its API in `rapid-skyrealms`, which saves months over a from-scratch engine. |
 | Player shops | **QuickShop-Hikari** | smp | Chest shops. It must respect `rapid-claims` (shops only in claims you have Member or higher in), via its protection-check hook. |
 | Pre-generation | **Chunky** + ChunkyBorder | smp | Pre-generate Heartland and every new Frontier before it opens |
-| Scoreboard / tab | **TAB** | Velocity | Handles 1.8 limits, per-server layouts, MiniMessage |
-| Holograms | **DecentHolograms** | Paper | Armor-stand based, so it's 1.8-safe |
+| Scoreboard / tab | **TAB** | Velocity | Per-server layouts, MiniMessage, nametags and sorting |
+| Holograms | **DecentHolograms** | Paper | Hub and lobby holograms |
 | NPCs | **Citizens** | Paper | Hub gamemode NPCs, shopkeepers, quest givers |
 | Placeholders | PlaceholderAPI (Paper), MiniPlaceholders (Velocity) | Both | |
 | Block logging | **CoreProtect** | smp, skyrealms | Grief and rollback investigations |
@@ -163,7 +163,7 @@ The **Panel runs on its own server**, separate from the **game node** (one dedic
 | `rapid-market` | smp, skyrealms | **Auction house**, scoped per mode and per currency (§4.2) |
 | `rapid-minigame` | *(deferred)* | Arena framework, built only if gamemode 3 is a match-based mode (§5.4) |
 
-**Why custom for these pieces:** premade cosmetics, party, claim, auction and economy plugins rarely store data network-wide, rarely handle 1.8 rendering well, and none fit a shared currency that has non-advantage rules. Owning claims and the auction house also means:
+**Why custom for these pieces:** premade cosmetics, party, claim, auction and economy plugins rarely store data network-wide, and none fit a shared currency that has non-advantage rules. Owning claims and the auction house also means:
 - Town Projects, Crowns sinks and Trades integrate directly instead of through another plugin's API limits.
 - Duplication safety and economy logging are under our control.
 - Minecraft updates never wait on a third-party release.
@@ -174,7 +174,7 @@ Building on `rapid-common` keeps one source of truth.
 
 **Claims**
 - **Chunk-based**, in the Heartland only. Frontiers, the Nether and the End can't be claimed. Chunk granularity gives O(1) protection lookups (an in-memory map keyed by world + chunk), clean town borders, and borders that are easy to show on every client version.
-- **Claiming UX:** `/claim` claims the chunk you're standing in. `/claim map` opens a 6-row chest GUI map of the surrounding chunks using colored glass panes (yours, your town's, someone else's, wilderness), and you click to claim or unclaim, with no text input. Borders are shown with particles plus temporary client-side block outlines, which work on 1.8.
+- **Claiming UX:** `/claim` claims the chunk you're standing in. `/claim map` opens a 6-row chest GUI map of the surrounding chunks using colored glass panes (yours, your town's, someone else's, wilderness), and you click to claim or unclaim, with no text input. Borders are shown with particles plus temporary client-side block outlines.
 - **Claim allowance:** 9 starter chunks. More chunks are earned through playtime and Trade levels, or bought with Crowns at a rising price (a Crowns sink). **Never sold for money or Bolts.**
 - **Trust roles per claim:**
 
@@ -201,7 +201,7 @@ Building on `rapid-common` keeps one source of truth.
 - **Town roles:** Mayor → Assistant → Resident → Recruit, with configurable permissions per role. Mayors can assign **plots** (town chunks owned by a resident) using the same trust system.
 - **Town bank:** in Crowns. It pays **daily upkeep** scaled by chunk count, which is an economy sink. The chunk cap scales with resident count and completed Projects.
 - **Town Projects** (§5.2) are part of this module: donation tracking, completion, and unlocking upgrades (town warp, shared vault, market stall, cosmetics).
-- **Display:** a town tag in chat and tab, with colors from a limited legacy palette (red is still reserved for staff). Also town chat and a town level based on completed Projects.
+- **Display:** a town tag in chat and tab, with colors from a limited palette of named chat colors (red is still reserved for staff). Also town chat and a town level based on completed Projects.
 - **Inactivity:** personal claims of players inactive for 90+ days, and towns that miss upkeep for 14 days, become **ruins**. Ruins stay protected for another 7 days, during which the owner can reclaim by logging in or paying upkeep. After that they're unclaimed, and the builds stay in the world.
 
 **Engineering**
@@ -218,10 +218,10 @@ Building on `rapid-common` keeps one source of truth.
 - **Listing fee of 2%** (non-refundable) and **5% sales tax** on completed sales. Both are economy sinks.
 - Max active listings is the same for everyone: 10, rising with Trade or island level. **It's never a rank perk.**
 
-**Browsing (1.8-safe chest GUI)**
+**Browsing (chest GUI)**
 - Categories: blocks, tools & armor, food, farming, redstone, misc.
 - Sort by price, newest, or ending soon. Search uses a chat prompt, not an anvil.
-- Each listing's lore shows the seller, price, time left, and **the item's true name**. 1.8 clients see Via substitutes for newer items, so the lore tells them what they're actually buying.
+- Each listing's lore shows the seller, price, time left, and **the item's true name**. Clients older than the server see ViaBackwards substitutes for items added after their version, so the lore tells them what they're actually buying.
 - **Price history:** the 7-day average sale price is shown when listing and when buying. It also feeds the economy health dashboard.
 
 **Delivery**
@@ -302,7 +302,7 @@ The architecture reserves a server slot, and `rapid-minigame` is deferred until 
 
 Ranks are sold as **Tebex subscriptions** at `store.rapidskies.us` and are also available as **30-day passes bought with Bolts**. Higher tiers include all perks of lower tiers. Prices are starting points to tune in beta.
 
-**Prefix format:** the word `RAPID` always uses the brand color (`#FFD800`, legacy fallback gold), and the pluses use the player's chosen **plus color**:
+**Prefix format:** the word `RAPID` always uses the brand color (`#FFD800`), and the pluses use the player's chosen **plus color**:
 
 ```
 [RAPID+]  Steve: hello          ← "+"   in chosen color
@@ -312,13 +312,13 @@ Ranks are sold as **Tebex subscriptions** at `store.rapidskies.us` and are also 
 
 **Plus color (`/plus`):**
 - `/plus` opens a GUI showing a preview of your prefix in each color. The choice is stored in the player's profile in `rapid-core`, synced network-wide over Redis, and rendered in chat, tab, nametags and the sidebar through a placeholder (`%rapid_plus_color%`).
-- **Colors are drawn from the 16 legacy chat colors** so every client version shows them exactly. The palette widens with tier:
+- **Colors are drawn from the 16 named chat colors**, so each one has a clear name in `/plus`. The palette widens with tier:
 
 | Tier | Available plus colors |
 |---|---|
 | Rapid+ | White, Yellow, Gold, Aqua, Green, Light Purple (6) |
 | Rapid++ | + Blue, Dark Blue, Dark Aqua, Dark Green, Dark Purple (11) |
-| Rapid+++ | + Gray, Dark Gray, Black (all 14 non-reserved colors), plus **gradients** for 1.16+ clients that fall back to the gradient's first color on older clients |
+| Rapid+++ | + Gray, Dark Gray, Black (all 14 non-reserved colors), plus **gradients** |
 
 - **Red and Dark Red are reserved** for staff prefixes, to prevent impersonation.
 - Extra plus colors and gradients can be earned as achievement or Chapter rewards, but only players with an active rank can equip them.
@@ -422,7 +422,7 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 
 **LuckPerms staff track:** Helper → Moderator → Sr. Moderator → Admin → Owner, with Builder and Developer as separate groups. Staff prefixes use the reserved red shades.
 
-**Staff mode** (`rapid-core`): vanish, freeze (with a 1.8-safe GUI prompt), inventory/ender chest inspect, teleport to player, random teleport to players, CPS/reach view from the anti-cheat, X-ray ore-ratio view, and a punishment GUI that shortcuts LiteBans templates.
+**Staff mode** (`rapid-core`): vanish, freeze (with a chest-menu notice), inventory/ender chest inspect, teleport to player, random teleport to players, CPS/reach view from the anti-cheat, X-ray ore-ratio view, and a punishment GUI that shortcuts LiteBans templates.
 
 **Survival-specific tools:** CoreProtect lookups and rollbacks, `/claimadmin` and island admin overrides, `/ah admin` and shop transaction lookups, and economy anomaly alerts for sudden large gains or suspicious auction patterns.
 
@@ -438,7 +438,7 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 
 ## 10. Data model (MariaDB, versioned migrations)
 
-- `players` (uuid, name, first_join, last_join, last_server, network_xp, locale, **plus_color**, tailwind_banked)
+- `players` (uuid, name, first_join, last_join, last_server, last_seen, network_xp, locale, **plus_color**, tailwind_banked). `last_seen` is stamped by the proxy when a player leaves the network and cleared when the next login turns that absence into Tailwind.
 - `bolts_ledger` (id, uuid, delta, reason, source, txn_id UNIQUE, created_at), with `bolts_balance` as a cached view. Use a ledger, not a single balance column, for auditability.
 - `mode_economy_ledger` (mode, uuid, delta, reason, created_at) for Coins and Crowns, kept separate per mode
 - `cosmetics_owned` (uuid, cosmetic_id, source, acquired_at); `cosmetics_equipped` (uuid, slot, cosmetic_id)
@@ -450,12 +450,12 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 - `skyrealms_trade_routes` (id, seller_island, buyer_island, item, qty, price, interval, state)
 - `frontier_history` (id, modifier, opened_at, closed_at, archive_path)
 - `friends` (two rows per friendship), `friend_requests`. Parties and the join queue are ephemeral and live in the proxy's memory: there is one proxy and a restart drops every player anyway. Move them to Redis (`party:<id>`, `queue:<target>`) if a second proxy is ever added.
-- `reports`, `staff_actions`, `chat_log`
+- `reports`, `staff_actions` (staff, action, target, server, detail: freezes, inspections, vanish and staff-mode toggles), `chat_log`
 - `store_transactions` (txn_id, uuid, package, status, timestamps)
 
 SuperiorSkyblock2 keeps its own tables in the same MariaDB instance, under its own schema.
 
-Redis (every key and channel is prefixed `rapid:`, since LuckPerms shares the instance): `server:<id>` heartbeat and state, `maintenance`, plus pub/sub channels for profile and plus-color updates, Bolts changes, maintenance, connect requests from backends to the proxy (`connect`), and cache invalidation. Private messages, party chat and staff chat run on the single proxy and need no channel; `presence:<uuid>` and per-party keys join them only with a second proxy.
+Redis (every key and channel is prefixed `rapid:`, since LuckPerms shares the instance): `server:<id>` heartbeat and state, `maintenance`, the sets `vanished` and `frozen` (staff state that survives relogs and server switches), `shared-ip` (written by the proxy: accounts sharing an IP with one that joined earlier, which earn no activity Bolts), and `playtime:<day>:<uuid>` active-second counters; plus pub/sub channels for profile and plus-color updates, Bolts changes, maintenance, connect requests from backends to the proxy (`connect`), `vanish`, `freeze`, `mode-balance` (a Coins/Crowns balance changed on another server), and cache invalidation. Private messages, party chat and staff chat run on the single proxy and need no channel; `presence:<uuid>` and per-party keys join them only with a second proxy.
 
 **Migrations:** each module keeps `V<n>__<name>.sql` scripts plus an `index` file under `db/migration/<module>/`, applied once under a MariaDB named lock and checksum-verified on every start (`rapid-common` `Migrator`). This replaced Flyway: it's one small class with no classloader or relocation quirks inside shaded plugin jars. Shipped scripts are never edited; fixes go in a new version.
 
@@ -483,31 +483,37 @@ Durations assume 1–2 developers plus 1–2 builders working in parallel. Phase
 Done (with tests; the MariaDB/Redis ones run in CI through Testcontainers):
 
 - [x] `rapid-common`: YAML config, MiniMessage lang bundles with brand tags and per-server overrides, HikariCP pool, migrations, Redis bus (pub/sub with reconnect), server registry and hub selection, player profiles, Bolts and per-mode ledgers (atomic debits, idempotent `txn_id`), rank / staff role / plus-color model
-- [x] `rapid-proxy`: joins and kicks routed to the least-loaded live hub, auto-registration of new backends (private IPs only), 1.8 version gate, rotating MOTD with network player count, `/maintenance` (Redis-backed, staff bypass), `rapid bolts add|remove|balance` for Tebex, logins refused until MariaDB and Redis are reachable
-- [x] `rapid-core`: heartbeat, profile load on pre-login, chat with rank/staff prefixes and plus color (via LuckPerms groups), `/plus` (clickable list), `/bolts`, no attack cooldown and no sweep hits
+- [x] `rapid-proxy`: joins and kicks routed to the least-loaded live hub, auto-registration of new backends (private IPs only), 1.20 version gate, rotating MOTD with network player count, `/maintenance` (Redis-backed, staff bypass), `rapid bolts add|remove|balance` for Tebex, logins refused until MariaDB and Redis are reachable
+- [x] `rapid-core`: heartbeat, profile load on pre-login, chat with rank/staff prefixes and plus color (via LuckPerms groups), `/plus` (clickable list), `/bolts`
 - [x] Deploy config: `rapid-proxy` / `rapid-core` config patches, `RAPID_DB_*` secrets, staging on its own schema, LuckPerms permissions
 - [x] `rsdeploy.py` ships the custom jars: `dist/` entries in plugin sets come from `build/dist/`, compared by SHA-256 (their names never change, and Gradle builds them reproducibly, so an unchanged build isn't re-uploaded); `plugins --restart`
 - [x] `rapid-proxy` social layer: parties (invite/accept/kick/promote/warp, `/pc`, members follow the leader, size by rank), friends (requests, list with server and join button, join/leave notices, size by rank; `friends` + `friend_requests`, core V2), join queue (`/play`, `/leavequeue`, rank priority, action-bar position, backends request moves over Redis `rapid:connect`), cross-server `/msg` + `/r`, staff chat `/sc`
 - [x] `rapid-core`: chest-menu framework (`gui.Menu`), `/plus` as a chest GUI, PlaceholderAPI expansion (`%rapid_prefix%`, `%rapid_plus_color%`, `%rapid_rank%`, `%rapid_staff%`), `RapidCore#connect` for the hub selector
 - [x] LiteBans (own MariaDB schema, mute list covers proxy chat commands), Grim and TAB (branded header/footer, team-first sorting) in the `network.yml` plugin sets
+- [x] `rapid-core` staff mode (§9): `/staff` swaps the inventory (kept in persistent player data, so a crash can't lose it) for tools: random teleport, inventory/ender chest inspection (read-only snapshots), freeze, player list, vanish; staff can't drop, pick up, build or fight. `/vanish` is network-wide (Redis) and hides staff from friend lists, friend notices and `/msg` on the proxy. `/freeze` locks movement, items and commands on the backend and the proxy (so `/play` is no escape), shows a notice menu plus title reminders, survives relogs, and alerts staff chat on logout. Every use is logged to `staff_actions` (core V3)
+- [x] AFK detection (only view turns, chat and commands count, so water streams and auto-clickers stay AFK), `/afk`, `PlayerAfkChangeEvent`
+- [x] Anti-farm: `EarnGuard` for every activity reward (no Bolts while AFK, none for accounts sharing an IP with one that joined earlier, network-wide daily caps per reason) and playtime Bolts (2 per 15 active minutes, 20/day, progress carried across server switches)
+- [x] Tailwind (§5.3): the proxy turns time away into Tailwind on login (2h per day away, at most 3 days counted; 2h starter bank for new players); gamemode servers spend it while not AFK; `tailwind().multiplier(player)` for the mode plugins, `/tailwind`, `%rapid_tailwind%`
+- [x] Per-mode Vault economy: VaultUnlocked on gamemode servers; rapid-core registers Coins or Crowns (`server.gamemode`) with cached balances and ledger-guarded writes, rounding fractional amounts against the receiver; ledger rows name the calling plugin (`vault:SuperiorSkyblock2`)
+- [x] TAB-Bridge on the backends and VelocityScoreboardAPI on the proxy; TAB shows `%rapid_prefix%` in the tab list and nametags and `%rapid_afk%` after names
 
 Next:
 
-- [ ] `rapid-core`: staff mode, Tailwind, AFK and anti-farm detection, per-mode Vault economy provider (needs a Vault-compatible plugin on the backends; none is in `plugins/` yet)
-- [ ] TAB-Bridge on the backends, so the proxy's TAB can show `%rapid_prefix%` in the tab list and nametags
-- [ ] Check on 1.8.9 and 26.3: LiteBans mutes block `/msg`, `/r` and `/pc`; party follow and the queue action bar; `/plus` menu items and lore
+- [ ] Check on 1.20.1 and 26.3: LiteBans mutes block `/msg`, `/r` and `/pc`; party follow and the queue action bar; `/plus` menu items and lore; staff mode tools, the freeze notice and title; `[RAPID+++]` nametags; vanished staff missing from the tab list
+- [ ] Tune in beta: Tailwind rate and starter bank, playtime Bolts, AFK timeout
+- [ ] Later staff tooling from §9 that needs other plugins' APIs: CPS/reach view (Grim), X-ray ore ratios, LiteBans punishment GUI
 
 **Recommended launch strategy:** launch both modes together. With only two modes, launching one at a time would feel thin. Run Horizons as the first closed beta, though, since it relies more on premade plugins and will stress-test the core platform early. Don't wipe beta progress on Skyrealms or Horizons at launch.
 
 ### Test matrix (every release)
 
-Clients: **1.8.9, 1.12.2, 1.16.5, 1.20.4, 1.21.11, 26.1.2, 26.3.** For each client, check:
+Clients: **1.20.1, 1.20.4, 1.21.11, 26.1.2, 26.3.** For each client, check:
 - Login via `rapidskies.us` (SRV) and `mc.rapidskies.us`
-- Chat colors, including every plus color and gradient fallbacks
+- Chat colors, including every plus color and gradient
 - Sidebar and tab, every GUI, holograms and NPCs, cosmetics visibility
 - Skyrealms: create an island and complete one Expedition
 - Horizons: claim land via `/claim map`, found a town, use a chest shop, travel to the Frontier, and fight in a Skyborne event
-- Both modes: list, buy and collect on the auction house, and confirm the true item name shows for newer items on 1.8
+- Both modes: list, buy and collect on the auction house, and confirm the true item name shows for newer items on 1.20
 
 **Automated tests (run in CI on every build):**
 - MockBukkit unit and integration tests for the full claim protection matrix (§4.1).

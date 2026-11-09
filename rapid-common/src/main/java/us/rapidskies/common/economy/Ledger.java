@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -74,7 +75,7 @@ public final class Ledger {
     }
 
     public record Entry(long id, UUID player, long delta, String reason, String source, String txnId,
-                        java.time.Instant createdAt) {
+                        Instant createdAt) {
     }
 
     public long balance(UUID player) throws SQLException {
@@ -103,6 +104,26 @@ public final class Ledger {
 
     public CompletableFuture<Result> debitAsync(UUID player, long amount, String reason, String source, String txnId) {
         return db.async(() -> debit(player, amount, reason, source, txnId));
+    }
+
+    /**
+     * The sum of credits for {@code reason} (e.g. {@code playtime}) since {@code since}, on
+     * any server, for daily earning caps (PLAN.md §6.2, anti-farm).
+     */
+    public long earnedSince(UUID player, String reason, Instant since) throws SQLException {
+        return db.withConnection(c -> {
+            try (PreparedStatement ps = c.prepareStatement("SELECT COALESCE(SUM(delta), 0) FROM " + ledgerTable
+                    + " WHERE " + scopeWhere() + "uuid = ? AND created_at >= ? AND reason = ? AND delta > 0")) {
+                int i = bindScope(ps, 1);
+                ps.setString(i++, player.toString());
+                ps.setObject(i++, LocalDateTime.ofInstant(since, ZoneOffset.UTC));
+                ps.setString(i, truncate(reason, 64));
+                try (ResultSet rs = ps.executeQuery()) {
+                    rs.next();
+                    return rs.getLong(1);
+                }
+            }
+        });
     }
 
     /** Most recent entries first. */

@@ -69,7 +69,8 @@ public final class ProfileService implements Listener {
         }
         try {
             online.put(event.getUniqueId(),
-                    repository.recordLogin(event.getUniqueId(), event.getName(), settings.serverId()));
+                    repository.recordLogin(event.getUniqueId(), event.getName(), settings.serverId(),
+                            settings.tailwind().starterSeconds()));
         } catch (SQLException | RuntimeException e) {
             plugin.getSLF4JLogger().error("Couldn't load the profile of {} ({})", event.getName(), event.getUniqueId(), e);
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, lang.get("login.profile-failed"));

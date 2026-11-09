@@ -24,7 +24,7 @@ import us.rapidskies.proxy.party.Parties;
 class LangKeysTest {
 
     private static final Pattern KEY = Pattern.compile(
-            "\"((?:admin|bolts|errors|friend|kick|maintenance|motd|msg|party|queue|staffchat)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
+            "\"((?:admin|bolts|errors|freeze|friend|kick|maintenance|motd|msg|party|queue|staffchat)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
 
     @Test
     void everyKeyInTheCodeIsInTheBundle() throws IOException {

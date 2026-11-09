@@ -30,7 +30,7 @@ import us.rapidskies.core.gui.Menu;
  */
 public final class PlusMenu extends Menu {
 
-    /** Wool (and lapis for dark blue) exists on 1.8, so every client sees the right block. */
+    /** Wool, plus lapis for dark blue: one plain block per color. */
     private static final Map<PlusColor, Material> BLOCKS = new EnumMap<>(Map.ofEntries(
             Map.entry(PlusColor.WHITE, Material.WHITE_WOOL),
             Map.entry(PlusColor.YELLOW, Material.YELLOW_WOOL),

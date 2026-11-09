@@ -83,6 +83,20 @@ lpv group helper permission set rapid.staffchat true server=proxy
 lpv group builder permission set rapid.staffchat true server=proxy
 lpv group developer permission set rapid.staffchat true server=proxy
 
+# Staff mode (rapid-core, every backend; plan §9): /staff, /vanish, /freeze, /invsee and
+# /endersee for the whole staff track. The team can't be frozen and sees vanished staff
+# (the proxy checks rapid.staff.vanish.see too, so no server context).
+lpv group helper permission set rapid.staff.mode true
+lpv group helper permission set rapid.staff.vanish true
+lpv group helper permission set rapid.staff.vanish.see true
+lpv group helper permission set rapid.staff.freeze true
+lpv group helper permission set rapid.staff.inspect true
+lpv group helper permission set rapid.staff.freeze.exempt true
+lpv group builder permission set rapid.staff.vanish.see true
+lpv group builder permission set rapid.staff.freeze.exempt true
+lpv group developer permission set rapid.staff.vanish.see true
+lpv group developer permission set rapid.staff.freeze.exempt true
+
 # Builders: full control on the build server only. (Add FAWE to the build server's
 # plugin set in network.yml; it isn't in plugins/ yet.)
 lpv group builder permission set worldedit.* true server=build

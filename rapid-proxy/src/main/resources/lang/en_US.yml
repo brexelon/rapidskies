@@ -1,23 +1,23 @@
 # rapid-proxy messages (MiniMessage). Brand tags: <primary> <accent> <text> <muted> <dark>
-# <success> <error>, and <prefix> for "RAPIDSKIES »". Keep server-list lines short: 1.8
-# clients cut the MOTD at about 45 characters per line.
+# <success> <error>, and <prefix> for "RAPIDSKIES »". Keep server-list lines short: the
+# client cuts the MOTD at about 45 characters per line.
 
 motd:
-  line1: "<primary><bold>RAPID</bold></primary><white><bold>SKIES</bold></white> <dark>»</dark> <muted>1.8 – 26.3</muted>"
+  line1: "<primary><bold>RAPID</bold></primary><white><bold>SKIES</bold></white> <dark>»</dark> <muted>1.20 – 26.3</muted>"
   # Line 2 rotates (config motd.rotate-seconds): news, the current Season/Frontier, the store.
   rotation:
     - "<accent>Skyrealms</accent> <dark>•</dark> <accent>Horizons SMP</accent>"
     - "<text>Store:</text> <primary>store.rapidskies.us</primary>"
   maintenance: "<error>Down for maintenance.</error> <muted>Back soon!</muted>"
   # Shown in red in place of the ping bar.
-  version-unsupported: "1.8 – 26.3"
+  version-unsupported: "1.20 – 26.3"
   version-maintenance: "Maintenance"
 
 kick:
   version: |-
     <primary><bold>RAPID</bold></primary><white><bold>SKIES</bold></white>
 
-    <text>We support Minecraft <accent>1.8</accent> to <accent>26.3</accent>.</text>
+    <text>We support Minecraft <accent>1.20</accent> to <accent>26.3</accent>.</text>
     <muted>Please switch versions and join again.</muted>
   maintenance: |-
     <primary><bold>RAPID</bold></primary><white><bold>SKIES</bold></white>
@@ -72,7 +72,7 @@ errors:
   not-online: "<prefix><error><text><player></text> isn't online.</error>"
   never-joined: "<prefix><error>No player <text><player></text> has ever joined.</error>"
 
-# Join queue (/play, the hub selector). Action bar lines show on 1.8 too; keep them short.
+# Join queue (/play, the hub selector). Keep action bar lines short.
 queue:
   usage: "<accent>Queue</accent> <dark>»</dark> <muted>Usage:</muted> <text>/play \\<mode></text> <muted>(<modes>)</muted>"
   unknown-target: "<accent>Queue</accent> <dark>»</dark> <error>There's no mode called <text><target></text>.</error>"
@@ -197,6 +197,11 @@ msg:
   from: "<dark>[</dark><text><player></text> <dark>»</dark> <accent>You</accent><dark>]</dark> <muted><message></muted>"
 
 # Staff chat (/sc). Red is reserved for the team.
+# Freeze (rapid-core's staff mode freezes; the proxy keeps frozen players from leaving).
+freeze:
+  no-commands: "<prefix><error>You can't use commands while frozen.</error> <muted>You can still /msg and /r.</muted>"
+  logged-out: "<red>Staff</red> <dark>»</dark> <error><player> logged out while frozen.</error>"
+
 staffchat:
   usage: "<red>Staff</red> <dark>»</dark> <muted>Usage:</muted> <text>/sc \\<message></text>"
   format: "<red>Staff</red> <dark>»</dark> <muted>[<server>]</muted> <text><player></text><dark>:</dark> <text><message></text>"

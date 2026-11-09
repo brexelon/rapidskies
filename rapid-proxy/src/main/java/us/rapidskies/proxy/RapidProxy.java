@@ -38,11 +38,17 @@ import us.rapidskies.proxy.queue.PlayCommand;
 import us.rapidskies.proxy.queue.QueueService;
 import us.rapidskies.proxy.queue.QueueSettings;
 import us.rapidskies.proxy.rank.ProxyRanks;
+import us.rapidskies.proxy.session.FrozenPlayers;
+import us.rapidskies.proxy.session.SharedIps;
+import us.rapidskies.proxy.session.TailwindSessions;
+import us.rapidskies.proxy.session.VanishedStaff;
 
 /**
  * Velocity entry point (PLAN.md §4): hub load balancing from the server registry, the
  * version gate, MOTD, maintenance mode, the console command the store uses, and the social
- * layer: parties, friends, the join queue, cross-server messages and staff chat.
+ * layer: parties, friends, the join queue, cross-server messages and staff chat. It also
+ * owns what only a whole-network view can decide: Tailwind accrual between sessions, which
+ * accounts share an IP (anti-farm), and hiding vanished staff from social features.
  *
  * <p>If MariaDB or Redis is unreachable at boot (e.g. the node rebooted and the proxy came
  * up first), the proxy stays up, refuses logins with lang {@code kick.starting}, and keeps
@@ -74,6 +80,7 @@ public final class RapidProxy {
     private NetworkDirectory directory;
     private QueueService queue;
     private PartyService parties;
+    private SharedIps sharedIps;
 
     @Inject
     public RapidProxy(ProxyServer proxy, Logger logger, @DataDirectory Path dataDir) {
@@ -121,14 +128,17 @@ public final class RapidProxy {
         directory.start(this);
 
         ProfileRepository profiles = new ProfileRepository(database);
+        VanishedStaff vanish = new VanishedStaff(redis, logger);
+        sharedIps = new SharedIps(proxy, redis, logger);
+        sharedIps.start(this);
         ProxyRanks ranks = new ProxyRanks(LuckPermsProvider.get(), proxy);
         queue = new QueueService(proxy, lang, QueueSettings.from(config), ranks, directory::servers, logger);
         queue.start(this, redis);
         parties = new PartyService(proxy, lang, PartySettings.from(config), ranks, queue);
         parties.start(this);
         FriendService friends = new FriendService(proxy, lang, FriendSettings.from(config), ranks, queue, database,
-                profiles, logger);
-        PrivateMessages messages = new PrivateMessages(proxy, lang);
+                profiles, vanish, logger);
+        PrivateMessages messages = new PrivateMessages(proxy, lang, vanish);
 
         var events = proxy.getEventManager();
         events.register(this, new ConnectionListener(lang, directory, settings));
@@ -137,6 +147,9 @@ public final class RapidProxy {
         events.register(this, parties);
         events.register(this, friends);
         events.register(this, messages);
+        events.register(this, new TailwindSessions(proxy, database, settings.tailwind(), logger));
+        events.register(this, sharedIps);
+        events.register(this, new FrozenPlayers(proxy, lang, redis, logger));
 
         register("maintenance", new MaintenanceCommand(proxy, lang, redis, directory, logger));
         register("rapid", new AdminCommand(proxy, lang, Ledger.bolts(database), profiles, logger));
@@ -174,6 +187,10 @@ public final class RapidProxy {
         if (parties != null) {
             parties.stop();
             parties = null;
+        }
+        if (sharedIps != null) {
+            sharedIps.stop();
+            sharedIps = null;
         }
         if (directory != null) {
             directory.stop();

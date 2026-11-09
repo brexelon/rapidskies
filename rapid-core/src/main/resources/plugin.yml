@@ -8,9 +8,29 @@ website: https://rapidskies.us
 # Ranks and staff roles are read from LuckPerms groups.
 depend: [LuckPerms]
 # %rapid_prefix% and friends for TAB, scoreboards and holograms, when it's installed.
-softdepend: [PlaceholderAPI]
+# Vault (VaultUnlocked) on gamemode servers, where rapid-core provides the Coins/Crowns economy.
+softdepend: [PlaceholderAPI, Vault]
 
 permissions:
   rapid.command.bolts.others:
     description: See another player's Bolts balance with /bolts <player>.
+    default: false
+  # Staff tools (PLAN.md §9). Granted per group in infra/luckperms/bootstrap.txt.
+  rapid.staff.mode:
+    description: Use /staff (staff mode and its hotbar tools).
+    default: false
+  rapid.staff.vanish:
+    description: Use /vanish.
+    default: false
+  rapid.staff.vanish.see:
+    description: See vanished staff.
+    default: false
+  rapid.staff.freeze:
+    description: Freeze and release players (/freeze, staff mode ice).
+    default: false
+  rapid.staff.freeze.exempt:
+    description: Can't be frozen.
+    default: false
+  rapid.staff.inspect:
+    description: Inspect inventories and ender chests (/invsee, /endersee, staff mode book).
     default: false

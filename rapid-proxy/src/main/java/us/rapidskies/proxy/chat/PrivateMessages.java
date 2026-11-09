@@ -15,23 +15,28 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import us.rapidskies.common.lang.Lang;
 import us.rapidskies.proxy.Suggest;
+import us.rapidskies.proxy.session.VanishedStaff;
 
 /**
  * Cross-server private messages (PLAN.md §4): {@code /msg <player> <message>} and
  * {@code /r <message>} to answer whoever you last talked to. They run on the proxy, so
  * they reach players on any server. Muted players can't use them (LiteBans
  * {@code mutes.command_blacklist}), and Velocity logs every command for moderation.
+ * Vanished staff can't be messaged by players who can't see them, though they can still
+ * answer anyone who wrote to them first.
  */
 public final class PrivateMessages {
 
     private final ProxyServer proxy;
     private final Lang lang;
+    private final VanishedStaff vanish;
     /** Who each player last messaged or heard from. */
     private final Map<UUID, UUID> lastPartner = new ConcurrentHashMap<>();
 
-    public PrivateMessages(ProxyServer proxy, Lang lang) {
+    public PrivateMessages(ProxyServer proxy, Lang lang, VanishedStaff vanish) {
         this.proxy = proxy;
         this.lang = lang;
+        this.vanish = vanish;
     }
 
     public SimpleCommand msgCommand() {
@@ -47,7 +52,8 @@ public final class PrivateMessages {
                     lang.send(sender, "msg.usage");
                     return;
                 }
-                Optional<Player> target = proxy.getPlayer(args[0]);
+                Optional<Player> target = proxy.getPlayer(args[0])
+                        .filter(t -> !vanish.hiddenFrom(t.getUniqueId(), sender));
                 if (target.isEmpty()) {
                     lang.send(sender, "errors.not-online", Placeholder.unparsed("player", args[0]));
                     return;
@@ -58,7 +64,12 @@ public final class PrivateMessages {
             @Override
             public CompletableFuture<List<String>> suggestAsync(Invocation invocation) {
                 String[] args = invocation.arguments();
-                return Suggest.done(args.length <= 1 ? Suggest.players(proxy, Suggest.last(args)) : List.of());
+                if (args.length > 1) {
+                    return Suggest.done(List.of());
+                }
+                return Suggest.done(Suggest.matching(proxy.getAllPlayers().stream()
+                        .filter(p -> !vanish.hiddenFrom(p.getUniqueId(), invocation.source()))
+                        .map(Player::getUsername).toList(), Suggest.last(args)));
             }
         };
     }

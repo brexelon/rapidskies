@@ -1,6 +1,5 @@
 # rapid-core messages (MiniMessage). Brand tags: <primary> <accent> <text> <muted> <dark>
-# <success> <error>, and <prefix> for "RAPIDSKIES »". Test every change on a 1.8.9 client:
-# hex colors fall back to the nearest legacy color there.
+# <success> <error>, and <prefix> for "RAPIDSKIES »".
 
 # Rank and staff prefixes (PLAN.md §6.1, §9). <plus>...</plus> takes the player's plus color.
 rank:
@@ -59,6 +58,99 @@ bolts:
   balance-other: "<prefix><primary>⚡</primary> <text><player> has</text> <accent><balance> Bolts</accent><text>.</text>"
   unknown-player: "<prefix><error>No player <text><player></text> has ever joined.</error>"
   failed: "<prefix><error>Couldn't load Bolts right now; please try again.</error>"
+
+afk:
+  now-afk: "<prefix><muted>You're now AFK. Playtime rewards and Tailwind are paused until you're back.</muted>"
+  back: "<prefix><text>Welcome back!</text>"
+  # %rapid_afk% (tab list suffix); a leading space keeps it apart from the name.
+  tag: " <dark>[AFK]</dark>"
+
+# Tailwind (PLAN.md §5.3). <time> is what's left ("2h 15m"), <bonus> the percent.
+tailwind:
+  join: "<prefix><primary>Tailwind:</primary> <text><time> of</text> <accent>+<bonus>%</accent> <text>mode XP and Trade income.</text>"
+  depleted: "<prefix><muted>Your Tailwind has run out. Time away from the network builds it back up.</muted>"
+  empty: "<prefix><text>No Tailwind banked.</text> <muted>Time away from the network banks a</muted> <accent>+<bonus>%</accent> <muted>bonus for your next session.</muted>"
+  banked: "<prefix><primary>Tailwind:</primary> <text><time> banked.</text> <muted>It's spent while you play Skyrealms or Horizons, for</muted> <accent>+<bonus>%</accent> <muted>mode XP and Trade income.</muted>"
+  active: "<prefix><primary>Tailwind:</primary> <text><time> left,</text> <accent>+<bonus>%</accent> <text>mode XP and Trade income right now.</text>"
+  paused: "<prefix><primary>Tailwind:</primary> <text><time> left,</text> <muted>paused while you're AFK.</muted>"
+
+rewards:
+  playtime: "<prefix><primary>⚡</primary> <accent>+<amount> Bolts</accent> <muted>for <minutes> minutes of play.</muted>"
+
+# Staff tools (PLAN.md §9). Staff-facing text, so it can be terse.
+staff:
+  usage-player: "<prefix><error>Name a player on this server.</error>"
+  not-here: "<prefix><error><player> isn't on this server.</error>"
+  mode:
+    enabled: "<prefix><success>Staff mode on.</success> <muted>Your inventory comes back when you leave.</muted>"
+    disabled: "<prefix><text>Staff mode off.</text> <muted>Inventory restored.</muted>"
+    teleported: "<prefix><text>Teleported to <player>.</text>"
+    nobody: "<prefix><muted>Nobody else to teleport to.</muted>"
+    click-a-player: "<prefix><muted>Right-click a player with this.</muted>"
+  tool:
+    random-name: "<primary>Random player</primary> <muted>(right-click)</muted>"
+    random-lore:
+      - "<muted>Teleports you to a random player</muted>"
+      - "<muted>on this server.</muted>"
+    inspect-name: "<primary>Inspect</primary> <muted>(right-click a player)</muted>"
+    inspect-lore:
+      - "<muted>Shows their inventory.</muted>"
+      - "<muted>Sneak to see their ender chest.</muted>"
+    freeze-name: "<primary>Freeze</primary> <muted>(right-click a player)</muted>"
+    freeze-lore:
+      - "<muted>Freezes or releases them.</muted>"
+    players-name: "<primary>Players</primary> <muted>(right-click)</muted>"
+    players-lore:
+      - "<muted>Everyone on this server.</muted>"
+    vanish-on-name: "<success>Vanished</success> <muted>(right-click to appear)</muted>"
+    vanish-on-lore:
+      - "<muted>Players can't see you.</muted>"
+    vanish-off-name: "<error>Visible</error> <muted>(right-click to vanish)</muted>"
+    vanish-off-lore:
+      - "<muted>Players can see you.</muted>"
+    exit-name: "<error>Leave staff mode</error> <muted>(right-click)</muted>"
+    exit-lore:
+      - "<muted>Gives your inventory back.</muted>"
+  vanish:
+    enabled: "<prefix><success>You're vanished.</success> <muted>Players can't see you, here or in friend lists.</muted>"
+    disabled: "<prefix><text>You're visible again.</text>"
+    still: "<prefix><muted>You're still vanished. /vanish to appear.</muted>"
+  freeze:
+    froze: "<prefix><text>Froze <player>.</text> <muted>Talk to them in chat; use the ice again to release.</muted>"
+    released-staff: "<prefix><text>Released <player>.</text>"
+    exempt: "<prefix><error><player> can't be frozen.</error>"
+    rejoined: "<prefix><error><player> rejoined while frozen.</error> <muted>They're frozen again.</muted>"
+    released: "<prefix><success>You've been released. Thanks for your patience.</success>"
+    no-commands: "<prefix><error>You can't use commands while frozen.</error>"
+    reminder: "<prefix><error>You're frozen.</error> <text>A staff member will talk to you in chat. Don't log out: that counts as refusing a check.</text>"
+    title: "<error><bold>FROZEN</bold></error>"
+    subtitle: "<text>Check chat, and don't log out</text>"
+    menu-title: "<dark>You've been frozen</dark>"
+    menu-name: "<error><bold>You've been frozen</bold></error>"
+    menu-lore:
+      - "<text>A staff member wants to check your client.</text>"
+      - "<text>They'll talk to you in chat.</text>"
+      - ""
+      - "<error>Logging out counts as refusing the check.</error>"
+    menu-close: "<accent>Close this and open chat</accent>"
+  inspect:
+    title: "<dark><player>'s inventory</dark>"
+    ender-title: "<dark><player>'s ender chest</dark>"
+    info-name: "<primary><player></primary>"
+    info-health: "<muted>Health</muted> <text><health></text> <dark>•</dark> <muted>Food</muted> <text><food></text>"
+    info-mode: "<muted>Game mode</muted> <text><mode></text>"
+    info-location: "<muted>At</muted> <text><world> <x>, <y>, <z></text>"
+    refresh: "<accent>Refresh</accent>"
+    gone: "<prefix><muted><player> left this server.</muted>"
+  players:
+    title: "<dark>Players here</dark>"
+    name: "<text><player></text>"
+    frozen: "<error>Frozen</error>"
+    vanished: "<muted>Vanished</muted>"
+    click: "<accent>Click</accent> <muted>to teleport,</muted> <accent>shift-click</accent> <muted>to inspect</muted>"
+    page: "<muted>Page <page>/<pages></muted>"
+    previous: "<accent>Previous page</accent>"
+    next: "<accent>Next page</accent>"
 
 errors:
   players-only: "<prefix><error>Only players can use this.</error>"

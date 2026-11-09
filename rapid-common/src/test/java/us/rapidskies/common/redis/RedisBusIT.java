@@ -64,4 +64,18 @@ class RedisBusIT {
         assertTrue(new ServerRegistry(b).fetchAll().stream().noneMatch(s -> s.id().equals("hub-1")));
         registry.remove("smp-1");
     }
+
+    @Test
+    void countersAndSetMembership() {
+        a.delete("it-counter");
+        assertEquals(60, a.incrementBy("it-counter", 60, 30));
+        assertEquals(120, b.incrementBy("it-counter", 60, 30));
+
+        a.delete("it-set");
+        a.addToSet("it-set", "x", "y");
+        assertTrue(b.isMember("it-set", "x"));
+        b.removeFromSet("it-set", "x");
+        assertEquals(false, a.isMember("it-set", "x"));
+        assertTrue(a.isMember("it-set", "y"));
+    }
 }

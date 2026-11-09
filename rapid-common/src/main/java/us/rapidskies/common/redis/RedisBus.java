@@ -198,6 +198,21 @@ public final class RedisBus implements AutoCloseable {
         client.srem(prefixed(key), members);
     }
 
+    /** Adds {@code delta} to the counter at {@code key}, (re)sets its expiry, and returns the new value. */
+    public long incrementBy(String key, long delta, long ttlSeconds) {
+        String k = prefixed(key);
+        try (AbstractPipeline p = client.pipelined()) {
+            Response<Long> value = p.incrBy(k, delta);
+            p.expire(k, ttlSeconds);
+            p.sync();
+            return value.get();
+        }
+    }
+
+    public boolean isMember(String key, String member) {
+        return client.sismember(prefixed(key), member);
+    }
+
     public Set<String> members(String key) {
         return client.smembers(prefixed(key));
     }

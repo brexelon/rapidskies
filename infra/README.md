@@ -81,8 +81,8 @@ show an ID, and every backend an allocation on `172.18.0.1`.
    node). Then install `host/backup-db.sh` as described in [Backups](#backups).
 6. **Permissions.** Paste `luckperms/bootstrap.txt` into the Velocity console, then give yourself
    `owner`. Add staff to the `build`/`staging` whitelists from those consoles.
-7. **Verify** (from a 1.8.9 client and a 26.3 client): join `rapidskies.us` and `mc.rapidskies.us`,
-   land on a hub, `/server` is denied for a default player, a 1.7.10 client gets the branded kick,
+7. **Verify** (from a 1.20.1 client and a 26.3 client): join `rapidskies.us` and `mc.rapidskies.us`,
+   land on a hub, `/server` is denied for a default player, a 1.19.4 client gets the branded kick,
    and `/lp info` on the proxy shows MariaDB storage and Redis messaging connected.
 
 Re-run `diff` / `apply` whenever a profile changes; both are idempotent.
@@ -162,6 +162,14 @@ compares them by SHA-256 rather than size; builds are reproducible, so an unchan
 never re-uploaded. `rsdeploy.py plugins --restart` restarts the servers whose jars changed.
 
 New schemas for phase 1: **LiteBans** keeps its data in its own `litebans` schema (create it like
-the others; credentials are `LITEBANS_DB_*` in `secrets.env`). **TAB** runs on Velocity only; to
-show rank prefixes in the tab list it will also need TAB-Bridge on the backends, which isn't in
-`plugins/` yet.
+the others; credentials are `LITEBANS_DB_*` in `secrets.env`). Its chat lines, ban/kick screens
+and Discord embed colors are restyled to the brand in `velocity/plugins/litebans/messages.yml.patch`
+(LiteBans reads `&` codes, not MiniMessage). **TAB** runs on Velocity with
+**VelocityScoreboardAPI** (needed for scoreboard teams); **TAB-Bridge** on every backend passes
+rapid-core's `%rapid_prefix%` and vanish state up to it, so the tab list and nametags match chat.
+
+**VaultUnlocked** (the `survival` set) carries the Vault API on the gamemode servers. rapid-core
+registers the Coins (skyrealms) or Crowns (smp, staging) economy through it, picked by
+`server.gamemode` in the `smp`/`skyrealms` profiles. It implements the classic Vault interface,
+which SuperiorSkyblock2 uses; when QuickShop-Hikari joins the smp set (phase 3b), set its economy
+to the classic Vault provider, not VaultUnlocked's newer one.

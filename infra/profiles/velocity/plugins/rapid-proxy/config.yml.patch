@@ -7,3 +7,5 @@ database.password: "${RAPID_DB_PASSWORD}"
 redis.host: "${REDIS_HOST}"
 redis.port: "${REDIS_PORT}"
 redis.password: "${REDIS_PASSWORD}"
+# Oldest client allowed in: 763 = 1.20 / 1.20.1 (plan §3, version support).
+minimum-protocol: 763

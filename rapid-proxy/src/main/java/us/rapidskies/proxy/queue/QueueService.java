@@ -25,7 +25,7 @@ import us.rapidskies.proxy.rank.ProxyRanks;
 
 /**
  * Runs the {@link JoinQueue}: every second it sends whoever can go, and every few seconds
- * it shows everyone waiting their place on the action bar (which 1.8 clients show too).
+ * it shows everyone waiting their place on the action bar.
  *
  * <p>Requests come from {@code /play}, from backends over Redis ({@link Channels#CONNECT}:
  * the hub selector and NPCs), from party follow and from {@code /friend join}.

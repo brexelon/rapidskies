@@ -22,22 +22,34 @@ import us.rapidskies.common.profile.ProfileRepository;
 import us.rapidskies.common.redis.Channels;
 import us.rapidskies.common.redis.RedisBus;
 import us.rapidskies.common.registry.ServerRegistry;
+import us.rapidskies.core.afk.AfkTracker;
 import us.rapidskies.core.chat.ChatListener;
-import us.rapidskies.core.combat.CombatTiming;
 import us.rapidskies.core.command.BoltsCommand;
+import us.rapidskies.core.command.PlayerStatusCommands;
 import us.rapidskies.core.command.PlusCommand;
+import us.rapidskies.core.economy.ModeEconomy;
 import us.rapidskies.core.gui.MenuListener;
 import us.rapidskies.core.profile.ProfileService;
 import us.rapidskies.core.rank.PlusChoice;
 import us.rapidskies.core.rank.RankDisplay;
 import us.rapidskies.core.rank.RapidPlaceholders;
+import us.rapidskies.core.reward.EarnGuard;
+import us.rapidskies.core.reward.PlaytimeRewards;
+import us.rapidskies.core.staff.Freeze;
+import us.rapidskies.core.staff.StaffCommands;
+import us.rapidskies.core.staff.StaffLog;
+import us.rapidskies.core.staff.StaffMode;
+import us.rapidskies.core.staff.Vanish;
+import us.rapidskies.core.tailwind.TailwindService;
 
 /**
  * rapid-core: runs on every Paper backend and is the API the other rapid-* plugins build on
- * (PLAN.md §4). Phase 1 so far: profiles, the Bolts and per-mode ledgers, the server
- * heartbeat, chat with rank prefixes and plus colors, the chest-menu framework
+ * (PLAN.md §4). Phase 1: profiles, the Bolts and per-mode ledgers, the server heartbeat,
+ * chat with rank prefixes and plus colors, the chest-menu framework
  * ({@link us.rapidskies.core.gui.Menu}), the {@code /plus} menu, {@code /bolts}, the
- * PlaceholderAPI expansion, and 1.8-style combat timing.
+ * PlaceholderAPI expansion, AFK detection, anti-farm rules and
+ * playtime Bolts, Tailwind, staff mode (vanish, freeze, inspection), and on gamemode
+ * servers the Vault economy for Coins or Crowns.
  *
  * <p>Other plugins get the services through {@link #get()} after declaring
  * {@code depend: [rapid-core]}.
@@ -61,7 +73,13 @@ public final class RapidCore extends JavaPlugin {
     private final Map<EconomyMode, Ledger> modeLedgers = new EnumMap<>(EconomyMode.class);
     private RankDisplay ranks;
     private Heartbeat heartbeat;
-    private CombatTiming combat;
+    private AfkTracker afk;
+    private TailwindService tailwind;
+    private EarnGuard earning;
+    private PlaytimeRewards playtime;
+    private ModeEconomy economy;
+    private StaffMode staffMode;
+    private boolean vaultRegistered;
 
     /** The running instance, for plugins that depend on rapid-core. */
     public static RapidCore get() {
@@ -97,15 +115,61 @@ public final class RapidCore extends JavaPlugin {
         pm.registerEvents(profiles, this);
         pm.registerEvents(new ChatListener(ranks, lang), this);
         pm.registerEvents(new MenuListener(), this);
-        combat = new CombatTiming(this, settings);
-        pm.registerEvents(combat, this);
-        combat.applyToOnline();
+
+        afk = new AfkTracker(this, settings.afk(), lang);
+        pm.registerEvents(afk, this);
+        afk.start();
+        tailwind = new TailwindService(this, database, profiles, afk, settings, lang);
+        pm.registerEvents(tailwind, this);
+        tailwind.start();
+        earning = new EarnGuard(this, database, bolts, redis, afk, settings.serverId());
+        pm.registerEvents(earning, this);
+        earning.start();
+        playtime = new PlaytimeRewards(this, earning, redis, settings.playtime(), lang);
+        playtime.start();
+
+        StaffLog staffLog = new StaffLog(this, database);
+        Vanish vanish = new Vanish(this, redis, staffLog, lang);
+        Freeze freeze = new Freeze(this, redis, staffLog, lang, settings.staff().freezeReminderSeconds());
+        staffMode = new StaffMode(this, vanish, freeze, staffLog, lang, settings.staff());
+        pm.registerEvents(vanish, this);
+        pm.registerEvents(freeze, this);
+        pm.registerEvents(staffMode, this);
+        freeze.start();
+        vanish.restoreOnline();
+        freeze.restoreOnline();
+        StaffCommands staffCommands = new StaffCommands(staffMode, lang);
+
+        settings.gamemode().ifPresent(mode -> {
+            economy = new ModeEconomy(this, mode, modeLedgers.get(mode), redis, settings.serverId());
+            pm.registerEvents(economy, this);
+            if (pm.getPlugin("Vault") != null) {
+                // Its own class, so Vault's types are only loaded when it's installed.
+                us.rapidskies.core.economy.VaultEconomy.register(this, economy);
+                vaultRegistered = true;
+            } else {
+                getSLF4JLogger().warn("Vault (VaultUnlocked) isn't installed: plugins that charge {} through "
+                        + "Vault won't work here", mode.currencyName(2));
+            }
+        });
 
         PlusCommand plus = new PlusCommand(new PlusChoice(this, database, ranks, profiles, profileRepository, lang));
         BoltsCommand boltsCommand = new BoltsCommand(database, bolts, profileRepository, lang);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             event.registrar().register("plus", "Choose the color of the pluses in your rank prefix", List.of(), plus);
             event.registrar().register("bolts", "Show your Bolts balance", List.of("bolt"), boltsCommand);
+            event.registrar().register("afk", "Mark yourself as away", List.of(),
+                    PlayerStatusCommands.afk(afk, lang));
+            event.registrar().register("tailwind", "Show your Tailwind bonus", List.of("rested"),
+                    PlayerStatusCommands.tailwind(tailwind, lang));
+            event.registrar().register("staff", "Toggle staff mode", List.of("staffmode", "mod"),
+                    staffCommands.staff());
+            event.registrar().register("vanish", "Toggle vanish", List.of("v"), staffCommands.vanish());
+            event.registrar().register("freeze", "Freeze or release a player", List.of("ss"),
+                    staffCommands.freeze());
+            event.registrar().register("invsee", "Inspect a player's inventory", List.of(), staffCommands.invsee());
+            event.registrar().register("endersee", "Inspect a player's ender chest", List.of("echest"),
+                    staffCommands.endersee());
         });
 
         if (pm.getPlugin("PlaceholderAPI") != null) {
@@ -144,11 +208,30 @@ public final class RapidCore extends JavaPlugin {
     @Override
     public void onDisable() {
         MenuListener.closeAll();
+        if (staffMode != null) {
+            // Before anything else, so nobody is left holding staff tools.
+            staffMode.leaveAll();
+            staffMode.vanish().showAll();
+            staffMode.freeze().stop();
+        }
+        if (vaultRegistered) {
+            us.rapidskies.core.economy.VaultEconomy.unregister(this);
+        }
         if (heartbeat != null) {
             heartbeat.stop();
         }
-        if (combat != null) {
-            combat.removeFromOnline();
+        if (playtime != null) {
+            playtime.stop();
+        }
+        if (earning != null) {
+            earning.stop();
+        }
+        if (afk != null) {
+            afk.stop();
+        }
+        if (tailwind != null) {
+            // Writes unsaved spending, so it must run before the database closes.
+            tailwind.stop();
         }
         closeServices();
     }
@@ -168,6 +251,11 @@ public final class RapidCore extends JavaPlugin {
 
     public CoreSettings settings() {
         return settings;
+    }
+
+    /** rapid-core's message bundle. */
+    public Lang lang() {
+        return lang;
     }
 
     public Database database() {
@@ -194,6 +282,30 @@ public final class RapidCore extends JavaPlugin {
 
     public RankDisplay ranks() {
         return ranks;
+    }
+
+    /** AFK state, for anything that should pause while a player is away. */
+    public AfkTracker afk() {
+        return afk;
+    }
+
+    /** Tailwind: mode plugins multiply mode XP and Trade income by {@code tailwind().multiplier(player)}. */
+    public TailwindService tailwind() {
+        return tailwind;
+    }
+
+    /** Every activity reward in Bolts goes through this (AFK, shared-IP and daily-cap rules). */
+    public EarnGuard earning() {
+        return earning;
+    }
+
+    /** This server's gamemode currency, or null on servers without one (hub, build). */
+    public ModeEconomy economy() {
+        return economy;
+    }
+
+    public StaffMode staffMode() {
+        return staffMode;
     }
 
     /**

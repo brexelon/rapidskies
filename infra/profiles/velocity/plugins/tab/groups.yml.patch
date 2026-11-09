@@ -1,0 +1,9 @@
+# TAB group properties (Velocity). Every group takes these: rapid-core renders the prefix
+# (rank with plus color, or team role) and TAB-Bridge on each backend passes it up through
+# PlaceholderAPI, so the tab list and nametags match chat (plan §6.1).
+_DEFAULT_:
+  tabprefix: "%rapid_prefix%"
+  tagprefix: "%rapid_prefix%"
+  customtabname: "%player%"
+  tabsuffix: "%rapid_afk%"
+  tagsuffix: ""

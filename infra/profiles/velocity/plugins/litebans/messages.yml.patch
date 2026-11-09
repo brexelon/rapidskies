@@ -1,0 +1,313 @@
+# LiteBans messages in the RapidSkies style (PLAN.md §2). LiteBans doesn't read MiniMessage,
+# so these use & codes. Our brand tokens map onto them exactly:
+#   primary #FFD800 -> &#FFD800    accent  #FFAA00 -> &6    text    #FFFFFF -> &f
+#   muted   #AAAAAA -> &7          dark    #555555 -> &8    success #55FF55 -> &a
+#   error   #FF5555 -> &c
+# Chat prefix "RAPIDSKIES » " is &#FFD800&lRAPID&f&lSKIES &8» ; staff-only notices use
+# "&cStaff &8» " like rapid-proxy's staff chat. Disconnect screens copy rapid-proxy's kick
+# screens: the bold wordmark, a blank line, then the message.
+#
+# Player-facing messages leave out the staff member's name; staff see it in broadcasts,
+# /history and /checkban. {hoverText: ...} needs litebans.json.hover_text to show, and
+# without it the message just shows without the hover.
+#
+# Keys are dotted leaf paths on purpose: a mapping value would replace the whole section.
+# Untouched: the alts guardrail disclaimer, durations, strings and the time format.
+
+# ---------------------------------------------------------------- defaults
+default_ban_reason: "Breaking the network rules"
+default_mute_reason: "Breaking the chat rules"
+
+# ---------------------------------------------------------------- disconnect screens
+banned_message_base: |-
+  &#FFD800&lRAPID&f&lSKIES
+
+  &cYou are banned from the network.
+
+  &7Reason: &f$reason
+  &7Ban ID: &6#$id
+banned_message: |-
+  $base
+  &7Expires in: &6$duration
+
+  $appealMessage
+banned_message_permanent: |-
+  $base
+  &7Expires: &cNever
+
+  $appealMessage
+banned_message_appeal_message: "&7Appeal at &#FFD800rapidskies.us &7or on our Discord."
+banned_message_geoip_blacklist: |-
+  &#FFD800&lRAPID&f&lSKIES
+
+  &cConnections from your region aren't allowed.
+  &7Region: &f$geoip
+
+command.kick.message: |-
+  &#FFD800&lRAPID&f&lSKIES
+
+  &cYou were kicked from the network.
+
+  &7Reason: &f$reason
+command.kick.message_no_reason: |-
+  &#FFD800&lRAPID&f&lSKIES
+
+  &cYou were kicked from the network.
+
+command.lockdown.kick_message: |-
+  &#FFD800&lRAPID&f&lSKIES
+
+  &cThis server is locked down right now.
+  &7Reason: &f$reason
+
+  &7Please try again later.
+command.lockdown.kick_message_global: |-
+  &#FFD800&lRAPID&f&lSKIES
+
+  &cThe network is locked down right now.
+  &7Reason: &f$reason
+
+  &7Check &#FFD800rapidskies.us &7or our Discord for updates.
+
+# ---------------------------------------------------------------- what punished players see in chat
+proxy_switch_banned: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &cYou're banned from &f$serverScope&c.
+  &7Reason: &f$reason
+proxy_switch_tempbanned: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &cYou're banned from &f$serverScope &cfor &6$duration&c.
+  &7Reason: &f$reason
+muted: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &cYou're muted for &6$duration&c.
+  &7Reason: &f$reason &8(ID #$id)
+muted_permanent: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &cYou're permanently muted.
+  &7Reason: &f$reason &8(ID #$id) &7Appeal at &#FFD800rapidskies.us&7.
+command.mute.message: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &cYou've been muted for &6$duration&c.
+  &7Reason: &f$reason
+command.mute.message_permanent: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &cYou've been permanently muted.
+  &7Reason: &f$reason
+  &7Appeal at &#FFD800rapidskies.us &7or on our Discord.
+command.warn.message: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &cYou've been warned.
+  &7Reason: &f$reason &8(expires in $duration)
+warned_join: "&#FFD800&lRAPID&f&lSKIES &8» &cYou were warned while you were away:"
+warned_join_entry: "&8 • &f$reason &8($timeSince ago)"
+
+# ---------------------------------------------------------------- staff notices
+notify.banned_player_join: "&cStaff &8» &f$player &7tried to join but is banned &8($duration)"
+notify.banned_geoip_blacklist: "&cStaff &8» &f$player &7tried to join from a blocked region &8($geoip)"
+command.mute.notification: "&cStaff &8» &f$playerDisplayName &7tried to chat while muted."
+
+# ---------------------------------------------------------------- errors
+permission_error: "&#FFD800&lRAPID&f&lSKIES &8» &cYou don't have permission to do that."
+error_no_template_provided: "&#FFD800&lRAPID&f&lSKIES &8» &cPick a template for this punishment."
+error_no_reason_provided: "&#FFD800&lRAPID&f&lSKIES &8» &cGive a reason for this punishment."
+error_no_reason_removal: "&#FFD800&lRAPID&f&lSKIES &8» &cGive a reason for removing this punishment."
+error_no_sql_connection: "&#FFD800&lRAPID&f&lSKIES &8» &cLiteBans can't reach the database. &7See the proxy console."
+error_no_uuid_found: "&#FFD800&lRAPID&f&lSKIES &8» &cNo player by that name has ever joined."
+error_no_duration: "&#FFD800&lRAPID&f&lSKIES &8» &cThat isn't a valid duration. &7Try &f30m&7, &f12h&7, &f7d&7."
+error_stack_overflow: "&#FFD800&lRAPID&f&lSKIES &8» &cStack overflow detected."
+error_console_only: "&#FFD800&lRAPID&f&lSKIES &8» &cOnly the console can use this."
+duration_limit_error: "&#FFD800&lRAPID&f&lSKIES &8» &cThe longest you can give is &6$duration&c."
+internal_error: "&#FFD800&lRAPID&f&lSKIES &8» &cSomething went wrong running that command. &7See the proxy console."
+
+# ---------------------------------------------------------------- /ban, /tempban, /ipban, /unban
+command.ban.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command [-s] <player> [duration] [reason]"
+command.ban.example: "&#FFD800&lRAPID&f&lSKIES &8» &7Example: &f$command Steve 7d Hacking"
+command.ban.silent_prefix: "&8[&7Silent&8] "
+command.ban.broadcast_ban: '&#FFD800&lRAPID&f&lSKIES &8» &6$executor &7banned &f$playerDisplayName&7: &f$reason {hoverText: &7Ban ID: &6#$id\n&7Server: &f$serverOrigin}'
+command.ban.broadcast_tempban: '&#FFD800&lRAPID&f&lSKIES &8» &6$executor &7banned &f$playerDisplayName &7for &6$tempDuration&7: &f$reason {hoverText: &7Ban ID: &6#$id\n&7Server: &f$serverOrigin}'
+command.ban.broadcast_ip_ban: '&#FFD800&lRAPID&f&lSKIES &8» &6$executor &7IP-banned &f$playerDisplayName&7: &f$reason {hoverText: &7Ban ID: &6#$id\n&7Server: &f$serverOrigin}'
+command.ban.broadcast_temp_ip_ban: '&#FFD800&lRAPID&f&lSKIES &8» &6$executor &7IP-banned &f$playerDisplayName &7for &6$tempDuration&7: &f$reason {hoverText: &7Ban ID: &6#$id\n&7Server: &f$serverOrigin}'
+command.ban.previous_ban_removed: "&#FFD800&lRAPID&f&lSKIES &8» &aReplaced the earlier ban on &f$playerName&a."
+command.ban.previous_ban_existing: "&#FFD800&lRAPID&f&lSKIES &8» &f$playerName &cis already banned, and you can't replace bans."
+command.ban.unban_fail: "&#FFD800&lRAPID&f&lSKIES &8» &cThat player isn't banned."
+command.ban.no_override: "&#FFD800&lRAPID&f&lSKIES &8» &cThat player is already banned."
+command.ban.alts_guardrail_ban_self: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &cBanning the accounts linked to &f$playerName &cwould ban you too.
+  &7Nobody else was banned.
+command.ban.alts_guardrail_ban_many: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &6This also bans &f$num &6linked accounts:
+  $list
+  &#FFD800&lClick here to confirm. {run: $command $commandArgs --confirm}
+command.ban.exempt: "&#FFD800&lRAPID&f&lSKIES &8» &f$player &ccan't be banned."
+command.ban.cooldown: "&#FFD800&lRAPID&f&lSKIES &8» &cWait &6$duration &cbefore using this again."
+command.ban.modify_success: "&#FFD800&lRAPID&f&lSKIES &8» &aPunishment updated."
+command.ban.delete_success: "&#FFD800&lRAPID&f&lSKIES &8» &aPunishment deleted."
+command.ban.ip_hidden: "&8[hidden IP]"
+command.ban.unban_usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player> [reason]"
+command.ban.broadcast_unban: "&#FFD800&lRAPID&f&lSKIES &8» &6$executor &7unbanned &f$playerName&7: &f$removalReason"
+command.ban.unban_queued: "&#FFD800&lRAPID&f&lSKIES &8» &7They aren't banned right now. &7If they try to join, the unban applies then."
+
+# ---------------------------------------------------------------- /mute, /tempmute, /ipmute, /unmute
+command.mute.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command [-s] <player> [duration] [reason]"
+command.mute.example: "&#FFD800&lRAPID&f&lSKIES &8» &7Example: &f$command Steve 1h Spamming"
+command.mute.broadcast: '&#FFD800&lRAPID&f&lSKIES &8» &6$executor &7muted &f$playerDisplayName&7: &f$reason {hoverText: &7Mute ID: &6#$id\n&7Server: &f$serverOrigin}'
+command.mute.broadcast_tempmute: '&#FFD800&lRAPID&f&lSKIES &8» &6$executor &7muted &f$playerDisplayName &7for &6$tempDuration&7: &f$reason {hoverText: &7Mute ID: &6#$id\n&7Server: &f$serverOrigin}'
+command.mute.broadcast_ip_mute: '&#FFD800&lRAPID&f&lSKIES &8» &6$executor &7IP-muted &f$playerDisplayName&7: &f$reason {hoverText: &7Mute ID: &6#$id\n&7Server: &f$serverOrigin}'
+command.mute.broadcast_temp_ip_mute: '&#FFD800&lRAPID&f&lSKIES &8» &6$executor &7IP-muted &f$playerDisplayName &7for &6$tempDuration&7: &f$reason {hoverText: &7Mute ID: &6#$id\n&7Server: &f$serverOrigin}'
+command.mute.unmute_fail: "&#FFD800&lRAPID&f&lSKIES &8» &cThat player isn't muted."
+command.mute.no_override: "&#FFD800&lRAPID&f&lSKIES &8» &cThat player is already muted."
+command.mute.previous_mute_removed: "&#FFD800&lRAPID&f&lSKIES &8» &aReplaced the earlier mute on &f$playerName&a."
+command.mute.previous_mute_existing: "&#FFD800&lRAPID&f&lSKIES &8» &f$playerName &cis already muted, and you can't replace mutes."
+command.mute.exempt: "&#FFD800&lRAPID&f&lSKIES &8» &f$player &ccan't be muted."
+command.mute.error_not_enabled: "&#FFD800&lRAPID&f&lSKIES &8» &cMutes are turned off in the LiteBans config."
+command.mute.unmute_usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player> [reason]"
+command.mute.broadcast_unmute: "&#FFD800&lRAPID&f&lSKIES &8» &6$executor &7unmuted &f$playerDisplayName&7: &f$removalReason"
+
+# ---------------------------------------------------------------- /warn, /unwarn, /warnings
+command.warn.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command [-s] <player> [reason]"
+command.warn.broadcast: '&#FFD800&lRAPID&f&lSKIES &8» &6$executor &7warned &f$playerDisplayName&7: &f$reason {hoverText: &7Warning ID: &6#$id\n&7Server: &f$serverOrigin}'
+command.warn.list_entry: "&8 • &f$reason &8(by $executor)"
+command.warn.unwarn_response: "&#FFD800&lRAPID&f&lSKIES &8» &aRemoved the latest warning for &f$player&a."
+command.warn.unwarn_fail: "&#FFD800&lRAPID&f&lSKIES &8» &cThat player has no warnings."
+command.warn.exempt: "&#FFD800&lRAPID&f&lSKIES &8» &f$player &ccan't be warned."
+command.warn.unwarn_usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player>"
+command.warn.broadcast_unwarn: "&#FFD800&lRAPID&f&lSKIES &8» &6$executor &7removed a warning from &f$playerDisplayName&7."
+command.warnings.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player>"
+command.warnings.start: "&#FFD800&lRAPID&f&lSKIES &8» &7Active warnings for &f$target&7:"
+
+# ---------------------------------------------------------------- /kick
+command.kick.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player> [reason]"
+command.kick.no_match: "&#FFD800&lRAPID&f&lSKIES &8» &cThat player isn't online."
+command.kick.kick_requested: "&#FFD800&lRAPID&f&lSKIES &8» &f$player &7isn't on this server, so they're being kicked from the whole network."
+command.kick.response: "&#FFD800&lRAPID&f&lSKIES &8» &aKicked &f$playerDisplayName&a."
+command.kick.broadcast: "&#FFD800&lRAPID&f&lSKIES &8» &6$executor &7kicked &f$playerDisplayName&7: &f$reason"
+command.kick.broadcast_no_reason: "&#FFD800&lRAPID&f&lSKIES &8» &6$executor &7kicked &f$playerDisplayName&7."
+command.kick.exempt: "&#FFD800&lRAPID&f&lSKIES &8» &f$player &ccan't be kicked."
+
+# ---------------------------------------------------------------- /history, /staffhistory, /prunehistory, /staffrollback
+# Removal entries (unban_entry etc.) are appended to the punishment they removed.
+command.history.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player> [entries=10]"
+command.history.start: "&#FFD800&lRAPID&f&lSKIES &8» &7History for &f$target &8(last $limit)"
+command.history.ban_entry: "&8 • &7$timeSince ago &8» &f$name &7was &cbanned &7by &f$executor&7: &f$reason"
+command.history.mute_entry: "&8 • &7$timeSince ago &8» &f$name &7was &6muted &7by &f$executor&7: &f$reason"
+command.history.warn_entry: "&8 • &7$timeSince ago &8» &f$name &7was &#FFD800warned &7by &f$executor&7: &f$reason"
+command.history.kick_entry: "&8 • &7$timeSince ago &8» &f$name &7was &ekicked &7by &f$executor&7: &f$reason"
+command.history.unban_entry: "\n&8     » &f$name &7was &aunbanned &7by &f$executor&7: &f$removalReason"
+command.history.unmute_entry: "\n&8     » &f$name &7was &aunmuted &7by &f$executor&7: &f$removalReason"
+command.history.unwarn_entry: "\n&8     » &f$name &7was &aunwarned &7by &f$executor&7: &f$removalReason"
+command.history.active_suffix: " &8[&cActive&8]"
+command.history.active_suffix_temp: " &8[&cActive&8, &6$duration &8left]"
+command.history.expired_suffix: " &8[&7Expired&8]"
+command.history.error_no_loginrecord: "&#FFD800&lRAPID&f&lSKIES &8» &cThat player has never joined."
+command.history.error_no_user: "&#FFD800&lRAPID&f&lSKIES &8» &cNo player by that name has ever joined."
+command.prunehistory.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player> [duration]"
+command.prunehistory.message: "&#FFD800&lRAPID&f&lSKIES &8» &aHistory pruned."
+command.staffhistory.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player> [entries=10]"
+command.staffhistory.start: "&#FFD800&lRAPID&f&lSKIES &8» &7Punishments given by &f$target &8(last $limit)"
+command.staffrollback.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player> [duration]"
+command.staffrollback.message: "&#FFD800&lRAPID&f&lSKIES &8» &aRollback done. &7Removed &6$amount &7entries."
+command.banlist.start: "&#FFD800&lRAPID&f&lSKIES &8» &7Bans &8• &7page &6$page &7of &6$total"
+
+# ---------------------------------------------------------------- /iphistory, /namehistory, /dupeip, /ipreport, /lastuuid, /geoip
+command.iphistory.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player> [entries=10]"
+command.iphistory.start: "&#FFD800&lRAPID&f&lSKIES &8» &7Login history for &f$target &8(last $limit)"
+command.iphistory.entry: "&8 • &7$date &8» &f$name &8($ip)"
+command.iphistory.error_no_history: "&#FFD800&lRAPID&f&lSKIES &8» &cNo login history found."
+command.namehistory.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player> [entries=10]"
+command.namehistory.start: "&#FFD800&lRAPID&f&lSKIES &8» &7Name history for &f$target &8(last $limit)"
+command.namehistory.entry: "&8 • &7$playerLoginDate &8» &6$playerName"
+command.dupeip.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player>"
+command.dupeip.start: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &7Accounts sharing &f$name&7's IP &8($ip)
+  &8[&aOnline&8] [&7Offline&8] [&6Muted&8] [&cBanned&8] [&eIP-banned&8]
+command.dupeip.start_no_ip: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &7Accounts linked to &f$name
+  &8[&aOnline&8] [&7Offline&8] [&6Muted&8] [&cBanned&8] [&eIP-banned&8]
+command.dupeip.multiple_addresses: "&8[$num addresses]"
+command.dupeip.separator: "&8, "
+command.ipreport.start: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &7Scanning &6$num &7online players
+  &8[&aOnline&8] [&7Offline&8] [&cBanned&8]
+command.ipreport.entry: "&8 • &f$player&8: $result"
+command.checkban.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player>"
+command.checkban.no_ban: "&#FFD800&lRAPID&f&lSKIES &8» &f$target &7isn't banned."
+command.checkban.banned: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &f$target &cis banned &8(ID #$id)
+  &8 • &7By: &f$executor
+  &8 • &7Reason: &f$reason
+  &8 • &7Since: &f$dateStart
+  &8 • &7Until: &f$dateEnd &8($duration)
+  &8 • &7Placed on: &f$serverOrigin &8• &7Applies to: &f$serverScope
+  &8 • &7IP ban: &f$ipban &8• &7Silent: &f$silent &8• &7Permanent: &f$permanent
+command.checkmute.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player>"
+command.checkmute.no_mute: "&#FFD800&lRAPID&f&lSKIES &8» &f$target &7isn't muted."
+command.checkmute.muted: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &f$target &6is muted &8(ID #$id)
+  &8 • &7By: &f$executor
+  &8 • &7Reason: &f$reason
+  &8 • &7Since: &f$dateStart
+  &8 • &7Until: &f$dateEnd &8($duration)
+  &8 • &7Placed on: &f$serverOrigin &8• &7Applies to: &f$serverScope
+  &8 • &7IP mute: &f$ipban &8• &7Silent: &f$silent &8• &7Permanent: &f$permanent
+command.checkwarn.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player>"
+command.checkwarn.no_warn: "&#FFD800&lRAPID&f&lSKIES &8» &f$target &7has no active warnings."
+command.checkwarn.warned: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &f$target &#FFD800is warned &8(ID #$id)
+  &8 • &7By: &f$executor
+  &8 • &7Reason: &f$reason
+  &8 • &7Since: &f$dateStart
+  &8 • &7Until: &f$dateEnd &8($duration)
+  &8 • &7Placed on: &f$serverOrigin &8• &7Applies to: &f$serverScope
+  &8 • &7IP warning: &f$ipban &8• &7Silent: &f$silent &8• &7Permanent: &f$permanent
+command.lastuuid.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player|IP>"
+command.lastuuid.message: "&#FFD800&lRAPID&f&lSKIES &8» &7Last UUID for &f$name&7: &6$uuid"
+command.geoip.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <player|IP>"
+command.geoip.message: "&#FFD800&lRAPID&f&lSKIES &8» &f$target &7is from &6$result&7."
+command.geoip.error_disabled: "&#FFD800&lRAPID&f&lSKIES &8» &cGeoIP is turned off in the LiteBans config."
+command.geoip.error_unavailable: "&#FFD800&lRAPID&f&lSKIES &8» &cGeoIP isn't available yet. &7Has the database finished downloading?"
+command.geoip.error_not_found: "&#FFD800&lRAPID&f&lSKIES &8» &cNo GeoIP data for &f$target&c."
+
+# ---------------------------------------------------------------- /lockdown
+command.lockdown.usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command <reason> &7or &f$command end"
+command.lockdown.message: "&cStaff &8» &cLockdown on. &7Reason: &f$reason"
+command.lockdown.stopped: "&cStaff &8» &aLockdown off."
+command.lockdown.error_not_active: "&#FFD800&lRAPID&f&lSKIES &8» &cThere's no lockdown running."
+
+# ---------------------------------------------------------------- /litebans (admin)
+command.litebans.reload_success: "&#FFD800&lRAPID&f&lSKIES &8» &aLiteBans reloaded."
+command.litebans.reload_fail: "&#FFD800&lRAPID&f&lSKIES &8» &cReload failed. &7See the proxy console."
+command.litebans.reload_fail_connect: "&#FFD800&lRAPID&f&lSKIES &8» &aLiteBans reloaded, &cbut it can't reach the database."
+command.litebans.reload_fail_config: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &cconfig.yml isn't valid, so LiteBans is using the defaults.
+  &7See the proxy console for details.
+command.litebans.reload_fail_messages: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &cmessages.yml isn't valid, so LiteBans is using the default messages.
+  &7See the proxy console for details.
+command.litebans.reload_fail_templates: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &ctemplates.yml isn't valid. Templates are off until it's fixed.
+  &7See the proxy console for details.
+command.litebans.fix_history: "&#FFD800&lRAPID&f&lSKIES &8» &7Fixing history for table &f$table&7..."
+command.litebans.fix_history_result: "&#FFD800&lRAPID&f&lSKIES &8» &aAdded &6$amount &aentries."
+command.litebans.fix_history_offline_uuids: "&#FFD800&lRAPID&f&lSKIES &8» &6$amount &cUUIDs weren't looked up with Mojang because they're offline-mode UUIDs."
+command.litebans.import_usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f$command import start"
+command.litebans.import_start: "&#FFD800&lRAPID&f&lSKIES &8» &7Importing from &f$db&7. This can take a while..."
+command.litebans.import_finish: "&#FFD800&lRAPID&f&lSKIES &8» &aImport done. &7Imported &6$bans &7bans and &6$ipbans &7IP bans."
+command.litebans.import_finish_litebans: "&#FFD800&lRAPID&f&lSKIES &8» &aImport done. &7Added &6$amount &7entries."
+command.litebans.import_fail: "&#FFD800&lRAPID&f&lSKIES &8» &cImport failed. &7See the proxy console."
+command.litebans.import_unsupported: "&#FFD800&lRAPID&f&lSKIES &8» &cImporting from &f$name &cisn't supported yet."
+command.litebans.allow_usage: "&#FFD800&lRAPID&f&lSKIES &8» &7Usage: &f/litebans allow <add|remove|check> <player>"
+command.litebans.allow_added: "&#FFD800&lRAPID&f&lSKIES &8» &f$playerName &7is now &aallowed &7to join."
+command.litebans.allow_removed: "&#FFD800&lRAPID&f&lSKIES &8» &f$playerName &7was &cremoved &7from the allow list."
+command.litebans.allow_check_true: "&#FFD800&lRAPID&f&lSKIES &8» &f$playerName &7is &aallowed &7to join."
+command.litebans.allow_check_false: "&#FFD800&lRAPID&f&lSKIES &8» &f$playerName &7is &cnot allowed &7to join."
+command.litebans.allow_error_add: "&#FFD800&lRAPID&f&lSKIES &8» &f$playerName &cis already on the allow list."
+command.litebans.allow_error_remove: "&#FFD800&lRAPID&f&lSKIES &8» &f$playerName &cisn't on the allow list."
+command.litebans.reset_database_confirm_quoted: |-
+  &#FFD800&lRAPID&f&lSKIES &8» &cWARNING: &fThis deletes every punishment in the database, active and expired.
+  &cYou can only undo it by restoring a database backup.
+  &7Run &clitebans $commandArgs confirm &7to go ahead.
+command.litebans.reset_database_result: "&#FFD800&lRAPID&f&lSKIES &8» &aRemoved &6$amount &a$type from &fserver:$serverScope&a."
+
+# ---------------------------------------------------------------- Discord webhook embeds (brand colors)
+webhook.events.embed_ban.color: "#FF5555"
+webhook.events.embed_unban.color: "#55FF55"
+webhook.events.embed_mute.color: "#FFAA00"
+webhook.events.embed_unmute.color: "#55FF55"
+webhook.events.embed_warn.color: "#FFD800"
+webhook.events.embed_unwarn.color: "#55FF55"
+webhook.events.embed_kick.color: "#AAAAAA"
+webhook.events.embed_alts.color: "#555555"

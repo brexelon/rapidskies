@@ -20,7 +20,7 @@ import us.rapidskies.common.rank.StaffRole;
 class LangKeysTest {
 
     private static final Pattern KEY = Pattern.compile(
-            "\"((?:bolts|chat|errors|login|plus|rank)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
+            "\"((?:afk|bolts|chat|errors|login|plus|rank|rewards|staff|tailwind)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
 
     @Test
     void everyKeyInTheCodeIsInTheBundle() throws IOException {
@@ -34,6 +34,11 @@ class LangKeysTest {
         }
         for (StaffRole s : StaffRole.values()) {
             keys.add("rank.staff." + s.group());
+        }
+        // Staff mode tool names and lore ("staff.tool." + key + "-name").
+        for (String tool : new String[] {"random", "inspect", "freeze", "players", "vanish-on", "vanish-off", "exit"}) {
+            keys.add("staff.tool." + tool + "-name");
+            keys.add("staff.tool." + tool + "-lore");
         }
         Set<String> missing = new TreeSet<>();
         for (String key : keys) {
@@ -49,7 +54,9 @@ class LangKeysTest {
         assertTrue(Files.isDirectory(src), "run from the rapid-core module directory");
         Set<String> keys = new TreeSet<>();
         try (Stream<Path> files = Files.walk(src)) {
-            for (Path f : files.filter(p -> p.toString().endsWith(".java")).toList()) {
+            // CoreSettings reads config.yml paths (afk.idle-seconds...), which share prefixes with lang keys.
+            for (Path f : files.filter(p -> p.toString().endsWith(".java"))
+                    .filter(p -> !p.getFileName().toString().equals("CoreSettings.java")).toList()) {
                 Matcher m = KEY.matcher(Files.readString(f));
                 while (m.find()) {
                     keys.add(m.group(1));

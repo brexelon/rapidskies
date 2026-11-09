@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import us.rapidskies.common.rank.PlusColor;
 import us.rapidskies.common.rank.Rank;
 import us.rapidskies.core.RapidCore;
+import us.rapidskies.core.tailwind.TailwindService;
 
 /**
  * PlaceholderAPI expansion for TAB, scoreboards and holograms (PLAN.md §6.1), so the tab
@@ -18,10 +19,13 @@ import us.rapidskies.core.RapidCore;
  *   <li>{@code %rapid_plus_color%}: the plus color as a legacy code, e.g. {@code §e}</li>
  *   <li>{@code %rapid_rank%}: {@code Rapid++}, or empty</li>
  *   <li>{@code %rapid_staff%}: the team role's group name, or empty</li>
+ *   <li>{@code %rapid_afk%}: lang {@code afk.tag} while the player is AFK, else empty</li>
+ *   <li>{@code %rapid_tailwind%}: Tailwind left ({@code 2h 15m}), or empty</li>
+ *   <li>{@code %rapid_balance%}: Coins or Crowns on a gamemode server, else empty</li>
  * </ul>
  *
- * <p>Hex brand colors are written as {@code §x§F§F§D§8§0§0}; TAB and Via fall back to the
- * nearest legacy color for 1.8–1.15 clients. Only loaded when PlaceholderAPI is installed.
+ * <p>Hex brand colors are written as {@code §x§F§F§D§8§0§0}, which TAB reads back as hex.
+ * Only loaded when PlaceholderAPI is installed.
  */
 public final class RapidPlaceholders extends PlaceholderExpansion {
 
@@ -72,6 +76,14 @@ public final class RapidPlaceholders extends PlaceholderExpansion {
                 yield rank == Rank.DEFAULT ? "" : PlusChoice.rankName(rank);
             }
             case "staff" -> ranks.of(player).staff().map(s -> s.group()).orElse("");
+            case "afk" -> core.afk().isAfk(player) ? LEGACY.serialize(core.lang().get("afk.tag")) : "";
+            case "tailwind" -> {
+                long left = core.tailwind().remainingSeconds(player);
+                yield left > 0 ? TailwindService.format(left) : "";
+            }
+            case "balance" -> core.economy() == null ? ""
+                    : core.economy().cachedBalance(player.getUniqueId()).stream()
+                            .mapToObj(b -> String.format("%,d", b)).findFirst().orElse("");
             default -> null; // unknown placeholder: PlaceholderAPI leaves it as typed
         };
     }

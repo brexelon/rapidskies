@@ -8,6 +8,10 @@ server:
   # Role shared by interchangeable servers (hub, skyrealms, smp, build, staging). The proxy
   # balances joins across servers in the `hub` group.
   group: ""
+  # The gamemode this server runs: skyrealms, horizons, or "" for the hub and staff servers.
+  # Decides the currency rapid-core serves through Vault (Coins or Crowns) and whether
+  # Tailwind is spent here. Set by the smp and skyrealms profiles.
+  gamemode: ""
   # host:port the proxy can reach this server at. Only needed for instances that aren't in
   # velocity.toml yet (the proxy registers them from the heartbeat). Private IPs only.
   advertise-address: ""
@@ -26,9 +30,31 @@ redis:
   port: 6379
   password: ""
 
-# 1.8-style combat for every client version (PLAN.md §3, cross-version design rules).
-combat:
-  # 1.8 clients can't see or use the 1.9+ attack cooldown, so nobody gets one.
-  no-attack-cooldown: true
-  # Sweeping edge hits don't exist on 1.8; turning them off keeps fights equal.
-  disable-sweep-attacks: true
+# AFK detection (PLAN.md §6.2). Only turning the view, chatting and commands count as
+# activity: water streams, pistons and auto-clickers don't keep anyone "active".
+afk:
+  idle-seconds: 300
+
+# Tailwind, the rested bonus (PLAN.md §5.3). The proxy banks it from time away (see
+# rapid-proxy's config); it's spent here only on gamemode servers, while not AFK.
+tailwind:
+  # Banked for brand-new players: a head start from their first session.
+  starter-minutes: 120
+  # Bonus to mode XP and Trade income while Tailwind lasts.
+  bonus-percent: 50
+
+# Bolts for playing (PLAN.md §6.2). Nothing while AFK or for an account sharing an IP
+# with one that joined earlier; the daily cap is network-wide (UTC days).
+rewards:
+  playtime:
+    enabled: true
+    amount: 2
+    every-minutes: 15
+    daily-cap: 20
+
+# Staff mode (PLAN.md §9).
+staff:
+  # /staff also vanishes you (if you may vanish); leaving staff mode reappears you.
+  vanish-on-staff-mode: true
+  # How often a frozen player is reminded (chat + title).
+  freeze-reminder-seconds: 15

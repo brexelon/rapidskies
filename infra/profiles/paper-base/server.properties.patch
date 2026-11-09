@@ -7,7 +7,7 @@
 
 # Velocity authenticates players; backends trust the forwarded identity.
 online-mode: "false"
-# Chat is formatted server-side and 1.8 clients can't sign messages (plan §3).
+# Chat is formatted server-side, so messages aren't signed (plan §3).
 enforce-secure-profile: "false"
 # Velocity compresses for the client; compressing again between proxy and backend wastes CPU.
 network-compression-threshold: "-1"

@@ -93,23 +93,26 @@ plugin_sets:
     # Paid and git-ignored: keep LiteBans.jar in plugins/ locally (infra/README.md).
     - "LiteBans.jar"
     - "TAB v*.jar"
+    # TAB on Velocity needs it for scoreboard teams (nametag prefixes, tab sorting).
+    - "VelocityScoreboardAPI*.jar"
     - "dist/rapid-proxy.jar"
     # Phase 5: "tebex-velocity-*.jar"
 
   paper-base:
     - "ViaVersion-*.jar"
     - "ViaBackwards-*.jar"
-    - "ViaRewind-[0-9]*.jar"
-    - "ViaRewind-Legacy-Support-*.jar"
     - "LuckPerms-Bukkit-*.jar"
     - "spark-*-bukkit.jar"
     - "PlaceholderAPI-*.jar"
     - "grimac-bukkit-*.jar"
+    # Passes PlaceholderAPI values (%rapid_prefix%) and vanish state up to TAB on the proxy.
+    - "TAB-Bridge*.jar"
     - "dist/rapid-core.jar"
     # Phase 2: "DecentHolograms-*.jar", "Citizens-*.jar"
 
   survival:
-    []
+    # Vault API for the Coins/Crowns economy rapid-core provides (server.gamemode).
+    - "VaultUnlocked-*.jar"
     # Phase 3: "CoreProtect-CE-*.jar"
     # smp only, phase 3b: "QuickShop-Hikari-*.jar"
     # skyrealms only, phase 4b: "SuperiorSkyblock2-*.jar"

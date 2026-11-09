@@ -31,7 +31,7 @@ final class ConnectionListener {
         this.settings = settings;
     }
 
-    /** Velocity accepts 1.7.2+; the network starts at 1.8 (PLAN.md §3, version support). */
+    /** Velocity accepts 1.7.2+; the network starts at 1.20 (PLAN.md §3, version support). */
     @Subscribe(priority = Short.MAX_VALUE) // first
     public void onPreLogin(PreLoginEvent event) {
         if (event.getConnection().getProtocolVersion().getProtocol() < settings.minimumProtocol()) {

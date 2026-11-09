@@ -9,8 +9,8 @@ import org.bukkit.inventory.ItemStack;
 
 /**
  * Menu icons. Names and lore lose the italics Minecraft adds to custom names. Meaning must
- * never depend on the material alone (1.8 clients see Via substitutes for newer items, and
- * colorblind players can't tell wool apart): put it in the name or lore.
+ * never depend on the material alone (older clients see ViaBackwards substitutes for newer
+ * items, and colorblind players can't tell wool apart): put it in the name or lore.
  */
 public final class Icons {
 

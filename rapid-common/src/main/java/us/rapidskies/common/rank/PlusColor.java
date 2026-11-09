@@ -11,8 +11,8 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 /**
  * The color of the pluses in a rank prefix, chosen with {@code /plus} (PLAN.md §6.1).
  *
- * <p>Only the 16 legacy chat colors are used, so every client from 1.8 up shows exactly
- * the chosen color. Red and dark red are reserved for staff and are not listed here.
+ * <p>Only the 16 named chat colors are used, so each choice has a clear name. Red and dark
+ * red are reserved for staff and are not listed here.
  * Gradients for Rapid+++ arrive with the {@code /plus} GUI in phase 5.
  */
 public enum PlusColor {

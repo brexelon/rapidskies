@@ -1,6 +1,6 @@
 # RapidSkies
 
-Velocity + Paper 26.3 network for Java clients 1.8 → 26.3. See [PLAN.md](PLAN.md) for the full design.
+Velocity + Paper 26.3 network for Java clients 1.20 → 26.3. See [PLAN.md](PLAN.md) for the full design.
 
 | Path | Contents |
 |---|---|
