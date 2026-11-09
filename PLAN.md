@@ -104,7 +104,7 @@ If the website will be hosted on the same box, the apex A record can point strai
 
 ### Hosting on Pterodactyl
 
-One dedicated server to start (16 cores / 64 GB RAM / NVMe recommended), running Panel and Wings on the same box at first. Move the Panel off-box later if needed.
+The **Panel runs on its own server**, separate from the **game node** (one dedicated server, 16 cores / 64 GB RAM / NVMe recommended) that runs Wings and every game container below. Containers reach services on the node at `172.18.0.1`. MariaDB and Redis are best kept on the node too, so gameplay never depends on the panel machine; if they live on the panel server, containers use its private IP and its firewall admits only the node. See `infra/README.md` → Where things run.
 
 | Server (egg) | RAM | Notes |
 |---|---|---|
@@ -118,9 +118,9 @@ One dedicated server to start (16 cores / 64 GB RAM / NVMe recommended), running
 | MariaDB | 4 GB | Use Pterodactyl's database host feature |
 | Redis | 1 GB | Separate egg or a host-level service |
 
-- **Security:** bind every backend allocation to the internal Docker interface (`172.18.0.1`) or to localhost, never to the public IP. Use Velocity modern forwarding with a long random secret, and firewall everything except 25565, the Panel (behind Cloudflare or an IP allowlist) and SSH (key-only).
+- **Security:** bind every backend allocation to the internal Docker interface (`172.18.0.1`) or to localhost, never to the public IP. Use Velocity modern forwarding with a long random secret. On the **game node**, firewall everything except 25565, the Wings API/SFTP ports (Wings 8080 or 443 and SFTP 2022, which the panel and staff connect to) and SSH (key-only). On the **panel server**, allow only HTTPS (behind Cloudflare or an IP allowlist) and SSH, plus MariaDB/Redis from the node's IP if they run there.
 - **JVM:** Java 25 with Paper's recommended (Aikar-style) flags. Install spark on every server.
-- **Backups:** Pterodactyl scheduled backups (hourly for skyrealms and smp, daily for the rest), nightly `mysqldump`, and an offsite copy to S3 or Backblaze B2. Archive each retired Frontier world for a month before deleting it.
+- **Backups:** Pterodactyl scheduled backups (hourly for skyrealms and smp, daily for the rest, stored on the node), nightly `mysqldump` on whichever machine runs MariaDB plus the panel's own database on the panel server, and an offsite copy to S3 or Backblaze B2 from both machines. Keep the panel's `.env` (`APP_KEY`) somewhere safe outside the server. Archive each retired Frontier world for a month before deleting it.
 - **Scaling path:** add more Wings nodes. Game servers register themselves in Redis, so rapid-proxy discovers new instances without config edits.
 
 ---

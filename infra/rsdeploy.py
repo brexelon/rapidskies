@@ -53,6 +53,7 @@ REPO = INFRA.parent
 PROFILES = INFRA / "profiles"
 LOCAL_PLUGINS = REPO / "plugins"
 PLACEHOLDER = re.compile(r"\$\{([A-Za-z0-9_:.\-]+)\}")
+PTERO_ID = re.compile(r"[0-9a-f]{8}(-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})?")
 INTERNAL_PREFIXES = ("172.", "10.", "192.168.", "127.")
 
 
@@ -83,6 +84,15 @@ def yaml_rt() -> YAML:
     y.preserve_quotes = True
     y.width = 4096
     return y
+
+
+def ptero_id(srv: dict) -> str:
+    return str(srv.get("ptero_id") or "").strip().lower()
+
+
+def unset_servers(inv: dict) -> set[str]:
+    """Servers with no ptero_id yet. Every command skips them."""
+    return {name for name, srv in inv["servers"].items() if not ptero_id(srv)}
 
 
 def load_inventory(path: Path) -> dict:
@@ -133,10 +143,15 @@ def collect_profile_files(profiles: list[str]) -> dict[str, FilePlan]:
 # --------------------------------------------------------------------------- substitution
 
 class Resolver:
-    def __init__(self, env: dict[str, str], server_vars: dict, addr_lookup):
+    def __init__(self, env: dict[str, str], server_vars: dict, addr_lookup, skip: set[str] = frozenset()):
         self.env = env
         self.vars = {k: str(v) for k, v in server_vars.items()}
         self.addr_lookup = addr_lookup
+        self.skip = skip  # servers without a ptero_id
+
+    def _skipped_addr(self, v) -> bool:
+        return isinstance(v, str) and any(
+            ref.startswith("addr:") and ref[5:] in self.skip for ref in PLACEHOLDER.findall(v))
 
     def lookup(self, name: str) -> str:
         if name.startswith("addr:"):
@@ -156,7 +171,15 @@ class Resolver:
         if isinstance(v, list):
             return [self.value(x) for x in v]
         if isinstance(v, dict):
-            return {k: self.value(x) for k, x in v.items()}
+            # An entry whose value is ${addr:<skipped server>} is dropped, and so is that
+            # entry's key from sibling lists (e.g. Velocity's `servers` table and `try` order).
+            dropped = {k for k, x in v.items() if self._skipped_addr(x)}
+            out = {k: self.value(x) for k, x in v.items() if k not in dropped}
+            if dropped:
+                for k, x in out.items():
+                    if isinstance(x, list):
+                        out[k] = [i for i in x if i not in dropped]
+            return out
         return v
 
 
@@ -258,7 +281,12 @@ def apply_patch(target: str, text: str, patch: dict) -> str:
 # --------------------------------------------------------------------------- backends
 
 class PanelBackend:
-    """Pterodactyl client API (/api/client, key from Account -> API Credentials)."""
+    """Pterodactyl client API (/api/client, key from Account -> API Credentials).
+
+    The panel and the game node are separate machines. API calls go to the panel, which
+    proxies file operations to Wings; jar uploads go directly to the node's Wings through
+    a signed URL, so the machine running this needs network access to both.
+    """
 
     def __init__(self, env: dict[str, str]):
         self.base = env.get("PTERO_URL", "").rstrip("/")
@@ -290,16 +318,18 @@ class PanelBackend:
     def api(self, method: str, path: str, **kw):
         return self._req(method, f"{self.base}/api/client{path}", **kw)
 
-    def servers(self) -> dict[str, dict]:
+    def servers(self) -> list[dict]:
+        """Every server the API key can see: name, identifier, uuid, default allocation."""
         if self._servers is None:
-            self._servers, page = {}, 1
+            self._servers, page = [], 1
             while True:
                 res = self.api("GET", f"?page={page}&per_page=100")
                 for s in res["data"]:
                     a = s["attributes"]
                     allocs = [x["attributes"] for x in a["relationships"]["allocations"]["data"]]
                     default = next((x for x in allocs if x.get("is_default")), allocs[0] if allocs else None)
-                    self._servers[a["name"]] = {"id": a["identifier"], "alloc": default}
+                    self._servers.append({"name": a["name"], "id": a["identifier"],
+                                          "uuid": a["uuid"], "alloc": default})
                 meta = res["meta"]["pagination"]
                 if meta["current_page"] >= meta["total_pages"]:
                     break
@@ -307,13 +337,14 @@ class PanelBackend:
         return self._servers
 
     def server(self, name: str, inv: dict) -> dict:
-        srv = inv["servers"][name]
-        if "ptero_id" in srv:
-            match = next((s for s in self.servers().values() if s["id"] == srv["ptero_id"]), None)
-        else:
-            match = self.servers().get(srv.get("name", name))
+        pid = ptero_id(inv["servers"][name])
+        if not pid:
+            raise DeployError(f"{name}: ptero_id is empty in network.yml "
+                              f"(run `rsdeploy.py servers` to list panel servers and their IDs)")
+        match = next((s for s in self.servers() if pid in (s["id"], s["uuid"])), None)
         if not match:
-            raise DeployError(f"server '{name}' not found in the panel (set `name` or `ptero_id` in network.yml)")
+            raise DeployError(f"{name}: no panel server with ptero_id '{pid}' visible to this API key "
+                              f"(run `rsdeploy.py servers` to list them)")
         return match
 
     def address(self, name: str, inv: dict) -> str:
@@ -333,11 +364,30 @@ class PanelBackend:
                 f"or set `address` for it in network.yml.")
         return f"{ip}:{alloc['port']}"
 
+    def _absent(self, sid: str, path: str) -> bool:
+        """True if `path` provably does not exist, checked by listing its parent directory."""
+        parent, _, name = ("/" + path.strip("/")).rpartition("/")
+        try:
+            res = self.api("GET", f"/servers/{sid}/files/list?directory={urllib.parse.quote(parent or '/')}")
+        except DeployError as e:
+            if parent and ("HTTP 404" in str(e) or "HTTP 500" in str(e)):
+                return self._absent(sid, parent)
+            raise
+        return all(x["attributes"]["name"] != name for x in res["data"])
+
+    def _is_missing(self, sid: str, path: str, e: DeployError) -> bool:
+        # Some Wings versions answer a missing file or directory with HTTP 500
+        # (DaemonConnectionException) instead of 404, so a 500 is only treated as
+        # "missing" once the parent listing confirms the entry isn't there.
+        if "HTTP 404" in str(e):
+            return True
+        return "HTTP 500" in str(e) and self._absent(sid, path)
+
     def read(self, sid: str, path: str) -> bytes | None:
         try:
             data = self.api("GET", f"/servers/{sid}/files/contents?file={urllib.parse.quote('/' + path)}", raw=True)
         except DeployError as e:
-            if "HTTP 404" in str(e):
+            if self._is_missing(sid, path, e):
                 return None
             raise
         return data
@@ -350,7 +400,7 @@ class PanelBackend:
         try:
             res = self.api("GET", f"/servers/{sid}/files/list?directory={urllib.parse.quote(directory)}")
         except DeployError as e:
-            if "HTTP 404" in str(e):
+            if self._is_missing(sid, directory, e):
                 return {}
             raise
         return {x["attributes"]["name"]: x["attributes"]["size"] for x in res["data"] if x["attributes"]["is_file"]}
@@ -473,7 +523,8 @@ def _as_text(data: bytes) -> str | None:
 def configure_server(name: str, inv: dict, env: dict, backend, write: bool) -> bool:
     srv = inv["servers"][name]
     sid = backend.server(name, inv)["id"]
-    resolver = Resolver(env, {"SERVER_NAME": name, **srv["vars"]}, lambda n: backend.address(n, inv))
+    resolver = Resolver(env, {"SERVER_NAME": name, **srv["vars"]}, lambda n: backend.address(n, inv),
+                        skip=unset_servers(inv))
     changed = False
     for target, plan in collect_profile_files(srv["profiles"]).items():
         current = backend.read(sid, target)
@@ -542,7 +593,19 @@ def check(inv: dict) -> int:
     """Offline validation for CI: profiles parse, placeholders are known, globs are sane."""
     known = set(load_env(INFRA / "secrets.env.example")) | {"SERVER_NAME"}
     problems = 0
+    seen_ids: dict[str, str] = {}
     for name, srv in inv["servers"].items():
+        pid = ptero_id(srv)
+        if not pid:
+            print(f"{name}: note: ptero_id is empty, so rsdeploy skips it")
+        elif not PTERO_ID.fullmatch(pid):
+            print(f"{name}: ptero_id '{pid}' is neither an 8-char identifier nor a UUID")
+            problems += 1
+        elif pid in seen_ids:
+            print(f"{name}: ptero_id '{pid}' is also used by {seen_ids[pid]}")
+            problems += 1
+        else:
+            seen_ids[pid] = name
         plans = collect_profile_files(srv["profiles"])  # raises on unparsable patches
         for target, plan in plans.items():
             blobs = [json.dumps(plan.patch, ensure_ascii=False)]
@@ -597,21 +660,39 @@ def main() -> int:
         unknown = [t for t in targets if t not in inv["servers"]]
         if unknown:
             raise DeployError(f"unknown server(s): {', '.join(unknown)}")
+        skipped = unset_servers(inv)
 
         if args.command == "servers":
+            if isinstance(backend, PanelBackend):
+                mapped = {ptero_id(srv): key for key, srv in inv["servers"].items() if ptero_id(srv)}
+                print("Panel servers (copy the ID into network.yml → ptero_id):")
+                print(f"  {'ID':10} {'allocation':22} {'network.yml':14} panel name")
+                for s in backend.servers():
+                    a = s["alloc"]
+                    alloc = f"{a['ip']}:{a['port']}" if a else "-"
+                    key = mapped.get(s["id"]) or mapped.get(s["uuid"]) or "-"
+                    print(f"  {s['id']:10} {alloc:22} {key:14} {s['name']}")
+                print()
+            print("network.yml servers:")
             for t in targets:
+                if t in skipped:
+                    print(f"  {t:14} skipped (no ptero_id)")
+                    continue
                 try:
                     info = backend.server(t, inv)
                     a = info["alloc"]
                     alloc = f"{a['ip']}:{a['port']}" if a else "-"
-                    print(f"{t:14} id={info['id']:10} alloc={alloc}")
+                    print(f"  {t:14} id={info['id']:10} alloc={alloc}")
                 except DeployError as e:
-                    print(f"{t:14} !! {e}")
+                    print(f"  {t:14} !! {e}")
             return 0
 
         if args.command == "apply":
             check_secrets(env)
         for t in targets:
+            if t in skipped:
+                print(f"[{t}] skipped: no ptero_id in network.yml")
+                continue
             print(f"[{t}]")
             if args.command == "plugins":
                 sync_plugins(t, inv, backend, args.dry_run)

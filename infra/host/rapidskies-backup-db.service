@@ -1,5 +1,6 @@
 [Unit]
 Description=RapidSkies MariaDB dump and offsite backup copy
+# mariadb.service is ordering only: on a machine without MariaDB it is simply ignored.
 After=network-online.target mariadb.service
 Wants=network-online.target
 

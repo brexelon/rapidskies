@@ -2,7 +2,7 @@
 
 Network config as code for the Velocity proxy and Paper 26.3 backends on Pterodactyl.
 DNS, the panel, Wings, the servers themselves, MariaDB and Redis already exist; this folder
-holds what goes *on* them.
+holds what goes *on* them. The panel and the game node are separate machines (see below).
 
 | Path | What it is |
 |---|---|
@@ -12,6 +12,36 @@ holds what goes *on* them.
 | `secrets.env.example` | Template for `secrets.env` (git-ignored): forwarding secret, DB and Redis credentials, panel API key |
 | `luckperms/bootstrap.txt` | One-time LuckPerms groups, tracks and permissions |
 | `host/` | Nightly MariaDB dump + offsite copy (systemd timer, rclone) |
+
+## Where things run
+
+The panel and the game node are separate machines.
+
+| Machine | Runs | What from this folder goes there |
+|---|---|---|
+| **Your PC / CI** | `rsdeploy.py` | Everything except `host/`. Nothing is installed on either server. |
+| **Panel server** | Pterodactyl Panel and its own database | `host/backup-db.sh` for the panel's database, if that's the only MariaDB there (see Backups) |
+| **Game node** | Wings and every game container (Velocity, hubs, skyrealms, smp, build, staging) | `host/backup-db.sh` for the game databases and Wings backups |
+
+How `rsdeploy` reaches them:
+
+- API calls (reading and writing configs, schedules, power) go to the **panel** (`PTERO_URL`), which
+  forwards file operations to Wings.
+- Plugin uploads go **straight to the node's Wings** through a signed URL from the panel, so your
+  PC must be able to reach the node's Wings address (its FQDN and port, usually 8080 or 443).
+  Cloudflare Access headers are only sent to the panel, never to Wings.
+
+Containers reach services on the **node** at `172.18.0.1` (the Pterodactyl Docker gateway). Anything
+on the **panel server** is a different machine: use its private IP, not `172.18.0.1`. That matters for
+`DB_HOST` and `REDIS_HOST` in `secrets.env`:
+
+| MariaDB / Redis location | `DB_HOST` / `REDIS_HOST` | Also do |
+|---|---|---|
+| On the node (recommended: lowest latency, no cross-machine dependency for gameplay) | `172.18.0.1` | Bind them to `172.18.0.1` (or `0.0.0.0` with the firewall blocking public access) so containers can reach them |
+| On the panel server | The panel server's private IP | Bind to that private IP and firewall the port so only the node's IP can connect. Never expose 3306/6379 publicly. |
+
+Pterodactyl's database host setting (admin → Databases) must use the same address the
+containers will use, since that's what it shows in each server's Databases tab.
 
 ## How profiles work
 
@@ -31,8 +61,13 @@ it back. That survives upstream format changes and keeps secrets out of git.
 ```bash
 pip install -r infra/requirements.txt
 cp infra/secrets.env.example infra/secrets.env        # fill in; generate the forwarding secret
-python infra/rsdeploy.py servers                      # every server found, backends on 172.18.0.1?
+python infra/rsdeploy.py servers                      # lists panel servers with their IDs
 ```
+
+Panel server names don't match the keys in `network.yml`, so each server is mapped by its
+**`ptero_id`**: the 8 characters in its panel URL (`panel.rapidskies.us/server/<id>`). Copy each
+ID from the `servers` output into `network.yml`, then run `servers` again: every entry should
+show an ID, and every backend an allocation on `172.18.0.1`.
 
 1. **Startup commands and Java.** Set each server's Docker image to Java 25 and its startup
    command as in [JVM flags](#jvm-flags) below (admin area → server → Startup; the client API
@@ -42,8 +77,8 @@ python infra/rsdeploy.py servers                      # every server found, back
    The configs only exist after this.
 4. **Configs.** `python infra/rsdeploy.py diff` to review, then
    `python infra/rsdeploy.py apply --restart`.
-5. **Backups.** `python infra/rsdeploy.py schedules`, then install `host/backup-db.sh` on the
-   host (instructions at the top of the script).
+5. **Backups.** `python infra/rsdeploy.py schedules` (Pterodactyl's own backups, stored on the
+   node). Then install `host/backup-db.sh` as described in [Backups](#backups).
 6. **Permissions.** Paste `luckperms/bootstrap.txt` into the Velocity console, then give yourself
    `owner`. Add staff to the `build`/`staging` whitelists from those consoles.
 7. **Verify** (from a 1.8.9 client and a 26.3 client): join `rapidskies.us` and `mc.rapidskies.us`,
@@ -66,6 +101,33 @@ Re-run `diff` / `apply` whenever a profile changes; both are idempotent.
 - **FAWE** for the build server isn't in `plugins/` yet. Add the jar and a glob to the `build`
   plugin sets when you have it.
 - **Paid jars** (LiteBans) are git-ignored so they're never pushed; keep them in `plugins/` locally.
+
+## Backups
+
+Three things need backing up, and with the panel on its own server they live in different places:
+
+| Data | Lives on | Covered by |
+|---|---|---|
+| Server files (worlds, configs) | Node (`/var/lib/pterodactyl/volumes`) | Pterodactyl scheduled backups → stored on the node in `/var/lib/pterodactyl/backups` |
+| Game databases (LuckPerms, later rapid-*, SuperiorSkyblock2) | Wherever MariaDB runs | `backup-db.sh` on that machine |
+| Panel database (users, servers, schedules, API keys) | Panel server | `backup-db.sh` on the panel server |
+
+Install `host/backup-db.sh` on **every machine that has a MariaDB or Wings backups**, each with its
+own `/etc/rapidskies/backup-db.env` (instructions at the top of the script):
+
+- **Node:** `WINGS_BACKUP_DIR=/var/lib/pterodactyl/backups`. If MariaDB runs here, set `DB_*` to it;
+  otherwise set `DUMP_DATABASES=false` and the node only ships Wings backups offsite.
+- **Panel server:** `DB_*` pointing at the local MariaDB (this covers the panel database, and the
+  game databases too if they're here). Leave `WINGS_BACKUP_DIR` unset: there's nothing to copy.
+- Give each machine its own `RCLONE_REMOTE` path under the same bucket (e.g. `b2:rapidskies-backups/node`
+  and `.../panel`) so their retention cleanup never touches each other's files.
+
+If you use S3/B2 for Pterodactyl backups instead of local storage (`config.yml` → `backups`
+on the node), Wings uploads them itself and the node only needs the database part.
+
+Also keep a copy of the panel's `/var/www/pterodactyl/.env`: it holds `APP_KEY`, without which the
+encrypted values in the panel database (node tokens, database host passwords) can't be decrypted
+after a restore. Store it in your password manager, not in git.
 
 ## JVM flags
 

@@ -4,8 +4,12 @@
 # rsdeploy.py reads this file. Values written as ${NAME} are filled from
 # infra/secrets.env (never committed) or from the per-server `vars` below.
 #
-#   name          Pterodactyl server name (the tool looks the server up by this name;
-#                 set `ptero_id` to the 8-char identifier instead if names differ)
+#   ptero_id      The server's Pterodactyl identifier: the 8 characters in its panel URL
+#                 (panel.rapidskies.us/server/<ptero_id>), or the full UUID. Panel names
+#                 don't match the keys below, so servers are found by this ID only.
+#                 `python infra/rsdeploy.py servers` lists every panel server with its ID.
+#                 Leave it "" for a server that doesn't exist yet: rsdeploy skips it, and
+#                 it's left out of Velocity's server list and `try` order.
 #   address       Internal host:port Velocity uses to reach the backend. Leave it out to
 #                 use the server's default Pterodactyl allocation (must be on 172.18.0.1).
 #   profiles      Applied in order; later profiles override earlier keys.
@@ -14,35 +18,41 @@
 
 servers:
   velocity:
+    ptero_id: "89239e13"
     profiles: [velocity]
     plugins: [proxy]
     schedules: [daily-backup]
 
   hub-1:
+    ptero_id: "474c9fe6"
     profiles: [paper-base, hub]
     plugins: [paper-base]
     schedules: [daily-backup]
     vars: { LP_SERVER: hub }
 
   hub-2:
+    ptero_id: ""
     profiles: [paper-base, hub]
     plugins: [paper-base]
     schedules: [daily-backup]
     vars: { LP_SERVER: hub }
 
   skyrealms-1:
+    ptero_id: "59776d6d"
     profiles: [paper-base, survival, skyrealms]
     plugins: [paper-base, survival]
     schedules: [hourly-backup]
     vars: { LP_SERVER: skyrealms }
 
   smp-1:
+    ptero_id: "5440367e"
     profiles: [paper-base, survival, smp]
     plugins: [paper-base, survival, worldgen]
     schedules: [hourly-backup]
     vars: { LP_SERVER: smp }
 
   build:
+    ptero_id: ""
     profiles: [paper-base, build]
     plugins: [paper-base, worldgen]
     schedules: [daily-backup]
@@ -51,6 +61,7 @@ servers:
   staging:
     # Mirror of a game server for testing updates. Defaults to mirroring smp;
     # swap `smp` for `skyrealms` (and the plugin sets) when testing Skyrealms.
+    ptero_id: ""
     profiles: [paper-base, survival, smp, staging]
     plugins: [paper-base, survival, worldgen]
     vars: { LP_SERVER: staging }
