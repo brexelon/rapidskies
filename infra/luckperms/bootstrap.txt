@@ -78,6 +78,10 @@ lpv group developer permission set rapid.maintenance.bypass true server=proxy
 lpv group admin permission set rapid.command.maintenance true server=proxy
 lpv group admin permission set rapid.admin.bolts true server=proxy
 lpv group moderator permission set rapid.command.bolts.others true
+# Staff chat (/sc on the proxy): the staff track, builders and developers.
+lpv group helper permission set rapid.staffchat true server=proxy
+lpv group builder permission set rapid.staffchat true server=proxy
+lpv group developer permission set rapid.staffchat true server=proxy
 
 # Builders: full control on the build server only. (Add FAWE to the build server's
 # plugin set in network.yml; it isn't in plugins/ yet.)

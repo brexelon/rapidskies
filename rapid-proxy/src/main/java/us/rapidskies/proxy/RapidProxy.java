@@ -7,12 +7,14 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
+import net.luckperms.api.LuckPermsProvider;
 import org.slf4j.Logger;
 import us.rapidskies.common.config.ConfigView;
 import us.rapidskies.common.config.DatabaseSettings;
@@ -23,11 +25,24 @@ import us.rapidskies.common.lang.Lang;
 import us.rapidskies.common.profile.ProfileRepository;
 import us.rapidskies.common.redis.RedisBus;
 import us.rapidskies.common.registry.ServerRegistry;
+import us.rapidskies.proxy.chat.PrivateMessages;
+import us.rapidskies.proxy.chat.StaffChatCommand;
+import us.rapidskies.proxy.friend.FriendCommand;
+import us.rapidskies.proxy.friend.FriendService;
+import us.rapidskies.proxy.friend.FriendSettings;
+import us.rapidskies.proxy.party.PartyChatCommand;
+import us.rapidskies.proxy.party.PartyCommand;
+import us.rapidskies.proxy.party.PartyService;
+import us.rapidskies.proxy.party.PartySettings;
+import us.rapidskies.proxy.queue.PlayCommand;
+import us.rapidskies.proxy.queue.QueueService;
+import us.rapidskies.proxy.queue.QueueSettings;
+import us.rapidskies.proxy.rank.ProxyRanks;
 
 /**
  * Velocity entry point (PLAN.md §4): hub load balancing from the server registry, the
- * version gate, MOTD, maintenance mode, and the console command the store uses.
- * Parties, friends, the join queue, cross-server messaging and staff chat come next.
+ * version gate, MOTD, maintenance mode, the console command the store uses, and the social
+ * layer: parties, friends, the join queue, cross-server messages and staff chat.
  *
  * <p>If MariaDB or Redis is unreachable at boot (e.g. the node rebooted and the proxy came
  * up first), the proxy stays up, refuses logins with lang {@code kick.starting}, and keeps
@@ -39,7 +54,9 @@ import us.rapidskies.common.registry.ServerRegistry;
         version = BuildConstants.VERSION,
         description = "RapidSkies network proxy plugin",
         url = "https://rapidskies.us",
-        authors = {"RapidSkies"})
+        authors = {"RapidSkies"},
+        // Ranks (party and friend-list size, queue priority) come from LuckPerms groups.
+        dependencies = {@Dependency(id = "luckperms")})
 public final class RapidProxy {
 
     private static final long RETRY_SECONDS = 10;
@@ -55,6 +72,8 @@ public final class RapidProxy {
     private Database database;
     private RedisBus redis;
     private NetworkDirectory directory;
+    private QueueService queue;
+    private PartyService parties;
 
     @Inject
     public RapidProxy(ProxyServer proxy, Logger logger, @DataDirectory Path dataDir) {
@@ -101,17 +120,42 @@ public final class RapidProxy {
         directory = new NetworkDirectory(proxy, new ServerRegistry(redis), redis, settings, logger);
         directory.start(this);
 
-        proxy.getEventManager().register(this, new ConnectionListener(lang, directory, settings));
-        proxy.getEventManager().register(this, new PingListener(lang, directory, settings));
+        ProfileRepository profiles = new ProfileRepository(database);
+        ProxyRanks ranks = new ProxyRanks(LuckPermsProvider.get(), proxy);
+        queue = new QueueService(proxy, lang, QueueSettings.from(config), ranks, directory::servers, logger);
+        queue.start(this, redis);
+        parties = new PartyService(proxy, lang, PartySettings.from(config), ranks, queue);
+        parties.start(this);
+        FriendService friends = new FriendService(proxy, lang, FriendSettings.from(config), ranks, queue, database,
+                profiles, logger);
+        PrivateMessages messages = new PrivateMessages(proxy, lang);
+
+        var events = proxy.getEventManager();
+        events.register(this, new ConnectionListener(lang, directory, settings));
+        events.register(this, new PingListener(lang, directory, settings));
+        events.register(this, queue);
+        events.register(this, parties);
+        events.register(this, friends);
+        events.register(this, messages);
+
         register("maintenance", new MaintenanceCommand(proxy, lang, redis, directory, logger));
-        register("rapid", new AdminCommand(proxy, lang, Ledger.bolts(database), new ProfileRepository(database), logger));
+        register("rapid", new AdminCommand(proxy, lang, Ledger.bolts(database), profiles, logger));
+        register("play", new PlayCommand(lang, queue, parties));
+        register("leavequeue", PlayCommand.leave(lang, queue), "lq");
+        register("party", new PartyCommand(proxy, lang, parties), "p");
+        register("pc", new PartyChatCommand(lang, parties));
+        register("friend", new FriendCommand(proxy, lang, friends), "f", "friends");
+        // The usual /msg aliases, so muscle memory works and LiteBans' mute list covers them.
+        register("msg", messages.msgCommand(), "tell", "w", "whisper", "m", "t", "pm", "message");
+        register("r", messages.replyCommand(), "reply");
+        register("staffchat", new StaffChatCommand(proxy, lang, logger), "sc");
 
         ready = true;
         logger.info("rapid-proxy {} ready", BuildConstants.VERSION);
     }
 
-    private void register(String name, Command command) {
-        CommandMeta meta = proxy.getCommandManager().metaBuilder(name).plugin(this).build();
+    private void register(String name, Command command, String... aliases) {
+        CommandMeta meta = proxy.getCommandManager().metaBuilder(name).aliases(aliases).plugin(this).build();
         proxy.getCommandManager().register(meta, command);
     }
 
@@ -123,6 +167,14 @@ public final class RapidProxy {
     }
 
     private void closeServices() {
+        if (queue != null) {
+            queue.stop();
+            queue = null;
+        }
+        if (parties != null) {
+            parties.stop();
+            parties = null;
+        }
         if (directory != null) {
             directory.stop();
             directory = null;

@@ -32,3 +32,41 @@ motd:
 
 # Oldest client protocol allowed in (47 = 1.8). Older clients get lang `kick.version`.
 minimum-protocol: 47
+
+# Every value below also has a built-in default, so a config.yml written by an older
+# build keeps working; add a section here only to change it.
+
+# Join queue (/play and the hub selector).
+queue:
+  # Server groups players may join, and the name players see. Staff-only servers
+  # (build, staging) are left out on purpose; staff use /server.
+  groups:
+    hub: Lobby
+    skyrealms: Skyrealms
+    smp: Horizons SMP
+  # Place in line on full servers, highest first (PLAN.md §6.1). `staff` is any team role.
+  priority:
+    default: 0
+    rapidplus: 1
+    rapidplusplus: 1
+    rapidplusplusplus: 2
+    staff: 3
+
+parties:
+  # Max members by the leader's rank, leader included (PLAN.md §6.1).
+  size:
+    default: 4
+    rapidplus: 6
+    rapidplusplus: 8
+    rapidplusplusplus: 12
+  invite-seconds: 60
+  # Members follow the leader when the leader moves to a server in one of these groups.
+  follow-groups: [hub, skyrealms, smp]
+
+friends:
+  # Friend-list size by rank (PLAN.md §6.1).
+  limit:
+    default: 100
+    rapidplus: 150
+    rapidplusplus: 250
+    rapidplusplusplus: 500

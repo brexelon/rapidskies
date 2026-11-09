@@ -7,6 +7,8 @@ author: RapidSkies
 website: https://rapidskies.us
 # Ranks and staff roles are read from LuckPerms groups.
 depend: [LuckPerms]
+# %rapid_prefix% and friends for TAB, scoreboards and holograms, when it's installed.
+softdepend: [PlaceholderAPI]
 
 permissions:
   rapid.command.bolts.others:

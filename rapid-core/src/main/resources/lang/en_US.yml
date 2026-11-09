@@ -33,12 +33,19 @@ login:
     <muted>Please try again in a minute.</muted>
 
 plus:
-  # /plus with no argument: header, then one clickable line per color.
-  header: "<prefix><text>Pick a plus color</text> <muted>(click one):</muted>"
-  # The whole entry line runs /plus <color> when clicked.
-  entry: "<dark>•</dark> <preview> <muted><name></muted>"
-  entry-hover: "<muted>Click to use</muted> <text><name></text>"
-  locked-entry: "<dark>•</dark> <preview> <dark><name> (needs <rank>)</dark>"
+  # The /plus menu (4 rows). <preview> is a prefix in the color the item stands for.
+  menu:
+    title: "<dark>Plus color</dark>"
+    preview-name: "<primary>Your prefix</primary>"
+    preview-lore: "<preview><text>You</text>"
+    # The color's own name is drawn in that color.
+    color-name: "<name>"
+    color-preview: "<muted>Preview:</muted> <preview><text>You</text>"
+    color-click: "<accent>Click to use</accent>"
+    color-selected: "<success>✔ Selected</success>"
+    color-locked: "<error>Needs <rank> or higher</error>"
+    reset-name: "<text>Reset</text>"
+    reset-lore: "<muted>Back to the default:</muted> <preview><text>You</text>"
   set: "<prefix><success>Plus color set.</success> <text>Your prefix:</text> <preview>"
   reset: "<prefix><success>Plus color reset.</success> <text>Your prefix:</text> <preview>"
   needs-rank: "<prefix><error>Plus colors are a Rapid+ perk.</error> <muted>See</muted> <primary><click:open_url:'https://store.rapidskies.us'>store.rapidskies.us</click></primary>"
@@ -55,3 +62,5 @@ bolts:
 
 errors:
   players-only: "<prefix><error>Only players can use this.</error>"
+  # RapidCore#connect couldn't reach the proxy (Redis down).
+  connect-failed: "<prefix><error>Couldn't reach the network right now; please try again.</error>"

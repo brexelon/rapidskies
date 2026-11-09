@@ -1,0 +1,56 @@
+# TAB (Velocity): header/footer and tab-list sorting for every client version (plan §2, §4).
+# TAB handles 1.8's limits itself. Each mapping below replaces TAB's whole example section.
+#
+# Rank prefixes in the tab list come later: rapid-core's PlaceholderAPI expansion
+# (%rapid_prefix%) needs TAB-Bridge on the backends to reach a proxy-side TAB.
+header-footer:
+  enabled: true
+  designs:
+    default:
+      header:
+        - ""
+        - "<#FFD800><bold>RAPID</bold></#FFD800><white><bold>SKIES</bold></white>"
+        - "<#AAAAAA>%online% online</#AAAAAA>"
+        - ""
+      footer:
+        - ""
+        - "<#AAAAAA>Store:</#AAAAAA> <#FFD800>store.rapidskies.us</#FFD800>"
+        - "<#FFD800>rapidskies.us</#FFD800>"
+        - ""
+tablist-name-formatting:
+  enabled: true
+scoreboard-teams:
+  enabled: true
+  enable-collision: true
+  invisible-nametags: false
+  # Team first (rapid-core's StaffRole order), then paid ranks (luckperms/bootstrap.txt).
+  sorting-types:
+    - "GROUPS:owner,admin,developer,srmod,moderator,helper,builder,rapidplusplusplus,rapidplusplus,rapidplus,default"
+    - "PLACEHOLDER_A_TO_Z:%player%"
+  case-sensitive-sorting: false
+  can-see-friendly-invisibles: false
+playerlist-objective:
+  enabled: false
+belowname-objective:
+  enabled: false
+bossbar:
+  enabled: false
+# Sidebars are per gamemode and arrive with the mode plugins.
+scoreboard:
+  enabled: false
+layout:
+  enabled: false
+placeholder-output-replacements: {}
+conditions: {}
+primary-group-finding-list:
+  - owner
+  - admin
+  - developer
+  - srmod
+  - moderator
+  - helper
+  - builder
+  - rapidplusplusplus
+  - rapidplusplus
+  - rapidplus
+  - default

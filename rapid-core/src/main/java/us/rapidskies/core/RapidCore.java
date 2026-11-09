@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
 import us.rapidskies.common.config.ConfigView;
@@ -18,20 +19,25 @@ import us.rapidskies.common.economy.EconomyMode;
 import us.rapidskies.common.economy.Ledger;
 import us.rapidskies.common.lang.Lang;
 import us.rapidskies.common.profile.ProfileRepository;
+import us.rapidskies.common.redis.Channels;
 import us.rapidskies.common.redis.RedisBus;
 import us.rapidskies.common.registry.ServerRegistry;
 import us.rapidskies.core.chat.ChatListener;
 import us.rapidskies.core.combat.CombatTiming;
 import us.rapidskies.core.command.BoltsCommand;
 import us.rapidskies.core.command.PlusCommand;
+import us.rapidskies.core.gui.MenuListener;
 import us.rapidskies.core.profile.ProfileService;
+import us.rapidskies.core.rank.PlusChoice;
 import us.rapidskies.core.rank.RankDisplay;
+import us.rapidskies.core.rank.RapidPlaceholders;
 
 /**
  * rapid-core: runs on every Paper backend and is the API the other rapid-* plugins build on
  * (PLAN.md §4). Phase 1 so far: profiles, the Bolts and per-mode ledgers, the server
- * heartbeat, chat with rank prefixes and plus colors, {@code /plus}, {@code /bolts}, and
- * 1.8-style combat timing. Staff mode, the GUI framework and Tailwind come next.
+ * heartbeat, chat with rank prefixes and plus colors, the chest-menu framework
+ * ({@link us.rapidskies.core.gui.Menu}), the {@code /plus} menu, {@code /bolts}, the
+ * PlaceholderAPI expansion, and 1.8-style combat timing.
  *
  * <p>Other plugins get the services through {@link #get()} after declaring
  * {@code depend: [rapid-core]}.
@@ -90,16 +96,22 @@ public final class RapidCore extends JavaPlugin {
         var pm = getServer().getPluginManager();
         pm.registerEvents(profiles, this);
         pm.registerEvents(new ChatListener(ranks, lang), this);
+        pm.registerEvents(new MenuListener(), this);
         combat = new CombatTiming(this, settings);
         pm.registerEvents(combat, this);
         combat.applyToOnline();
 
-        PlusCommand plus = new PlusCommand(database, ranks, profiles, profileRepository, lang);
+        PlusCommand plus = new PlusCommand(new PlusChoice(this, database, ranks, profiles, profileRepository, lang));
         BoltsCommand boltsCommand = new BoltsCommand(database, bolts, profileRepository, lang);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             event.registrar().register("plus", "Choose the color of the pluses in your rank prefix", List.of(), plus);
             event.registrar().register("bolts", "Show your Bolts balance", List.of("bolt"), boltsCommand);
         });
+
+        if (pm.getPlugin("PlaceholderAPI") != null) {
+            // Its own class, so PlaceholderAPI's types are only loaded when it's installed.
+            new RapidPlaceholders(this).register();
+        }
 
         heartbeat = new Heartbeat(this, new ServerRegistry(redis), settings);
         heartbeat.start();
@@ -131,6 +143,7 @@ public final class RapidCore extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        MenuListener.closeAll();
         if (heartbeat != null) {
             heartbeat.stop();
         }
@@ -181,5 +194,24 @@ public final class RapidCore extends JavaPlugin {
 
     public RankDisplay ranks() {
         return ranks;
+    }
+
+    /**
+     * Asks the proxy to send {@code player} to {@code target}: a server group players may
+     * join ({@code smp}, {@code skyrealms}, {@code hub}) or one of its servers
+     * ({@code smp-1}). They join the proxy's queue as if they'd typed {@code /play}. For the
+     * hub selector and NPCs.
+     */
+    public void connect(Player player, String target) {
+        Channels.ConnectRequest request = new Channels.ConnectRequest(player.getUniqueId().toString(), target);
+        getServer().getScheduler().runTaskAsynchronously(this, () -> {
+            try {
+                redis.publishJson(Channels.CONNECT, request);
+            } catch (RuntimeException e) {
+                getSLF4JLogger().warn("Couldn't ask the proxy to move {} to {}: {}", player.getName(), target,
+                        e.getMessage());
+                lang.send(player, "errors.connect-failed");
+            }
+        });
     }
 }

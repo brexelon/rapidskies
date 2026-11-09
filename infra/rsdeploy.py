@@ -19,7 +19,7 @@ Usage:
   python infra/rsdeploy.py servers                # show servers found in the panel
   python infra/rsdeploy.py diff  [server ...]      # show what `apply` would change
   python infra/rsdeploy.py apply [server ...] [--restart]
-  python infra/rsdeploy.py plugins [server ...] [--dry-run]
+  python infra/rsdeploy.py plugins [server ...] [--dry-run] [--restart]
   python infra/rsdeploy.py schedules [server ...] [--dry-run]   # backup schedules
   add --local DIR to work on DIR/<server>/ folders instead of the panel API.
 """
@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import difflib
 import fnmatch
+import hashlib
 import io
 import json
 import os
@@ -52,6 +53,10 @@ INFRA = Path(__file__).resolve().parent
 REPO = INFRA.parent
 PROFILES = INFRA / "profiles"
 LOCAL_PLUGINS = REPO / "plugins"
+# Custom rapid-* jars, built by `./gradlew dist`. Plugin set entries starting with "dist/"
+# are matched here instead of in plugins/.
+DIST = REPO / "build" / "dist"
+DIST_PREFIX = "dist/"
 PLACEHOLDER = re.compile(r"\$\{([A-Za-z0-9_:.\-]+)\}")
 PTERO_ID = re.compile(r"[0-9a-f]{8}(-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})?")
 INTERNAL_PREFIXES = ("172.", "10.", "192.168.", "127.")
@@ -415,6 +420,25 @@ class PanelBackend:
         self._req("POST", f"{url}{sep}directory={urllib.parse.quote(directory)}", body=body,
                   ctype=f"multipart/form-data; boundary={boundary}", raw=True, headers={})
 
+    def sha256(self, sid: str, path: str) -> str:
+        """Hash of a server file, streamed from Wings through a signed download URL."""
+        url = self.api("GET", f"/servers/{sid}/files/download?file={urllib.parse.quote('/' + path.strip('/'))}")
+        req = urllib.request.Request(url["attributes"]["url"], method="GET")
+        digest = hashlib.sha256()
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                while chunk := resp.read(1 << 20):
+                    digest.update(chunk)
+        except urllib.error.HTTPError as e:
+            raise DeployError(f"download of {path} from Wings -> HTTP {e.code}") from e
+        return digest.hexdigest()
+
+    def rename(self, sid: str, directory: str, src: str, dst: str) -> None:
+        # Wings refuses to rename onto an existing file, so `dst` must not exist.
+        self.api("PUT", f"/servers/{sid}/files/rename",
+                 body=json.dumps({"root": directory, "files": [{"from": src, "to": dst}]}).encode(),
+                 ctype="application/json", raw=True)
+
     def delete(self, sid: str, directory: str, names: list[str]) -> None:
         self.api("POST", f"/servers/{sid}/files/delete", body=json.dumps({"root": directory, "files": names}).encode(),
                  ctype="application/json", raw=True)
@@ -485,6 +509,13 @@ class LocalBackend:
         d = self.root / sid / directory.strip("/")
         d.mkdir(parents=True, exist_ok=True)
         shutil.copy2(local, d / local.name)
+
+    def sha256(self, sid: str, path: str) -> str:
+        return file_sha256(self.root / sid / path.strip("/"))
+
+    def rename(self, sid: str, directory: str, src: str, dst: str) -> None:
+        d = self.root / sid / directory.strip("/")
+        (d / src).rename(d / dst)
 
     def delete(self, sid: str, directory: str, names: list[str]) -> None:
         for n in names:
@@ -565,28 +596,80 @@ def configure_server(name: str, inv: dict, env: dict, backend, write: bool) -> b
     return changed
 
 
-def sync_plugins(name: str, inv: dict, backend, dry_run: bool) -> None:
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as f:
+        while chunk := f.read(1 << 20):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def plugin_source(glob: str) -> tuple[Path, str]:
+    """(local folder, file-name glob) for a plugin set entry."""
+    if glob.startswith(DIST_PREFIX):
+        return DIST, glob[len(DIST_PREFIX):]
+    return LOCAL_PLUGINS, glob
+
+
+def replace_jar(backend, sid: str, remote: dict[str, int], jar: Path) -> None:
+    """Uploads `jar` to /plugins without writing into a jar a running server has open.
+
+    The JVM keeps plugin jars open and loads classes from them lazily (some only on
+    shutdown). Uploading over the live file rewrites it in place, so the next lazy load
+    reads garbage offsets and throws NoClassDefFoundError. Instead the old jar is renamed
+    aside (same inode, so the JVM keeps reading it), the new one is uploaded as a fresh
+    file, and the old one is unlinked; its data stays readable until the server stops.
+    """
+    if jar.name not in remote:
+        backend.upload(sid, "/plugins", jar)
+        return
+    old = f"{jar.name}.old"
+    if old in remote:  # leftover from an interrupted deploy
+        backend.delete(sid, "/plugins", [old])
+    backend.rename(sid, "/plugins", jar.name, old)
+    try:
+        backend.upload(sid, "/plugins", jar)
+    except Exception:
+        backend.rename(sid, "/plugins", old, jar.name)
+        raise
+    backend.delete(sid, "/plugins", [old])
+
+
+def sync_plugins(name: str, inv: dict, backend, dry_run: bool) -> bool:
+    """Uploads the server's plugin jars. Returns True if anything changed."""
     srv = inv["servers"][name]
     sid = backend.server(name, inv)["id"]
     remote = backend.list_dir(sid, "/plugins")
     globs = [g for s in srv["plugins"] for g in (inv["plugin_sets"][s] or [])]
+    changed = False
     for g in globs:
-        local = sorted(LOCAL_PLUGINS.glob(g))
+        folder, pattern = plugin_source(g)
+        local = sorted(folder.glob(pattern))
         if len(local) != 1:
-            raise DeployError(f"plugin glob '{g}' matched {len(local)} jars in {LOCAL_PLUGINS} (need exactly 1)")
+            hint = " (run ./gradlew dist first)" if folder == DIST else ""
+            raise DeployError(f"plugin glob '{g}' matched {len(local)} jars in {folder} (need exactly 1){hint}")
         jar = local[0]
-        stale = [r for r in remote if fnmatch.fnmatch(r, g) and r != jar.name]
+        stale = [r for r in remote if fnmatch.fnmatch(r, pattern) and r != jar.name]
         up_to_date = remote.get(jar.name) == jar.stat().st_size
+        if up_to_date and folder == DIST:
+            # rapid-* jars keep the same name across builds, and a rebuild can easily keep
+            # the same size, so compare contents. Gradle builds them reproducibly, so an
+            # unchanged build hashes the same and isn't re-uploaded.
+            up_to_date = backend.sha256(sid, f"/plugins/{jar.name}") == file_sha256(jar)
         if up_to_date and not stale:
             continue
+        changed = True
         if not up_to_date:
             print(f"  + {jar.name}")
             if not dry_run:
-                backend.upload(sid, "/plugins", jar)
+                replace_jar(backend, sid, remote, jar)
         if stale:
             print(f"  - {', '.join(stale)}")
             if not dry_run:
                 backend.delete(sid, "/plugins", stale)
+    if not changed:
+        print("  (plugins up to date)")
+    return changed
 
 
 def check(inv: dict) -> int:
@@ -622,8 +705,16 @@ def check(inv: dict) -> int:
             if plan.patch and not target.endswith((".properties", ".yml", ".yaml", ".toml")):
                 print(f"{name}: {target}: can't patch this file type")
                 problems += 1
+    modules = {p.name for p in REPO.glob("rapid-*") if (p / "build.gradle.kts").is_file()}
     for set_name, globs in inv.get("plugin_sets", {}).items():
         for g in globs or []:
+            if g.startswith(DIST_PREFIX):
+                # Built by Gradle, not committed: check the name matches a plugin module.
+                pattern = g[len(DIST_PREFIX):]
+                if not any(fnmatch.fnmatch(f"{m}.jar", pattern) for m in modules):
+                    print(f"plugin set {set_name}: '{g}' matches no rapid-* module's jar")
+                    problems += 1
+                continue
             n = len(list(LOCAL_PLUGINS.glob(g)))
             if n > 1:
                 print(f"plugin set {set_name}: '{g}' matches {n} jars, expected 1")
@@ -641,7 +732,8 @@ def main() -> int:
     ap.add_argument("--local", type=Path, help="operate on LOCAL/<server>/ folders instead of the panel")
     ap.add_argument("--network", type=Path, default=INFRA / "network.yml")
     ap.add_argument("--secrets", type=Path, default=INFRA / "secrets.env")
-    ap.add_argument("--restart", action="store_true", help="apply: restart servers whose config changed")
+    ap.add_argument("--restart", action="store_true",
+                    help="apply/plugins: restart servers whose configs or plugins changed")
     ap.add_argument("--dry-run", action="store_true", help="plugins/schedules: only print what would change")
     args = ap.parse_args()
     for stream in (sys.stdout, sys.stderr):
@@ -695,7 +787,10 @@ def main() -> int:
                 continue
             print(f"[{t}]")
             if args.command == "plugins":
-                sync_plugins(t, inv, backend, args.dry_run)
+                changed = sync_plugins(t, inv, backend, args.dry_run)
+                if changed and args.restart and not args.dry_run:
+                    print("  restarting")
+                    backend.restart(backend.server(t, inv)["id"])
             elif args.command == "schedules":
                 sid = backend.server(t, inv)["id"]
                 for s in inv["servers"][t]["schedules"]:

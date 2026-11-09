@@ -1,0 +1,31 @@
+# LiteBans (Velocity, paid; the jar is git-ignored, keep it in plugins/ locally).
+# Network-wide bans, mutes and warnings in their own MariaDB schema (plan §4, §9).
+# Create it once, like the other schemas:
+#   CREATE DATABASE litebans CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+#   GRANT ALL ON litebans.* TO 'litebans'@'<container subnet>' IDENTIFIED BY '...';
+server_name: "proxy"
+sql.driver: "MariaDB"
+sql.address: "${DB_HOST}:${DB_PORT}"
+sql.database: "${LITEBANS_DB_NAME}"
+sql.username: "${LITEBANS_DB_USER}"
+sql.password: "${LITEBANS_DB_PASSWORD}"
+sql.options: "useSSL=false&serverTimezone=UTC"
+# Muted players can't use these. LiteBans' defaults plus rapid-proxy's private and
+# party chat (/msg and /r aliases are already covered by the defaults).
+mutes.command_blacklist:
+  - /me
+  - /say
+  - /tell
+  - /whisper
+  - /reply
+  - /pm
+  - /message
+  - /msg
+  - /w
+  - /m
+  - /t
+  - /r
+  - /party chat
+  - /p chat
+  - /pc
+  - /mail send

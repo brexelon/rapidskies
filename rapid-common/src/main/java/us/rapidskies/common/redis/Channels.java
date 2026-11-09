@@ -12,6 +12,12 @@ public final class Channels {
     /** Maintenance mode was switched on or off. */
     public static final String MAINTENANCE = "maintenance";
 
+    /**
+     * A backend asks the proxy to send a player somewhere (hub selector, NPCs). The proxy
+     * queues them like {@code /play} would.
+     */
+    public static final String CONNECT = "connect";
+
     /** Redis key holding "true" while maintenance mode is on. */
     public static final String MAINTENANCE_KEY = "maintenance";
 
@@ -35,5 +41,12 @@ public final class Channels {
     }
 
     public record MaintenanceChanged(boolean enabled, String by) {
+    }
+
+    /** {@code target} is a server group ({@code smp}) or a server id ({@code smp-1}). */
+    public record ConnectRequest(String uuid, String target) {
+        public UUID player() {
+            return UUID.fromString(uuid);
+        }
     }
 }

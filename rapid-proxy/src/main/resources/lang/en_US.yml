@@ -66,3 +66,137 @@ admin:
 # Sent to the player when Bolts arrive (store purchase or staff grant).
 bolts:
   received: "<prefix><primary>⚡</primary> <text>You received</text> <accent><amount> Bolts</accent><text>!</text> <muted>Balance: <balance></muted>"
+
+errors:
+  players-only: "<prefix><error>Only players can use this.</error>"
+  not-online: "<prefix><error><text><player></text> isn't online.</error>"
+  never-joined: "<prefix><error>No player <text><player></text> has ever joined.</error>"
+
+# Join queue (/play, the hub selector). Action bar lines show on 1.8 too; keep them short.
+queue:
+  usage: "<accent>Queue</accent> <dark>»</dark> <muted>Usage:</muted> <text>/play \\<mode></text> <muted>(<modes>)</muted>"
+  unknown-target: "<accent>Queue</accent> <dark>»</dark> <error>There's no mode called <text><target></text>.</error>"
+  already-there: "<accent>Queue</accent> <dark>»</dark> <muted>You're already on</muted> <text><target></text><muted>.</muted>"
+  joined: "<accent>Queue</accent> <dark>»</dark> <text>You're</text> <accent>#<place></accent> <muted>of <of></muted> <text>for</text> <accent><target></accent><text>.</text> <muted>/leavequeue to leave.</muted>"
+  joined-offline: "<accent>Queue</accent> <dark>»</dark> <accent><target></accent> <text>isn't up right now; you'll join as soon as it is.</text> <muted>/leavequeue to leave.</muted>"
+  position: "<accent>Queue</accent> <dark>»</dark> <text>You're</text> <accent>#<place></accent> <muted>of <of></muted> <text>for</text> <accent><target></accent><text>.</text>"
+  actionbar: "<accent>Queue</accent> <dark>»</dark> <text><target></text> <dark>•</dark> <accent>#<place></accent> <muted>of <of></muted>"
+  actionbar-offline: "<accent>Queue</accent> <dark>»</dark> <text><target></text> <dark>•</dark> <muted>waiting for a server</muted>"
+  sending: "<accent>Queue</accent> <dark>»</dark> <text>Sending you to</text> <accent><target></accent><text>...</text>"
+  # <reason> is the server's own message.
+  retrying: "<accent>Queue</accent> <dark>»</dark> <muted>Couldn't join <target> (<reason>); trying again.</muted>"
+  failed: "<accent>Queue</accent> <dark>»</dark> <error>Couldn't join <target>:</error> <muted><reason></muted>"
+  party-member: "<accent>Queue</accent> <dark>»</dark> <error>Your party leader picks where the party goes.</error> <muted>/party leave to go alone.</muted>"
+  left: "<accent>Queue</accent> <dark>»</dark> <text>You left the queue.</text>"
+  not-queued: "<accent>Queue</accent> <dark>»</dark> <muted>You're not in a queue.</muted>"
+
+# Parties (PLAN.md §7). Size depends on the leader's rank.
+party:
+  help: |-
+    <primary>Party</primary> <dark>»</dark> <text>Commands:</text>
+    <dark>•</dark> <text>/party \<player></text> <muted>invite someone</muted>
+    <dark>•</dark> <text>/party accept|deny [player]</text> <muted>answer an invite</muted>
+    <dark>•</dark> <text>/party list</text> <muted>who's in your party</muted>
+    <dark>•</dark> <text>/pc \<message></text> <muted>party chat</muted>
+    <dark>•</dark> <text>/party warp</text> <muted>bring everyone to your server (leader)</muted>
+    <dark>•</dark> <text>/party kick|promote \<player></text> <muted>(leader)</muted>
+    <dark>•</dark> <text>/party leave</text> <dark>|</dark> <text>/party disband</text>
+  invite-sent: "<primary>Party</primary> <dark>»</dark> <text>Invited</text> <accent><player></accent><text>.</text> <muted>They have <seconds>s to accept.</muted>"
+  invite-sent-others: "<primary>Party</primary> <dark>»</dark> <text><leader></text> <muted>invited</muted> <text><player></text><muted>.</muted>"
+  # <accept> and <deny> are the clickable buttons below.
+  invited: "<primary>Party</primary> <dark>»</dark> <accent><leader></accent> <text>invited you to their party!</text> <accept> <deny> <muted>(<seconds>s)</muted>"
+  button-accept: "<success><bold>[ACCEPT]</bold></success>"
+  button-deny: "<error><bold>[DENY]</bold></error>"
+  no-invites: "<primary>Party</primary> <dark>»</dark> <muted>You have no party invite to answer. If you have several, add the name.</muted>"
+  no-invite-from: "<primary>Party</primary> <dark>»</dark> <error><player> hasn't invited you.</error>"
+  joined: "<primary>Party</primary> <dark>»</dark> <success>You joined</success> <accent><leader></accent><success>'s party.</success>"
+  member-joined: "<primary>Party</primary> <dark>»</dark> <accent><player></accent> <text>joined the party.</text>"
+  denied: "<primary>Party</primary> <dark>»</dark> <muted>You declined</muted> <text><leader></text><muted>'s invite.</muted>"
+  invite-denied: "<primary>Party</primary> <dark>»</dark> <text><player></text> <muted>declined your invite.</muted>"
+  invite-expired-you: "<primary>Party</primary> <dark>»</dark> <muted>The invite from <leader> expired.</muted>"
+  invite-expired: "<primary>Party</primary> <dark>»</dark> <muted>Your invite to <player> expired.</muted>"
+  invite-expired-disbanded: "<primary>Party</primary> <dark>»</dark> <muted>Your invite to <player> expired, so the party was closed.</muted>"
+  not-in-party: "<primary>Party</primary> <dark>»</dark> <muted>You're not in a party.</muted> <text>/party \\<player></text> <muted>to start one.</muted>"
+  left: "<primary>Party</primary> <dark>»</dark> <text>You left the party.</text>"
+  member-left: "<primary>Party</primary> <dark>»</dark> <text><player></text> <muted>left the party.</muted>"
+  member-kicked: "<primary>Party</primary> <dark>»</dark> <text><player></text> <muted>was removed from the party.</muted>"
+  member-disconnected: "<primary>Party</primary> <dark>»</dark> <text><player></text> <muted>disconnected and left the party.</muted>"
+  kicked-you: "<primary>Party</primary> <dark>»</dark> <error><leader> removed you from the party.</error>"
+  new-leader: "<primary>Party</primary> <dark>»</dark> <accent><player></accent> <text>now leads the party.</text>"
+  disbanded: "<primary>Party</primary> <dark>»</dark> <text><leader></text> <muted>disbanded the party.</muted>"
+  disbanded-empty: "<primary>Party</primary> <dark>»</dark> <muted>Everyone else left, so the party was closed.</muted>"
+  list-header: "<primary>Party</primary> <dark>»</dark> <text>Members</text> <muted>(<count>/<max>):</muted>"
+  list-leader: "<dark>•</dark> <accent><player></accent> <primary>(leader)</primary> <muted><server></muted>"
+  list-member: "<dark>•</dark> <text><player></text> <muted><server></muted>"
+  chat: "<primary>Party</primary> <dark>»</dark> <accent><player></accent><dark>:</dark> <text><message></text>"
+  chat-usage: "<primary>Party</primary> <dark>»</dark> <muted>Usage:</muted> <text>/pc \\<message></text>"
+  warp-not-here: "<primary>Party</primary> <dark>»</dark> <error>You can't bring the party to this server.</error>"
+  warp-sent: "<primary>Party</primary> <dark>»</dark> <text>Bringing your party here.</text>"
+  warped: "<primary>Party</primary> <dark>»</dark> <text>Your leader is bringing you to</text> <accent><target></accent><text>.</text>"
+  following: "<primary>Party</primary> <dark>»</dark> <text>Following your leader to</text> <accent><target></accent><text>.</text>"
+  # One per Parties.Failure; <player> is whoever the command named.
+  fail:
+    self: "<primary>Party</primary> <dark>»</dark> <error>You can't do that to yourself.</error>"
+    not_in_party: "<primary>Party</primary> <dark>»</dark> <muted>You're not in a party.</muted>"
+    not_leader: "<primary>Party</primary> <dark>»</dark> <error>Only the party leader can do that.</error>"
+    already_in_party: "<primary>Party</primary> <dark>»</dark> <error>You're already in a party.</error> <muted>/party leave first.</muted>"
+    target_in_party: "<primary>Party</primary> <dark>»</dark> <error><player> is already in a party.</error>"
+    already_invited: "<primary>Party</primary> <dark>»</dark> <muted>You already invited <player>.</muted>"
+    no_invite: "<primary>Party</primary> <dark>»</dark> <error>That invite has expired or doesn't exist.</error>"
+    full: "<primary>Party</primary> <dark>»</dark> <error>The party is full.</error> <muted>Bigger parties come with Rapid+ ranks.</muted>"
+    not_member: "<primary>Party</primary> <dark>»</dark> <error><player> isn't in your party.</error>"
+
+# Friends (PLAN.md §7). List size depends on rank.
+friend:
+  help: |-
+    <success>Friends</success> <dark>»</dark> <text>Commands:</text>
+    <dark>•</dark> <text>/friend \<player></text> <muted>send a friend request</muted>
+    <dark>•</dark> <text>/friend accept|deny \<player></text> <muted>answer a request</muted>
+    <dark>•</dark> <text>/friend list [page]</text> <dark>|</dark> <text>/friend requests</text>
+    <dark>•</dark> <text>/friend join \<player></text> <muted>join a friend's server</muted>
+    <dark>•</dark> <text>/friend remove \<player></text>
+  joined: "<success>Friends</success> <dark>»</dark> <text><player></text> <success>joined.</success>"
+  left: "<success>Friends</success> <dark>»</dark> <text><player></text> <muted>left.</muted>"
+  online-summary: "<success>Friends</success> <dark>»</dark> <accent><online></accent><muted>/<total> of your friends are online.</muted> <text>/friend list</text>"
+  # The whole line is clickable (runs /friend requests).
+  requests-waiting: "<success>Friends</success> <dark>»</dark> <text>You have</text> <accent><count></accent> <text>friend request(s).</text> <muted>Click to see them.</muted>"
+  request-sent: "<success>Friends</success> <dark>»</dark> <text>Friend request sent to</text> <accent><player></accent><text>.</text>"
+  request-received: "<success>Friends</success> <dark>»</dark> <accent><player></accent> <text>wants to be friends!</text> <accept> <deny>"
+  button-accept: "<success><bold>[ACCEPT]</bold></success>"
+  button-deny: "<error><bold>[DENY]</bold></error>"
+  button-join: "<primary>[JOIN]</primary>"
+  now-friends: "<success>Friends</success> <dark>»</dark> <success>You and</success> <accent><player></accent> <success>are now friends.</success>"
+  already-friends: "<success>Friends</success> <dark>»</dark> <muted>You're already friends with <player>.</muted>"
+  already-sent: "<success>Friends</success> <dark>»</dark> <muted>You already sent <player> a request.</muted>"
+  limit-self: "<success>Friends</success> <dark>»</dark> <error>Your friend list is full (<limit>), or you have too many requests waiting.</error>"
+  limit-other: "<success>Friends</success> <dark>»</dark> <error><player>'s friend list is full.</error>"
+  self: "<success>Friends</success> <dark>»</dark> <error>You can't add yourself.</error>"
+  no-request: "<success>Friends</success> <dark>»</dark> <error><player> hasn't sent you a request.</error>"
+  denied: "<success>Friends</success> <dark>»</dark> <muted>Declined <player>'s request.</muted>"
+  not-friends: "<success>Friends</success> <dark>»</dark> <error>You're not friends with <player>.</error>"
+  removed: "<success>Friends</success> <dark>»</dark> <muted>Removed <player> from your friends.</muted>"
+  list-empty: "<success>Friends</success> <dark>»</dark> <muted>No friends yet.</muted> <text>/friend \\<player></text> <muted>to add one.</muted>"
+  list-header: "<success>Friends</success> <dark>»</dark> <text><count></text><muted>/<limit> friends, page <page>/<pages>:</muted>"
+  list-online: "<dark>•</dark> <success><player></success> <muted><server></muted>"
+  list-offline: "<dark>•</dark> <dark><player></dark> <dark>offline</dark>"
+  list-next: "<muted>Page <next> »</muted> <text>(click)</text>"
+  requests-empty: "<success>Friends</success> <dark>»</dark> <muted>No friend requests.</muted>"
+  requests-header: "<success>Friends</success> <dark>»</dark> <text>Friend requests</text> <muted>(<count>):</muted>"
+  requests-entry: "<dark>•</dark> <text><player></text> <accept> <deny>"
+  join-not-online: "<success>Friends</success> <dark>»</dark> <error><player> isn't an online friend.</error>"
+  join-not-joinable: "<success>Friends</success> <dark>»</dark> <error>You can't follow <player> to that server.</error>"
+  failed: "<success>Friends</success> <dark>»</dark> <error>Something went wrong; please try again.</error>"
+
+# Private messages across servers.
+msg:
+  usage: "<prefix><muted>Usage:</muted> <text>/msg \\<player> \\<message></text>"
+  reply-usage: "<prefix><muted>Usage:</muted> <text>/r \\<message></text>"
+  nobody-to-reply: "<prefix><muted>Nobody to reply to.</muted>"
+  self: "<prefix><error>You can't message yourself.</error>"
+  to: "<dark>[</dark><accent>You</accent> <dark>»</dark> <text><player></text><dark>]</dark> <muted><message></muted>"
+  from: "<dark>[</dark><text><player></text> <dark>»</dark> <accent>You</accent><dark>]</dark> <muted><message></muted>"
+
+# Staff chat (/sc). Red is reserved for the team.
+staffchat:
+  usage: "<red>Staff</red> <dark>»</dark> <muted>Usage:</muted> <text>/sc \\<message></text>"
+  format: "<red>Staff</red> <dark>»</dark> <muted>[<server>]</muted> <text><player></text><dark>:</dark> <text><message></text>"

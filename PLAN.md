@@ -449,13 +449,13 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 - **Market:** `market_listings` (id, mode, seller, item_blob, item_name, category, price, created_at, expires_at, status [ACTIVE/SOLD/EXPIRED/CANCELLED/REMOVED], buyer, sold_at), `market_collection` (id, mode, uuid, item_blob, reason), `market_price_history` (mode, item_key, day, avg_price, volume)
 - `skyrealms_trade_routes` (id, seller_island, buyer_island, item, qty, price, interval, state)
 - `frontier_history` (id, modifier, opened_at, closed_at, archive_path)
-- `friends`, `party` (Redis-only, ephemeral)
+- `friends` (two rows per friendship), `friend_requests`. Parties and the join queue are ephemeral and live in the proxy's memory: there is one proxy and a restart drops every player anyway. Move them to Redis (`party:<id>`, `queue:<target>`) if a second proxy is ever added.
 - `reports`, `staff_actions`, `chat_log`
 - `store_transactions` (txn_id, uuid, package, status, timestamps)
 
 SuperiorSkyblock2 keeps its own tables in the same MariaDB instance, under its own schema.
 
-Redis (every key and channel is prefixed `rapid:`, since LuckPerms shares the instance): `server:<id>` heartbeat and state, `queue:<server>`, `party:<id>`, `presence:<uuid>`, plus pub/sub channels for cross-server messages, staff chat, profile and plus-color updates, and cache invalidation.
+Redis (every key and channel is prefixed `rapid:`, since LuckPerms shares the instance): `server:<id>` heartbeat and state, `maintenance`, plus pub/sub channels for profile and plus-color updates, Bolts changes, maintenance, connect requests from backends to the proxy (`connect`), and cache invalidation. Private messages, party chat and staff chat run on the single proxy and need no channel; `presence:<uuid>` and per-party keys join them only with a second proxy.
 
 **Migrations:** each module keeps `V<n>__<name>.sql` scripts plus an `index` file under `db/migration/<module>/`, applied once under a MariaDB named lock and checksum-verified on every start (`rapid-common` `Migrator`). This replaced Flyway: it's one small class with no classloader or relocation quirks inside shaded plugin jars. Shipped scripts are never edited; fixes go in a new version.
 
@@ -486,13 +486,16 @@ Done (with tests; the MariaDB/Redis ones run in CI through Testcontainers):
 - [x] `rapid-proxy`: joins and kicks routed to the least-loaded live hub, auto-registration of new backends (private IPs only), 1.8 version gate, rotating MOTD with network player count, `/maintenance` (Redis-backed, staff bypass), `rapid bolts add|remove|balance` for Tebex, logins refused until MariaDB and Redis are reachable
 - [x] `rapid-core`: heartbeat, profile load on pre-login, chat with rank/staff prefixes and plus color (via LuckPerms groups), `/plus` (clickable list), `/bolts`, no attack cooldown and no sweep hits
 - [x] Deploy config: `rapid-proxy` / `rapid-core` config patches, `RAPID_DB_*` secrets, staging on its own schema, LuckPerms permissions
+- [x] `rsdeploy.py` ships the custom jars: `dist/` entries in plugin sets come from `build/dist/`, compared by SHA-256 (their names never change, and Gradle builds them reproducibly, so an unchanged build isn't re-uploaded); `plugins --restart`
+- [x] `rapid-proxy` social layer: parties (invite/accept/kick/promote/warp, `/pc`, members follow the leader, size by rank), friends (requests, list with server and join button, join/leave notices, size by rank; `friends` + `friend_requests`, core V2), join queue (`/play`, `/leavequeue`, rank priority, action-bar position, backends request moves over Redis `rapid:connect`), cross-server `/msg` + `/r`, staff chat `/sc`
+- [x] `rapid-core`: chest-menu framework (`gui.Menu`), `/plus` as a chest GUI, PlaceholderAPI expansion (`%rapid_prefix%`, `%rapid_plus_color%`, `%rapid_rank%`, `%rapid_staff%`), `RapidCore#connect` for the hub selector
+- [x] LiteBans (own MariaDB schema, mute list covers proxy chat commands), Grim and TAB (branded header/footer, team-first sorting) in the `network.yml` plugin sets
 
 Next:
 
-- [ ] `rsdeploy.py` uploads `build/dist/*.jar` (custom jars need a content check, not just a size check)
-- [ ] `rapid-proxy`: parties, friends, join queue, cross-server `/msg`, staff chat
-- [ ] `rapid-core`: GUI framework (then `/plus` as a chest GUI), staff mode, Tailwind, AFK and anti-farm detection, per-mode Vault economy provider, PlaceholderAPI expansion (`%rapid_plus_color%`, prefix) for TAB
-- [ ] LiteBans, Grim and TAB onto the servers (`network.yml` plugin sets)
+- [ ] `rapid-core`: staff mode, Tailwind, AFK and anti-farm detection, per-mode Vault economy provider (needs a Vault-compatible plugin on the backends; none is in `plugins/` yet)
+- [ ] TAB-Bridge on the backends, so the proxy's TAB can show `%rapid_prefix%` in the tab list and nametags
+- [ ] Check on 1.8.9 and 26.3: LiteBans mutes block `/msg`, `/r` and `/pc`; party follow and the queue action bar; `/plus` menu items and lore
 
 **Recommended launch strategy:** launch both modes together. With only two modes, launching one at a time would feel thin. Run Horizons as the first closed beta, though, since it relies more on premade plugins and will stress-test the core platform early. Don't wipe beta progress on Skyrealms or Horizons at launch.
 

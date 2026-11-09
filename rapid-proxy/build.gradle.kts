@@ -4,6 +4,8 @@ plugins {
 
 dependencies {
     compileOnly(libs.velocity.api)
+    // Ranks decide party size, friend-list size and queue priority (PLAN.md §6.1).
+    compileOnly(libs.luckperms.api)
     annotationProcessor(libs.velocity.api) // generates velocity-plugin.json from @Plugin
     implementation(project(":rapid-common"))
 

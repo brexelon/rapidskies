@@ -156,4 +156,12 @@ which server gets which. To upgrade a plugin, replace its jar in `plugins/` and 
 `staging` first (plan §12).
 
 Custom plugins (`rapid-*`) are built by Gradle (`./gradlew dist` → `build/dist/`) and by CI
-on every push. They start shipping to servers in phase 1.
+on every push. Plugin sets name them with a `dist/` prefix (`dist/rapid-core.jar`), so run
+`./gradlew dist` before `rsdeploy.py plugins`. Their file names never change, so rsdeploy
+compares them by SHA-256 rather than size; builds are reproducible, so an unchanged build is
+never re-uploaded. `rsdeploy.py plugins --restart` restarts the servers whose jars changed.
+
+New schemas for phase 1: **LiteBans** keeps its data in its own `litebans` schema (create it like
+the others; credentials are `LITEBANS_DB_*` in `secrets.env`). **TAB** runs on Velocity only; to
+show rank prefixes in the tab list it will also need TAB-Bridge on the backends, which isn't in
+`plugins/` yet.
