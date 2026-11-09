@@ -23,8 +23,11 @@ lpv createtrack ranks
 lpv track ranks append rapidplus
 lpv track ranks append rapidplusplus
 lpv track ranks append rapidplusplusplus
-# Ranks are granted as temporary parents that stack (§6.3), e.g. from Tebex:
-#   lpv user <uuid> parent addtemp rapidplusplus 30d accumulate
+# Ranks are granted with rapid-proxy's /grant, which records who gave what and why, and
+# writes LuckPerms temporary parents that stack (§6.3), e.g. from Tebex (console):
+#   grant <uuid> rapidplusplus 30d Store purchase txn:<transaction>
+# Staff use /grant <player> <rank> <duration> [reason], /grants <player> and
+# /grants revoke <id>, never lpv commands, so every rank change shows up in /grants.
 
 # ---------------------------------------------------------------- staff
 lpv creategroup helper
@@ -82,6 +85,17 @@ lpv group moderator permission set rapid.command.bolts.others true
 lpv group helper permission set rapid.staffchat true server=proxy
 lpv group builder permission set rapid.staffchat true server=proxy
 lpv group developer permission set rapid.staffchat true server=proxy
+
+# Grants (/grant and /grants on the proxy; plan §9). Moderators can read grant history;
+# Sr. Mods hand out and revoke paid ranks (comps, giveaways); admins also grant team roles
+# below their own and permission nodes they hold themselves on the proxy (so a node an admin
+# only has with server=build can't be granted by them). Nobody can grant to or revoke from
+# themselves; the console, and so the store, can grant anything.
+lpv group moderator permission set rapid.command.grant true server=proxy
+lpv group srmod permission set rapid.grant.rank true server=proxy
+lpv group srmod permission set rapid.grant.revoke true server=proxy
+lpv group admin permission set rapid.grant.staff true server=proxy
+lpv group admin permission set rapid.grant.permission true server=proxy
 
 # Staff mode (rapid-core, every backend; plan §9): /staff, /vanish, /freeze, /invsee and
 # /endersee for the whole staff track. The team can't be frozen and sees vanished staff

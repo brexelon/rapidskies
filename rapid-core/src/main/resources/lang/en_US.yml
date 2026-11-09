@@ -1,5 +1,12 @@
 # rapid-core messages (MiniMessage). Brand tags: <primary> <accent> <text> <muted> <dark>
 # <success> <error>, and <prefix> for "RAPIDSKIES »".
+#
+# Every supported client (1.20 – 26.3) renders hex colors, <gradient>, <hover>, <click>
+# and <key> exactly. <key:key.use>, <key:key.sneak> and <key:key.chat> show the player's own
+# keybind ("Right Button", "Left Shift", "T"), so instructions stay right for players who
+# rebind. Don't use <shadow> (1.21.4+), <sprite>/<head> (1.21.9+) or anything else newer
+# than 1.20: 1.20 clients drop it. Menu titles, item names and lore are components too, but
+# clicks and hovers do nothing there.
 
 # Rank and staff prefixes (PLAN.md §6.1, §9). <plus>...</plus> takes the player's plus color.
 rank:
@@ -32,13 +39,13 @@ login:
     <muted>Please try again in a minute.</muted>
 
 plus:
-  # The /plus menu (4 rows). <preview> is a prefix in the color the item stands for.
+  # The /plus menu (5 rows). <preview> is a prefix in the color the item stands for.
   menu:
     title: "<dark>Plus color</dark>"
     preview-name: "<primary>Your prefix</primary>"
     preview-lore: "<preview><text>You</text>"
-    # The color's own name is drawn in that color.
-    color-name: "<name>"
+    # The color's own name, drawn in that color (or gradient) by <plus>.
+    color-name: "<plus><name></plus>"
     color-preview: "<muted>Preview:</muted> <preview><text>You</text>"
     color-click: "<accent>Click to use</accent>"
     color-selected: "<success>✔ Selected</success>"
@@ -47,9 +54,9 @@ plus:
     reset-lore: "<muted>Back to the default:</muted> <preview><text>You</text>"
   set: "<prefix><success>Plus color set.</success> <text>Your prefix:</text> <preview>"
   reset: "<prefix><success>Plus color reset.</success> <text>Your prefix:</text> <preview>"
-  needs-rank: "<prefix><error>Plus colors are a Rapid+ perk.</error> <muted>See</muted> <primary><click:open_url:'https://store.rapidskies.us'>store.rapidskies.us</click></primary>"
+  needs-rank: "<prefix><error>Plus colors are a Rapid+ perk.</error> <muted>See</muted> <primary><click:open_url:'https://store.rapidskies.us'><hover:show_text:'<muted>Open the store in your browser'>store.rapidskies.us</hover></click></primary>"
   locked: "<prefix><error><name> needs <rank> or higher.</error>"
-  unknown: "<prefix><error>There's no color called <text><input></text>.</error> <muted>Type /plus to see your options.</muted>"
+  unknown: "<prefix><error>There's no color called <text><input></text>.</error> <muted>Type</muted> <click:run_command:'/plus'><hover:show_text:'<muted>Open the color menu'><text>/plus</text></hover></click> <muted>to see your options.</muted>"
   reserved: "<prefix><error>Red shades are reserved for staff.</error>"
   failed: "<prefix><error>Couldn't save that right now; please try again.</error>"
 
@@ -86,35 +93,35 @@ staff:
     disabled: "<prefix><text>Staff mode off.</text> <muted>Inventory restored.</muted>"
     teleported: "<prefix><text>Teleported to <player>.</text>"
     nobody: "<prefix><muted>Nobody else to teleport to.</muted>"
-    click-a-player: "<prefix><muted>Right-click a player with this.</muted>"
+    click-a-player: "<prefix><muted>Use this on a player</muted> <text>(<key:key.use>)</text><muted>.</muted>"
   tool:
-    random-name: "<primary>Random player</primary> <muted>(right-click)</muted>"
+    random-name: "<primary>Random player</primary> <muted>(<key:key.use>)</muted>"
     random-lore:
       - "<muted>Teleports you to a random player</muted>"
       - "<muted>on this server.</muted>"
-    inspect-name: "<primary>Inspect</primary> <muted>(right-click a player)</muted>"
+    inspect-name: "<primary>Inspect</primary> <muted>(<key:key.use> on a player)</muted>"
     inspect-lore:
       - "<muted>Shows their inventory.</muted>"
-      - "<muted>Sneak to see their ender chest.</muted>"
-    freeze-name: "<primary>Freeze</primary> <muted>(right-click a player)</muted>"
+      - "<muted>Hold</muted> <text><key:key.sneak></text> <muted>to see their ender chest.</muted>"
+    freeze-name: "<primary>Freeze</primary> <muted>(<key:key.use> on a player)</muted>"
     freeze-lore:
       - "<muted>Freezes or releases them.</muted>"
-    players-name: "<primary>Players</primary> <muted>(right-click)</muted>"
+    players-name: "<primary>Players</primary> <muted>(<key:key.use>)</muted>"
     players-lore:
       - "<muted>Everyone on this server.</muted>"
-    vanish-on-name: "<success>Vanished</success> <muted>(right-click to appear)</muted>"
+    vanish-on-name: "<success>Vanished</success> <muted>(<key:key.use> to appear)</muted>"
     vanish-on-lore:
       - "<muted>Players can't see you.</muted>"
-    vanish-off-name: "<error>Visible</error> <muted>(right-click to vanish)</muted>"
+    vanish-off-name: "<error>Visible</error> <muted>(<key:key.use> to vanish)</muted>"
     vanish-off-lore:
       - "<muted>Players can see you.</muted>"
-    exit-name: "<error>Leave staff mode</error> <muted>(right-click)</muted>"
+    exit-name: "<error>Leave staff mode</error> <muted>(<key:key.use>)</muted>"
     exit-lore:
       - "<muted>Gives your inventory back.</muted>"
   vanish:
     enabled: "<prefix><success>You're vanished.</success> <muted>Players can't see you, here or in friend lists.</muted>"
     disabled: "<prefix><text>You're visible again.</text>"
-    still: "<prefix><muted>You're still vanished. /vanish to appear.</muted>"
+    still: "<prefix><muted>You're still vanished.</muted> <click:run_command:'/vanish'><hover:show_text:'<muted>Become visible'><text>/vanish</text></hover></click> <muted>to appear.</muted>"
   freeze:
     froze: "<prefix><text>Froze <player>.</text> <muted>Talk to them in chat; use the ice again to release.</muted>"
     released-staff: "<prefix><text>Released <player>.</text>"
@@ -122,9 +129,9 @@ staff:
     rejoined: "<prefix><error><player> rejoined while frozen.</error> <muted>They're frozen again.</muted>"
     released: "<prefix><success>You've been released. Thanks for your patience.</success>"
     no-commands: "<prefix><error>You can't use commands while frozen.</error>"
-    reminder: "<prefix><error>You're frozen.</error> <text>A staff member will talk to you in chat. Don't log out: that counts as refusing a check.</text>"
+    reminder: "<prefix><error>You're frozen.</error> <text>A staff member will talk to you in chat</text> <muted>(press</muted> <accent><key:key.chat></accent><muted>)</muted><text>. Don't log out: that counts as refusing a check.</text>"
     title: "<error><bold>FROZEN</bold></error>"
-    subtitle: "<text>Check chat, and don't log out</text>"
+    subtitle: "<text>Press</text> <accent><key:key.chat></accent> <text>to chat, and don't log out</text>"
     menu-title: "<dark>You've been frozen</dark>"
     menu-name: "<error><bold>You've been frozen</bold></error>"
     menu-lore:
@@ -132,7 +139,7 @@ staff:
       - "<text>They'll talk to you in chat.</text>"
       - ""
       - "<error>Logging out counts as refusing the check.</error>"
-    menu-close: "<accent>Close this and open chat</accent>"
+    menu-close: "<accent>Close this, then press</accent> <text><key:key.chat></text> <accent>to chat</accent>"
   inspect:
     title: "<dark><player>'s inventory</dark>"
     ender-title: "<dark><player>'s ender chest</dark>"

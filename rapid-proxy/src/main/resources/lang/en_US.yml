@@ -1,6 +1,12 @@
 # rapid-proxy messages (MiniMessage). Brand tags: <primary> <accent> <text> <muted> <dark>
-# <success> <error>, and <prefix> for "RAPIDSKIES »". Keep server-list lines short: the
-# client cuts the MOTD at about 45 characters per line.
+# <success> <error>, and <prefix> for "RAPIDSKIES »".
+#
+# Every supported client (1.20 – 26.3) renders hex colors, <gradient>, <hover>, <key>
+# (the player's own keybind) and copy_to_clipboard clicks exactly, so use them freely.
+# Don't use <shadow> (1.21.4+), <sprite>/<head> (1.21.9+) or anything else newer than 1.20:
+# 1.20 clients drop it. Buttons get their click action from the code; the <hover> text
+# here only explains it. Keep server-list lines short: the MOTD is cut at about 45
+# characters per line.
 
 motd:
   line1: "<primary><bold>RAPID</bold></primary><white><bold>SKIES</bold></white> <dark>»</dark> <muted>1.20 – 26.3</muted>"
@@ -105,8 +111,8 @@ party:
   invite-sent-others: "<primary>Party</primary> <dark>»</dark> <text><leader></text> <muted>invited</muted> <text><player></text><muted>.</muted>"
   # <accept> and <deny> are the clickable buttons below.
   invited: "<primary>Party</primary> <dark>»</dark> <accent><leader></accent> <text>invited you to their party!</text> <accept> <deny> <muted>(<seconds>s)</muted>"
-  button-accept: "<success><bold>[ACCEPT]</bold></success>"
-  button-deny: "<error><bold>[DENY]</bold></error>"
+  button-accept: "<hover:show_text:'<success>Join the party'><success><bold>[ACCEPT]</bold></success></hover>"
+  button-deny: "<hover:show_text:'<muted>Decline the invite'><error><bold>[DENY]</bold></error></hover>"
   no-invites: "<primary>Party</primary> <dark>»</dark> <muted>You have no party invite to answer. If you have several, add the name.</muted>"
   no-invite-from: "<primary>Party</primary> <dark>»</dark> <error><player> hasn't invited you.</error>"
   joined: "<primary>Party</primary> <dark>»</dark> <success>You joined</success> <accent><leader></accent><success>'s party.</success>"
@@ -159,12 +165,12 @@ friend:
   left: "<success>Friends</success> <dark>»</dark> <text><player></text> <muted>left.</muted>"
   online-summary: "<success>Friends</success> <dark>»</dark> <accent><online></accent><muted>/<total> of your friends are online.</muted> <text>/friend list</text>"
   # The whole line is clickable (runs /friend requests).
-  requests-waiting: "<success>Friends</success> <dark>»</dark> <text>You have</text> <accent><count></accent> <text>friend request(s).</text> <muted>Click to see them.</muted>"
+  requests-waiting: "<hover:show_text:'<muted>Show your friend requests'><success>Friends</success> <dark>»</dark> <text>You have</text> <accent><count></accent> <text>friend request(s).</text> <muted>Click to see them.</muted></hover>"
   request-sent: "<success>Friends</success> <dark>»</dark> <text>Friend request sent to</text> <accent><player></accent><text>.</text>"
   request-received: "<success>Friends</success> <dark>»</dark> <accent><player></accent> <text>wants to be friends!</text> <accept> <deny>"
-  button-accept: "<success><bold>[ACCEPT]</bold></success>"
-  button-deny: "<error><bold>[DENY]</bold></error>"
-  button-join: "<primary>[JOIN]</primary>"
+  button-accept: "<hover:show_text:'<success>Become friends'><success><bold>[ACCEPT]</bold></success></hover>"
+  button-deny: "<hover:show_text:'<muted>Decline the request'><error><bold>[DENY]</bold></error></hover>"
+  button-join: "<hover:show_text:'<muted>Join their server'><primary>[JOIN]</primary></hover>"
   now-friends: "<success>Friends</success> <dark>»</dark> <success>You and</success> <accent><player></accent> <success>are now friends.</success>"
   already-friends: "<success>Friends</success> <dark>»</dark> <muted>You're already friends with <player>.</muted>"
   already-sent: "<success>Friends</success> <dark>»</dark> <muted>You already sent <player> a request.</muted>"
@@ -179,7 +185,7 @@ friend:
   list-header: "<success>Friends</success> <dark>»</dark> <text><count></text><muted>/<limit> friends, page <page>/<pages>:</muted>"
   list-online: "<dark>•</dark> <success><player></success> <muted><server></muted>"
   list-offline: "<dark>•</dark> <dark><player></dark> <dark>offline</dark>"
-  list-next: "<muted>Page <next> »</muted> <text>(click)</text>"
+  list-next: "<hover:show_text:'<muted>Show page <next>'><muted>Page <next> »</muted> <text>(click)</text></hover>"
   requests-empty: "<success>Friends</success> <dark>»</dark> <muted>No friend requests.</muted>"
   requests-header: "<success>Friends</success> <dark>»</dark> <text>Friend requests</text> <muted>(<count>):</muted>"
   requests-entry: "<dark>•</dark> <text><player></text> <accept> <deny>"
@@ -196,12 +202,98 @@ msg:
   to: "<dark>[</dark><accent>You</accent> <dark>»</dark> <text><player></text><dark>]</dark> <muted><message></muted>"
   from: "<dark>[</dark><text><player></text> <dark>»</dark> <accent>You</accent><dark>]</dark> <muted><message></muted>"
 
-# Staff chat (/sc). Red is reserved for the team.
 # Freeze (rapid-core's staff mode freezes; the proxy keeps frozen players from leaving).
 freeze:
   no-commands: "<prefix><error>You can't use commands while frozen.</error> <muted>You can still /msg and /r.</muted>"
   logged-out: "<red>Staff</red> <dark>»</dark> <error><player> logged out while frozen.</error>"
 
+# Staff chat (/sc). Red is reserved for the team.
 staffchat:
   usage: "<red>Staff</red> <dark>»</dark> <muted>Usage:</muted> <text>/sc \\<message></text>"
   format: "<red>Staff</red> <dark>»</dark> <muted>[<server>]</muted> <text><player></text><dark>:</dark> <text><message></text>"
+
+# Grants (/grant, /grants; PLAN.md §6.3, §9). Staff-facing except grant.received.
+# <what> is a grant.name entry, <term> a grant.term entry, times are UTC.
+grant:
+  usage: |-
+    <red>Grants</red> <dark>»</dark> <muted>Usage:</muted>
+    <text>/grant \<player> \<rank> \<duration|permanent> [reason]</text>
+    <text>/grant \<player> perm \<node> \<duration|permanent> [reason]</text>
+    <muted>Durations: 30d, 12h, 1w, 1h30m, 2mo. Timed grants stack on time the player already has.</muted>
+  unknown-rank: "<red>Grants</red> <dark>»</dark> <error>There's no rank called <text><input></text>.</error> <muted>Ranks: <ranks>. For a permission:</muted> <text>/grant \\<player> perm \\<node></text>"
+  bad-node: "<red>Grants</red> <dark>»</dark> <error><text><input></text> isn't a permission you can grant.</error> <muted>Lowercase letters, digits, dots and *; groups go through</muted> <text>/grant \\<player> \\<rank></text><muted>.</muted>"
+  bad-duration: "<red>Grants</red> <dark>»</dark> <error><text><input></text> isn't a duration.</error> <muted>Try 30d, 12h, 1w, 1h30m (10 years at most) or permanent.</muted>"
+  granted: "<red>Grants</red> <dark>»</dark> <success>Granted</success> <what> <success>to</success> <text><player></text> <text><term></text><success>.</success> <muted>Ends <ends> UTC.</muted> <dark>#<id></dark>"
+  granted-stacked: "<red>Grants</red> <dark>»</dark> <success>Granted</success> <what> <success>to</success> <text><player></text> <text><term></text><success>,</success> <muted>after the time they already had: <starts> → <ends> UTC.</muted> <dark>#<id></dark>"
+  granted-permanent: "<red>Grants</red> <dark>»</dark> <success>Granted</success> <what> <success>to</success> <text><player></text> <text><term></text><success>.</success> <dark>#<id></dark>"
+  duplicate: "<red>Grants</red> <dark>»</dark> <muted>Transaction</muted> <text><txn></text> <muted>was already granted (#<id>); nothing changed.</muted>"
+  received: "<prefix><success>You've been granted</success> <what> <text><term></text><success>!</success>"
+  notice: "<red>Grants</red> <dark>»</dark> <text><staff></text> <muted>granted</muted> <what> <muted>to</muted> <text><player></text> <muted><term>.</muted> <dark>#<id></dark>"
+  notice-reason: "<red>Grants</red> <dark>»</dark> <text><staff></text> <muted>granted</muted> <what> <muted>to</muted> <text><player></text> <muted><term>:</muted> <text><reason></text> <dark>#<id></dark>"
+  failed: "<red>Grants</red> <dark>»</dark> <error>Couldn't save that; nothing changed. See the proxy console.</error>"
+  no-reason: "<muted><italic>none given</italic></muted>"
+  denied:
+    self: "<red>Grants</red> <dark>»</dark> <error>You can't grant or revoke on yourself.</error>"
+    rank: "<red>Grants</red> <dark>»</dark> <error>You can't grant ranks.</error>"
+    staff: "<red>Grants</red> <dark>»</dark> <error>You can't grant team roles.</error>"
+    staff-level: "<red>Grants</red> <dark>»</dark> <error>Only someone above</error> <what> <error>can grant or revoke it.</error>"
+    permission: "<red>Grants</red> <dark>»</dark> <error>You can't grant permissions.</error>"
+    node: "<red>Grants</red> <dark>»</dark> <error>You can only grant permissions you have, and you don't have</error> <text><node></text><error>.</error>"
+    revoke: "<red>Grants</red> <dark>»</dark> <error>You can't revoke grants.</error>"
+  term:
+    timed: "for <length>"
+    permanent: "permanently"
+    until: "until <ends> UTC (<left> left)"
+  # In /grants, after each grant.
+  status:
+    active: "<success>active</success> <muted><left> left</muted>"
+    permanent: "<success>permanent</success>"
+    queued: "<accent>queued</accent> <muted>starts in <starts></muted>"
+    expired: "<dark>expired</dark>"
+    revoked: "<error>revoked</error> <muted>by <by></muted>"
+  # Ranks look like their chat prefixes (default plus color); <node> is the permission.
+  name:
+    rapidplus: "<primary>[RAPID</primary><yellow>+</yellow><primary>]</primary>"
+    rapidplusplus: "<primary>[RAPID</primary><yellow>++</yellow><primary>]</primary>"
+    rapidplusplusplus: "<primary>[<bold>RAPID</bold></primary><yellow>+++</yellow><primary>]</primary>"
+    owner: "<dark_red><bold>[OWNER]</bold></dark_red>"
+    admin: "<dark_red>[ADMIN]</dark_red>"
+    developer: "<red>[DEV]</red>"
+    srmod: "<red>[SR. MOD]</red>"
+    moderator: "<red>[MOD]</red>"
+    helper: "<red>[HELPER]</red>"
+    builder: "<red>[BUILDER]</red>"
+    permission: "<accent><node></accent>"
+  revoke:
+    usage: "<red>Grants</red> <dark>»</dark> <muted>Usage:</muted> <text>/grants revoke \\<id> [reason]</text> <muted>(ids are in</muted> <text>/grants \\<player></text><muted>)</muted>"
+    not-found: "<red>Grants</red> <dark>»</dark> <error>There's no grant #<id>.</error>"
+    already-revoked: "<red>Grants</red> <dark>»</dark> <muted>Grant #<id> was already revoked.</muted>"
+    already-expired: "<red>Grants</red> <dark>»</dark> <muted>Grant #<id> has already run out.</muted>"
+    done: "<red>Grants</red> <dark>»</dark> <success>Revoked</success> <what> <success>from</success> <text><player></text><success>.</success> <dark>#<id></dark>"
+    # When the player still holds it afterwards (another grant, or store time added through LuckPerms).
+    still-has: "<red>Grants</red> <dark>»</dark> <muted><player> still has</muted> <what> <muted><term> from other grants or the store.</muted>"
+    notice: "<red>Grants</red> <dark>»</dark> <text><staff></text> <muted>revoked</muted> <what> <muted>from</muted> <text><player></text><muted>.</muted> <dark>#<id></dark>"
+    notice-reason: "<red>Grants</red> <dark>»</dark> <text><staff></text> <muted>revoked</muted> <what> <muted>from</muted> <text><player></text><muted>:</muted> <text><reason></text> <dark>#<id></dark>"
+  history:
+    usage: "<red>Grants</red> <dark>»</dark> <muted>Usage:</muted> <text>/grants \\<player> [page]</text> <dark>|</dark> <text>/grants revoke \\<id> [reason]</text>"
+    empty: "<red>Grants</red> <dark>»</dark> <muted><player> has never been granted anything.</muted>"
+    header: "<red>Grants</red> <dark>»</dark> <text><player></text> <muted>(<count>, page <page>/<pages>, newest first; hover a line for details):</muted>"
+    entry: "<dark>#<id></dark> <what> <dark>•</dark> <status> <dark>•</dark> <muted>by <by></muted>"
+    # Fills in /grants revoke <id> in the chat box, so a reason can be added.
+    button-revoke: "<hover:show_text:'<muted>Revoke this grant (you can add a reason)'><error>[REVOKE]</error></hover>"
+    previous: "<hover:show_text:'<muted>Newer grants'><accent>« Previous</accent></hover>"
+    next: "<hover:show_text:'<muted>Older grants'><accent>Next »</accent></hover>"
+    # Hover text of each line; the extra sections are added when they apply.
+    details:
+      - "<muted>Grant</muted> <text>#<id></text>"
+      - "<muted>Granted</muted> <text><when> UTC</text> <muted>by</muted> <text><by></text>"
+      - "<muted>Length:</muted> <text><length></text>"
+      - "<muted>Reason:</muted> <text><reason></text>"
+    details-timed:
+      - "<muted>Runs</muted> <text><starts></text> <muted>→</muted> <text><ends> UTC</text>"
+    details-txn:
+      - "<muted>Store transaction:</muted> <text><txn></text>"
+    details-revoked:
+      - ""
+      - "<error>Revoked</error> <text><when> UTC</text> <muted>by</muted> <text><by></text>"
+      - "<muted>Why:</muted> <text><reason></text>"

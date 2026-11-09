@@ -21,6 +21,7 @@ import us.rapidskies.common.config.DatabaseSettings;
 import us.rapidskies.common.config.RedisSettings;
 import us.rapidskies.common.db.Database;
 import us.rapidskies.common.economy.Ledger;
+import us.rapidskies.common.grant.GrantRepository;
 import us.rapidskies.common.lang.Lang;
 import us.rapidskies.common.profile.ProfileRepository;
 import us.rapidskies.common.redis.RedisBus;
@@ -30,6 +31,9 @@ import us.rapidskies.proxy.chat.StaffChatCommand;
 import us.rapidskies.proxy.friend.FriendCommand;
 import us.rapidskies.proxy.friend.FriendService;
 import us.rapidskies.proxy.friend.FriendSettings;
+import us.rapidskies.proxy.grant.GrantCommand;
+import us.rapidskies.proxy.grant.GrantService;
+import us.rapidskies.proxy.grant.GrantsCommand;
 import us.rapidskies.proxy.party.PartyChatCommand;
 import us.rapidskies.proxy.party.PartyCommand;
 import us.rapidskies.proxy.party.PartyService;
@@ -46,7 +50,8 @@ import us.rapidskies.proxy.session.VanishedStaff;
 /**
  * Velocity entry point (PLAN.md §4): hub load balancing from the server registry, the
  * version gate, MOTD, maintenance mode, the console command the store uses, and the social
- * layer: parties, friends, the join queue, cross-server messages and staff chat. It also
+ * layer: parties, friends, the join queue, cross-server messages and staff chat, plus
+ * {@code /grant} for ranks and permissions (applied through LuckPerms). It also
  * owns what only a whole-network view can decide: Tailwind accrual between sessions, which
  * accounts share an IP (anti-farm), and hiding vanished staff from social features.
  *
@@ -61,7 +66,8 @@ import us.rapidskies.proxy.session.VanishedStaff;
         description = "RapidSkies network proxy plugin",
         url = "https://rapidskies.us",
         authors = {"RapidSkies"},
-        // Ranks (party and friend-list size, queue priority) come from LuckPerms groups.
+        // Ranks (party and friend-list size, queue priority) come from LuckPerms groups,
+        // and /grant writes them through its API.
         dependencies = {@Dependency(id = "luckperms")})
 public final class RapidProxy {
 
@@ -131,7 +137,8 @@ public final class RapidProxy {
         VanishedStaff vanish = new VanishedStaff(redis, logger);
         sharedIps = new SharedIps(proxy, redis, logger);
         sharedIps.start(this);
-        ProxyRanks ranks = new ProxyRanks(LuckPermsProvider.get(), proxy);
+        var luckPerms = LuckPermsProvider.get();
+        ProxyRanks ranks = new ProxyRanks(luckPerms, proxy);
         queue = new QueueService(proxy, lang, QueueSettings.from(config), ranks, directory::servers, logger);
         queue.start(this, redis);
         parties = new PartyService(proxy, lang, PartySettings.from(config), ranks, queue);
@@ -139,6 +146,8 @@ public final class RapidProxy {
         FriendService friends = new FriendService(proxy, lang, FriendSettings.from(config), ranks, queue, database,
                 profiles, vanish, logger);
         PrivateMessages messages = new PrivateMessages(proxy, lang, vanish);
+        GrantService grants = GrantService.create(proxy, lang, new GrantRepository(database),
+                new PlayerLookup(proxy, profiles), luckPerms, ranks, logger);
 
         var events = proxy.getEventManager();
         events.register(this, new ConnectionListener(lang, directory, settings));
@@ -154,6 +163,7 @@ public final class RapidProxy {
         register("maintenance", new MaintenanceCommand(proxy, lang, redis, directory, logger));
         register("rapid", new AdminCommand(proxy, lang, Ledger.bolts(database), profiles, logger));
         register("play", new PlayCommand(lang, queue, parties));
+        register("hub", PlayCommand.hub(lang, queue, settings.hubGroup()), "lobby");
         register("leavequeue", PlayCommand.leave(lang, queue), "lq");
         register("party", new PartyCommand(proxy, lang, parties), "p");
         register("pc", new PartyChatCommand(lang, parties));
@@ -162,6 +172,8 @@ public final class RapidProxy {
         register("msg", messages.msgCommand(), "tell", "w", "whisper", "m", "t", "pm", "message");
         register("r", messages.replyCommand(), "reply");
         register("staffchat", new StaffChatCommand(proxy, lang, logger), "sc");
+        register("grant", new GrantCommand(proxy, lang, grants));
+        register("grants", new GrantsCommand(proxy, lang, grants));
 
         ready = true;
         logger.info("rapid-proxy {} ready", BuildConstants.VERSION);

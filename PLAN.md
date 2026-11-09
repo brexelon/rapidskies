@@ -320,6 +320,7 @@ Ranks are sold as **Tebex subscriptions** at `store.rapidskies.us` and are also 
 | Rapid++ | + Blue, Dark Blue, Dark Aqua, Dark Green, Dark Purple (11) |
 | Rapid+++ | + Gray, Dark Gray, Black (all 14 non-reserved colors), plus **gradients** |
 
+- **Rapid+++ gradients** (each with its own name in `/plus`, shown on their own row): Sunset (yellow → gold → pink), Ocean (aqua → dark blue), Aurora (green → aqua → pink), Frost (white → aqua), Citrus (yellow → green), Twilight (blue → pink), Silver (white → dark gray). `+++` is three characters, so a gradient's first, middle and last colors are what shows; none of them may be close to red.
 - **Red and Dark Red are reserved** for staff prefixes, to prevent impersonation.
 - Extra plus colors and gradients can be earned as achievement or Chapter rewards, but only players with an active rank can equip them.
 - If a rank lapses, the color is remembered and restored when the rank returns.
@@ -383,9 +384,9 @@ Bolts are one global currency stored in `rapid-core`'s DB. They can be bought on
 ### 6.3 Store integration (store.rapidskies.us)
 
 - Tebex webstore on the custom domain `store.rapidskies.us` (CNAME + Tebex SSL), themed with the brand palette and logo. The Tebex plugin runs on Velocity.
-- Packages run commands such as `rapid grant rank <uuid> rapidplusplus 30d <txn>` and `rapid bolts add <uuid> 1100 <txn>`.
-- Every grant is **idempotent per Tebex transaction ID** and logged.
-- Ranks use LuckPerms **temporary parents**. Stacking extends time, and the highest active tier wins for display.
+- Packages run commands such as `grant <uuid> rapidplusplus 30d Store purchase txn:<txn>` and `rapid bolts add <uuid> 1100 <txn>`.
+- Every grant is **idempotent per Tebex transaction ID** and logged (`grants`, `bolts_ledger`).
+- Ranks use LuckPerms **temporary parents**, written by `/grant` through the LuckPerms API. Stacking extends time, and the highest active tier wins for display.
 - Chargebacks trigger an automatic revoke plus a flag for staff review.
 - `/store` and `/buy` in-game print a clickable `store.rapidskies.us` link.
 
@@ -422,6 +423,8 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 
 **LuckPerms staff track:** Helper → Moderator → Sr. Moderator → Admin → Owner, with Builder and Developer as separate groups. Staff prefixes use the reserved red shades.
 
+**Grants** (`rapid-proxy`): staff give ranks, team roles and permissions with `/grant <player> <rank> <duration|permanent> [reason]` or `/grant <player> perm <node> ...`, never with LuckPerms commands. Every grant is a `grants` row (who, what, how long, why), shown with hover details by `/grants <player>` and revoked with `/grants revoke <id> [reason]`; LuckPerms holds the result, so TAB, chat prefixes and other plugins need nothing extra. Timed grants stack, and revoking one takes away only the time it had left. Nobody grants to themselves, team roles only go to roles below your own, and permissions only if you hold them.
+
 **Staff mode** (`rapid-core`): vanish, freeze (with a chest-menu notice), inventory/ender chest inspect, teleport to player, random teleport to players, CPS/reach view from the anti-cheat, X-ray ore-ratio view, and a punishment GUI that shortcuts LiteBans templates.
 
 **Survival-specific tools:** CoreProtect lookups and rollbacks, `/claimadmin` and island admin overrides, `/ah admin` and shop transaction lookups, and economy anomaly alerts for sudden large gains or suspicious auction patterns.
@@ -451,6 +454,7 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 - `frontier_history` (id, modifier, opened_at, closed_at, archive_path)
 - `friends` (two rows per friendship), `friend_requests`. Parties and the join queue are ephemeral and live in the proxy's memory: there is one proxy and a restart drops every player anyway. Move them to Redis (`party:<id>`, `queue:<target>`) if a second proxy is ever added.
 - `reports`, `staff_actions` (staff, action, target, server, detail: freezes, inspections, vanish and staff-mode toggles), `chat_log`
+- `grants` (uuid, kind [rank/permission], value, granted_by, reason, txn_id UNIQUE, created_at, starts_at, expires_at, revoked_at/by/reason): the record behind `/grant`; LuckPerms holds the effective nodes
 - `store_transactions` (txn_id, uuid, package, status, timestamps)
 
 SuperiorSkyblock2 keeps its own tables in the same MariaDB instance, under its own schema.
@@ -496,10 +500,14 @@ Done (with tests; the MariaDB/Redis ones run in CI through Testcontainers):
 - [x] Tailwind (§5.3): the proxy turns time away into Tailwind on login (2h per day away, at most 3 days counted; 2h starter bank for new players); gamemode servers spend it while not AFK; `tailwind().multiplier(player)` for the mode plugins, `/tailwind`, `%rapid_tailwind%`
 - [x] Per-mode Vault economy: VaultUnlocked on gamemode servers; rapid-core registers Coins or Crowns (`server.gamemode`) with cached balances and ledger-guarded writes, rounding fractional amounts against the receiver; ledger rows name the calling plugin (`vault:SuperiorSkyblock2`)
 - [x] TAB-Bridge on the backends and VelocityScoreboardAPI on the proxy; TAB shows `%rapid_prefix%` in the tab list and nametags and `%rapid_afk%` after names
+- [x] `/hub` (alias `/lobby`): `/play` for the lobby group; party members may use it to go back alone
+- [x] Grants (§9): `/grant`, `/grants`, `/grants revoke` on the proxy, applied through the LuckPerms API with a Redis push to the backends; stacking timed grants, store idempotency via `txn:<id>`, team-role and permission limits (`grants`, core V4)
+- [x] `/plus` gradients for Rapid+++ (§6.1): seven named gradients on their own menu row, also settable with `/plus <name>`; rendered per character in chat, tab and nametags through `%rapid_prefix%`
+- [x] Lang bundles use what 1.20+ clients render: hover hints on every button, `<key:...>` keybinds in staff tools and the freeze notice, clickable command hints; a test fails if a `<hover>`, `<click>` or `<key>` tag doesn't parse
 
 Next:
 
-- [ ] Check on 1.20.1 and 26.3: LiteBans mutes block `/msg`, `/r` and `/pc`; party follow and the queue action bar; `/plus` menu items and lore; staff mode tools, the freeze notice and title; `[RAPID+++]` nametags; vanished staff missing from the tab list
+- [ ] Check on 1.20.1 and 26.3: LiteBans mutes block `/msg`, `/r` and `/pc`; party follow and the queue action bar; `/plus` menu items and lore; staff mode tools (keybind names in item names and lore), the freeze notice and title; `[RAPID+++]` nametags; vanished staff missing from the tab list; button hovers; `/grant` a rank to an online player and see the prefix change on their backend without a relog
 - [ ] Tune in beta: Tailwind rate and starter bank, playtime Bolts, AFK timeout
 - [ ] Later staff tooling from §9 that needs other plugins' APIs: CPS/reach view (Grim), X-ray ore ratios, LiteBans punishment GUI
 

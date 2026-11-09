@@ -63,6 +63,23 @@ public final class PlayCommand implements SimpleCommand {
                 ? Suggest.matching(queue.settings().groups().keySet(), Suggest.last(args)) : List.of());
     }
 
+    /**
+     * {@code /hub} (and {@code /lobby}): {@code /play} for the lobby group. Unlike other
+     * targets, party members may use it: going back to the lobby alone is always allowed and
+     * keeps them in the party. When the leader uses it, the party follows as usual.
+     */
+    public static SimpleCommand hub(Lang lang, QueueService queue, String hubGroup) {
+        return invocation -> {
+            if (!(invocation.source() instanceof Player player)) {
+                lang.send(invocation.source(), "errors.players-only");
+                return;
+            }
+            queue.resolve(hubGroup).ifPresentOrElse(
+                    target -> queue.join(player, target),
+                    () -> lang.send(player, "queue.unknown-target", Placeholder.unparsed("target", hubGroup)));
+        };
+    }
+
     /** {@code /leavequeue}. */
     public static SimpleCommand leave(Lang lang, QueueService queue) {
         return invocation -> {

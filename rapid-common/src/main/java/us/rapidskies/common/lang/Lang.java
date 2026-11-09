@@ -127,6 +127,11 @@ public final class Lang {
         return messages.containsKey(key);
     }
 
+    /** Every message key in the bundle (tests check each message renders). */
+    public Set<String> keys() {
+        return messages.keySet();
+    }
+
     /** The unparsed MiniMessage string for {@code key}. A list is joined with newlines. */
     public String raw(String key) {
         Object v = messages.get(key);

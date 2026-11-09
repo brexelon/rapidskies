@@ -6,15 +6,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.KeybindComponent;
+import net.kyori.adventure.text.TextComponent;
 import org.junit.jupiter.api.Test;
 import us.rapidskies.common.lang.Lang;
+import us.rapidskies.common.rank.Rank;
+import us.rapidskies.common.rank.StaffRole;
 import us.rapidskies.proxy.party.Parties;
 
 /**
@@ -24,7 +31,7 @@ import us.rapidskies.proxy.party.Parties;
 class LangKeysTest {
 
     private static final Pattern KEY = Pattern.compile(
-            "\"((?:admin|bolts|errors|freeze|friend|kick|maintenance|motd|msg|party|queue|staffchat)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
+            "\"((?:admin|bolts|errors|freeze|friend|grant|kick|maintenance|motd|msg|party|queue|staffchat)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
 
     @Test
     void everyKeyInTheCodeIsInTheBundle() throws IOException {
@@ -41,7 +48,58 @@ class LangKeysTest {
                 missing.add(key);
             }
         }
+        // GrantService#what: "grant.name." + group, for every grantable rank and team role.
+        for (Rank r : Rank.values()) {
+            if (r != Rank.DEFAULT && !lang.has("grant.name." + r.group())) {
+                missing.add("grant.name." + r.group());
+            }
+        }
+        for (StaffRole s : StaffRole.values()) {
+            if (!lang.has("grant.name." + s.group())) {
+                missing.add("grant.name." + s.group());
+            }
+        }
         assertEquals(Set.of(), missing);
+    }
+
+    /**
+     * Interactive tags really parse. MiniMessage prints a malformed tag as plain text instead
+     * of failing, so a typo in {@code <hover:show_text:'...'>} or {@code <key:...>} would
+     * otherwise only show up in front of players.
+     */
+    @Test
+    void interactiveTagsRender() throws IOException {
+        Lang lang = Lang.fromResource(getClass().getClassLoader(), Lang.DEFAULT_RESOURCE, null);
+        List<String> problems = new ArrayList<>();
+        for (String key : new TreeSet<>(lang.keys())) {
+            String raw = lang.raw(key);
+            Component c = lang.get(key);
+            for (String tag : new String[] {"hover", "click", "key"}) {
+                if (raw.contains("<" + tag + ":") && text(c).contains("<" + tag)) {
+                    problems.add(key + ": <" + tag + "> printed as text");
+                }
+            }
+            if (raw.contains("<hover:") && !any(c, x -> x.hoverEvent() != null)) {
+                problems.add(key + ": no hover");
+            }
+            if (raw.contains("<click:") && !any(c, x -> x.clickEvent() != null)) {
+                problems.add(key + ": no click");
+            }
+            if (raw.contains("<key:") && !any(c, x -> x instanceof KeybindComponent)) {
+                problems.add(key + ": no keybind");
+            }
+        }
+        assertEquals(List.of(), problems);
+    }
+
+    private static boolean any(Component c, Predicate<Component> test) {
+        return test.test(c) || c.children().stream().anyMatch(child -> any(child, test));
+    }
+
+    private static String text(Component c) {
+        StringBuilder sb = new StringBuilder(c instanceof TextComponent t ? t.content() : "");
+        c.children().forEach(child -> sb.append(text(child)));
+        return sb.toString();
     }
 
     private static Set<String> keysInSources() throws IOException {
@@ -57,7 +115,7 @@ class LangKeysTest {
             }
         }
         // Prefixes the code completes at runtime, and config paths that share a key's shape.
-        keys.removeIf(k -> List.of("party.fail", "queue.groups", "queue.priority", "queue.priority.staff",
+        keys.removeIf(k -> List.of("party.fail", "grant.name", "queue.groups", "queue.priority", "queue.priority.staff",
                 "motd.rotate-seconds").contains(k));
         return keys;
     }

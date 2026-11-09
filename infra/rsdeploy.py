@@ -10,6 +10,11 @@ Profile layout (infra/profiles/<profile>/...), paths mirror the server root:
   <file>.patch   YAML mapping of dotted.key.path -> value, applied to <file>.
                  Supported targets: .properties, .yml/.yaml, .toml
                  A mapping value replaces the whole section (no deep merge).
+                 Live lines that conflict with the patch are replaced: duplicate keys
+                 collapse to one (the patched value, or else the one the server reads),
+                 and a scalar or list standing where a patched section goes is replaced.
+                 Later profiles override earlier ones key by key, and a section set by a
+                 later profile drops an earlier profile's keys inside it.
   <file>         Any other file is written verbatim.
 Both may contain ${NAME} placeholders, resolved from infra/secrets.env, the
 server's `vars` in network.yml, SERVER_NAME, and ${addr:<server>}.
@@ -42,10 +47,15 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from collections.abc import Mapping
+
 try:
     import tomlkit
     from ruamel.yaml import YAML
     from ruamel.yaml.comments import CommentedMap
+    from ruamel.yaml.constructor import RoundTripConstructor
+    from ruamel.yaml.error import YAMLError
+    from tomlkit.exceptions import TOMLKitError
 except ImportError:  # pragma: no cover
     sys.exit("Missing dependencies: pip install -r infra/requirements.txt")
 
@@ -139,7 +149,8 @@ def collect_profile_files(profiles: list[str]) -> dict[str, FilePlan]:
                 body = YAML(typ="safe").load(f.read_text(encoding="utf-8")) or {}
                 if not isinstance(body, dict):
                     raise DeployError(f"{f}: patch must be a mapping")
-                plans.setdefault(target, FilePlan()).patch.update(body)
+                _merge_patch(plans.setdefault(target, FilePlan()).patch, body,
+                             nested=not target.endswith(".properties"))
             else:
                 plans.setdefault(rel, FilePlan()).verbatim = f.read_bytes()
     return plans
@@ -190,23 +201,138 @@ class Resolver:
 
 # --------------------------------------------------------------------------- patchers
 
-def patch_properties(text: str, patch: dict) -> str:
-    lines = text.splitlines()
-    remaining = dict(patch)
-    for i, line in enumerate(lines):
-        if line.lstrip().startswith(("#", "!")) or "=" not in line:
+def _same(a, b) -> bool:
+    """Deep equality that also matches types, so `1` doesn't count as `true` or "1"."""
+    if hasattr(a, "unwrap"):  # tomlkit items
+        a = a.unwrap()
+    if isinstance(a, Mapping) and isinstance(b, Mapping):
+        return a.keys() == b.keys() and all(_same(a[k], b[k]) for k in a)
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(_same(x, y) for x, y in zip(a, b))
+    kinds = (bool, int, float, str, type(None), Mapping, list)
+    kind = lambda v: next((t for t in kinds if isinstance(v, t)), type(v))
+    return kind(a) is kind(b) and a == b
+
+
+def _merge_patch(into: dict, body: dict, nested: bool) -> None:
+    """Merge a later profile's patch over an earlier one's.
+
+    The later entry always wins: a key is moved to the end so it applies after whatever
+    it refines, and when `nested`, earlier entries below it (`a.b` when the new key is `a`)
+    are dropped, since the new value replaces that whole section anyway.
+    """
+    for key, value in body.items():
+        key = str(key)
+        for old in [k for k in into if k == key or (nested and k.startswith(key + "."))]:
+            del into[old]
+        into[key] = value
+
+
+# Java .properties syntax (what Paper and Minecraft read): `key=value`, `key: value` or
+# `key value`; `#`/`!` comments; a trailing odd backslash continues the line; backslash escapes.
+_PROP_ESCAPES = {"t": "\t", "n": "\n", "r": "\r", "f": "\f"}
+
+
+def _prop_logical_lines(lines: list[str]) -> list[tuple[int, int]]:
+    """[start, end) physical line ranges of each logical line."""
+    out, i = [], 0
+    while i < len(lines):
+        start = i
+        if not lines[i].lstrip().startswith(("#", "!")):
+            while i < len(lines) - 1 and (len(lines[i]) - len(lines[i].rstrip("\\"))) % 2 == 1:
+                i += 1
+        i += 1
+        out.append((start, i))
+    return out
+
+
+def _prop_unescape(s: str) -> str:
+    out, i = [], 0
+    while i < len(s):
+        c = s[i]
+        if c == "\\" and i + 1 < len(s):
+            n = s[i + 1]
+            if n == "u" and re.fullmatch(r"[0-9a-fA-F]{4}", s[i + 2:i + 6]):
+                out.append(chr(int(s[i + 2:i + 6], 16)))
+                i += 6
+                continue
+            out.append(_PROP_ESCAPES.get(n, n))
+            i += 2
             continue
-        key = line.split("=", 1)[0].strip()
-        if key in remaining:
-            lines[i] = f"{key}={_prop_str(remaining.pop(key))}"
-    for key, value in remaining.items():
-        lines.append(f"{key}={_prop_str(value)}")
-    return "\n".join(lines) + "\n"
+        out.append(c)
+        i += 1
+    return "".join(out)
+
+
+def _prop_parse(physical: list[str]) -> tuple[str, str] | None:
+    """(key, value) of one logical line, or None for blanks and comments."""
+    joined = physical[0]
+    for nxt in physical[1:]:
+        joined = joined[:-1] + nxt.lstrip()  # drop the continuation backslash
+    s = joined.lstrip(" \t\f")
+    if not s or s.startswith(("#", "!")):
+        return None
+    i = 0
+    while i < len(s) and s[i] not in "=: \t\f":
+        i += 2 if s[i] == "\\" else 1
+    key, rest = s[:i], s[i:].lstrip(" \t\f")
+    if rest[:1] in ("=", ":"):
+        rest = rest[1:].lstrip(" \t\f")
+    return _prop_unescape(key), _prop_unescape(rest)
+
+
+def _prop_escape(s: str, is_key: bool) -> str:
+    out = []
+    for i, c in enumerate(s):
+        if c == "\\":
+            out.append("\\\\")
+        elif c in "\t\n\r\f":
+            out.append("\\" + {"\t": "t", "\n": "n", "\r": "r", "\f": "f"}[c])
+        elif c in "=:#!" or (c == " " and (is_key or i == 0)):
+            out.append("\\" + c)
+        else:
+            out.append(c)
+    return "".join(out)
+
+
+def _prop_line(key: str, value) -> str:
+    return f"{_prop_escape(key, True)}={_prop_escape(_prop_str(value), False)}"
+
+
+def patch_properties(text: str, patch: dict) -> str:
+    """Set each patched key. Lines that already hold the patched value are left as they are.
+
+    Duplicate keys are a conflict (Java keeps the last one, so an old duplicate further down
+    would silently win): a patched key keeps its first line, with the new value, and loses the
+    rest; an unpatched duplicate keeps only its last, effective, line.
+    """
+    lines = text.splitlines()
+    patch = {str(k): v for k, v in patch.items()}
+    entries = [(rng, _prop_parse(lines[rng[0]:rng[1]])) for rng in _prop_logical_lines(lines)]
+    last = {kv[0]: n for n, (_, kv) in enumerate(entries) if kv}
+    out, done = [], set()
+    for n, ((start, end), kv) in enumerate(entries):
+        if kv is None:
+            out.extend(lines[start:end])
+            continue
+        key, value = kv
+        if key in patch:
+            if key in done:
+                continue
+            done.add(key)
+            want = _prop_str(patch[key])
+            out.extend(lines[start:end] if value == want else [_prop_line(key, patch[key])])
+        elif last[key] == n:
+            out.extend(lines[start:end])
+    out.extend(_prop_line(k, v) for k, v in patch.items() if k not in done)
+    return "\n".join(out) + "\n"
 
 
 def _prop_str(v) -> str:
     if isinstance(v, bool):
         return "true" if v else "false"
+    if v is None:
+        return ""
     return str(v)
 
 
@@ -228,25 +354,37 @@ def _detect_yaml_style(text: str) -> tuple[int, bool]:
     return indent or 2, bool(nested_lists)
 
 
+class _LastKeyWins(RoundTripConstructor):
+    """Resolve duplicate YAML keys the way SnakeYAML (Bukkit, Velocity plugins) does: the
+    last one wins. Only that one is written back, so the conflict is gone after a patch."""
+
+    def check_mapping_key(self, node, key_node, mapping, key, value) -> bool:
+        if key in mapping:
+            del mapping[key]
+        return True
+
+
 def patch_yaml(text: str, patch: dict) -> str:
     y = yaml_rt()
+    y.Constructor = _LastKeyWins
     indent, nested_lists = _detect_yaml_style(text)
     if nested_lists:
         y.indent(mapping=indent, sequence=indent + 2, offset=indent)
     else:
         y.indent(mapping=indent, sequence=indent, offset=0)
     doc = y.load(text) if text.strip() else None
-    if doc is None:
+    if not isinstance(doc, dict):
         doc = CommentedMap()
     for path, value in patch.items():
         keys = str(path).split(".")
         node = doc
         for k in keys[:-1]:
+            # Anything that isn't a section (a scalar, a list) is in the way: replace it.
             if not isinstance(node.get(k), dict):
                 node[k] = CommentedMap()
             node = node[k]
-        # Re-assigning an equal list would drop comments ruamel attached to it.
-        if keys[-1] in node and node[keys[-1]] == value:
+        # Re-assigning an equal value would drop comments ruamel attached to it.
+        if keys[-1] in node and _same(node[keys[-1]], value):
             continue
         node[keys[-1]] = value
     out = io.StringIO()
@@ -260,26 +398,38 @@ def patch_toml(text: str, patch: dict) -> str:
         keys = str(path).split(".")
         node = doc
         for k in keys[:-1]:
-            if k not in node:
+            # A scalar, array or array of tables is in the way of the section: replace it.
+            if not isinstance(node.get(k), Mapping):
+                if k in node:
+                    del node[k]
                 node[k] = tomlkit.table()
             node = node[k]
+        last = keys[-1]
+        # Re-assigning an equal value would drop its trailing comment.
+        if last in node and _same(node[last], value):
+            continue
         if isinstance(value, dict):
-            table = tomlkit.table()
+            item = tomlkit.table()
             for k, v in value.items():
-                table[k] = v
-            node[keys[-1]] = table
+                item[k] = v
         else:
-            node[keys[-1]] = value
+            item = value
+        if last in node and isinstance(node[last], Mapping) != isinstance(value, dict):
+            del node[last]  # a table can't be overwritten in place by a value, or vice versa
+        node[last] = item
     return tomlkit.dumps(doc)
 
 
 def apply_patch(target: str, text: str, patch: dict) -> str:
-    if target.endswith(".properties"):
-        return patch_properties(text, patch)
-    if target.endswith((".yml", ".yaml")):
-        return patch_yaml(text, patch)
-    if target.endswith(".toml"):
-        return patch_toml(text, patch)
+    try:
+        if target.endswith(".properties"):
+            return patch_properties(text, patch)
+        if target.endswith((".yml", ".yaml")):
+            return patch_yaml(text, patch)
+        if target.endswith(".toml"):
+            return patch_toml(text, patch)
+    except (YAMLError, TOMLKitError) as e:
+        raise DeployError(f"{target} on the server doesn't parse, fix or delete it: {e}") from e
     raise DeployError(f"don't know how to patch {target}")
 
 

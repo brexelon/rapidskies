@@ -4,16 +4,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.IntStream;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 /**
  * The color of the pluses in a rank prefix, chosen with {@code /plus} (PLAN.md §6.1).
  *
- * <p>Only the 16 named chat colors are used, so each choice has a clear name. Red and dark
- * red are reserved for staff and are not listed here.
- * Gradients for Rapid+++ arrive with the {@code /plus} GUI in phase 5.
+ * <p>Plain colors are the 16 named chat colors, so each choice has a clear name. Red and dark
+ * red are reserved for staff and are not listed here. Rapid+++ also gets named
+ * <b>gradients</b>, whose stops stay clear of the staff reds.
  */
 public enum PlusColor {
     WHITE(NamedTextColor.WHITE, Rank.RAPID_PLUS),
@@ -31,21 +33,52 @@ public enum PlusColor {
 
     GRAY(NamedTextColor.GRAY, Rank.RAPID_PLUS_PLUS_PLUS),
     DARK_GRAY(NamedTextColor.DARK_GRAY, Rank.RAPID_PLUS_PLUS_PLUS),
-    BLACK(NamedTextColor.BLACK, Rank.RAPID_PLUS_PLUS_PLUS);
+    BLACK(NamedTextColor.BLACK, Rank.RAPID_PLUS_PLUS_PLUS),
+
+    // Gradients (Rapid+++). "+++" is three characters, so the first, middle and last colors
+    // are what shows in a prefix; keep them readable and away from red.
+    SUNSET(Rank.RAPID_PLUS_PLUS_PLUS, 0xFFFF55, 0xFFAA00, 0xFF55FF),
+    OCEAN(Rank.RAPID_PLUS_PLUS_PLUS, 0x55FFFF, 0x0000AA),
+    AURORA(Rank.RAPID_PLUS_PLUS_PLUS, 0x55FF55, 0x55FFFF, 0xFF55FF),
+    FROST(Rank.RAPID_PLUS_PLUS_PLUS, 0xFFFFFF, 0x55FFFF),
+    CITRUS(Rank.RAPID_PLUS_PLUS_PLUS, 0xFFFF55, 0x55FF55),
+    TWILIGHT(Rank.RAPID_PLUS_PLUS_PLUS, 0x5555FF, 0xFF55FF),
+    SILVER(Rank.RAPID_PLUS_PLUS_PLUS, 0xFFFFFF, 0x555555);
 
     /** Shown when nothing is chosen, or the choice needs a higher rank than the player has now. */
     public static final PlusColor DEFAULT = YELLOW;
 
-    private final NamedTextColor color;
+    private final TextColor color;
+    private final List<TextColor> stops;
     private final Rank minimum;
 
     PlusColor(NamedTextColor color, Rank minimum) {
         this.color = color;
+        this.stops = List.of();
         this.minimum = minimum;
     }
 
-    public NamedTextColor color() {
+    PlusColor(Rank minimum, int... stops) {
+        this.stops = IntStream.of(stops).mapToObj(TextColor::color).toList();
+        this.color = this.stops.get(0);
+        this.minimum = minimum;
+    }
+
+    /**
+     * The color, or a gradient's first color. Used where only one color fits, such as
+     * {@code %rapid_plus_color%}.
+     */
+    public TextColor color() {
         return color;
+    }
+
+    public boolean gradient() {
+        return !stops.isEmpty();
+    }
+
+    /** A gradient's colors from first to last; empty for a plain color. */
+    public List<TextColor> stops() {
+        return stops;
     }
 
     /** The lowest rank that can use this color. */
@@ -82,8 +115,14 @@ public enum PlusColor {
         return chosen != null && chosen.availableTo(rank) ? chosen : DEFAULT;
     }
 
-    /** {@code <plus>...</plus>} styling tag for the rank prefix templates in the lang bundle. */
+    /**
+     * {@code <plus>...</plus>} tag for the rank prefix templates in the lang bundle: the color,
+     * or the gradient spread over the enclosed text.
+     */
     public TagResolver tag() {
-        return TagResolver.resolver("plus", Tag.styling(color));
+        if (!gradient()) {
+            return TagResolver.resolver("plus", Tag.styling(color));
+        }
+        return TagResolver.resolver("plus", (args, ctx) -> new GradientTag(stops));
     }
 }

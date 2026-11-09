@@ -12,6 +12,9 @@ class RapidPlaceholdersTest {
         assertEquals("§e", RapidPlaceholders.legacyCode(PlusColor.YELLOW));
         assertEquals("§3", RapidPlaceholders.legacyCode(PlusColor.DARK_AQUA));
         assertEquals("§0", RapidPlaceholders.legacyCode(PlusColor.BLACK));
+        // A gradient falls back to its first color (Twilight starts blue, Ocean aqua).
+        assertEquals("§9", RapidPlaceholders.legacyCode(PlusColor.TWILIGHT));
+        assertEquals("§b", RapidPlaceholders.legacyCode(PlusColor.OCEAN));
     }
 
     @Test

@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -17,6 +16,7 @@ import us.rapidskies.common.economy.Ledger;
 import us.rapidskies.common.economy.Ledger.Result;
 import us.rapidskies.common.lang.Lang;
 import us.rapidskies.common.profile.ProfileRepository;
+import us.rapidskies.proxy.PlayerLookup.Found;
 
 /**
  * {@code /rapid bolts add|remove|balance}: the command Tebex packages run on the proxy
@@ -33,14 +33,14 @@ final class AdminCommand implements SimpleCommand {
     private final ProxyServer proxy;
     private final Lang lang;
     private final Ledger bolts;
-    private final ProfileRepository profiles;
+    private final PlayerLookup lookup;
     private final Logger logger;
 
     AdminCommand(ProxyServer proxy, Lang lang, Ledger bolts, ProfileRepository profiles, Logger logger) {
         this.proxy = proxy;
         this.lang = lang;
         this.bolts = bolts;
-        this.profiles = profiles;
+        this.lookup = new PlayerLookup(proxy, profiles);
         this.logger = logger;
     }
 
@@ -55,7 +55,7 @@ final class AdminCommand implements SimpleCommand {
         String action = args[1].toLowerCase(Locale.ROOT);
         String target = args[2];
         try {
-            Optional<Target> player = resolve(target);
+            Optional<Found> player = lookup.find(target);
             if (player.isEmpty()) {
                 lang.send(source, "admin.unknown-player", Placeholder.unparsed("player", target));
                 return;
@@ -72,7 +72,7 @@ final class AdminCommand implements SimpleCommand {
         }
     }
 
-    private void change(CommandSource source, Target player, boolean add, String[] args) throws SQLException {
+    private void change(CommandSource source, Found player, boolean add, String[] args) throws SQLException {
         if (args.length < 4) {
             lang.send(source, "admin.usage");
             return;
@@ -116,34 +116,7 @@ final class AdminCommand implements SimpleCommand {
         }
     }
 
-    private record Target(UUID uuid, String name) {
-    }
-
-    /** A UUID (what Tebex sends), an online player, or anyone who has joined before. */
-    private Optional<Target> resolve(String input) throws SQLException {
-        try {
-            UUID uuid = UUID.fromString(input);
-            String name = proxy.getPlayer(uuid).map(Player::getUsername)
-                    .or(() -> lookupName(uuid)).orElse(input);
-            return Optional.of(new Target(uuid, name));
-        } catch (IllegalArgumentException notUuid) {
-            Optional<Player> online = proxy.getPlayer(input);
-            if (online.isPresent()) {
-                return Optional.of(new Target(online.get().getUniqueId(), online.get().getUsername()));
-            }
-            return profiles.findByName(input).map(p -> new Target(p.uuid(), p.name()));
-        }
-    }
-
-    private Optional<String> lookupName(UUID uuid) {
-        try {
-            return profiles.find(uuid).map(p -> p.name());
-        } catch (SQLException e) {
-            return Optional.empty();
-        }
-    }
-
-    private static TagResolver name(Target t) {
+    private static TagResolver name(Found t) {
         return Placeholder.unparsed("player", t.name());
     }
 

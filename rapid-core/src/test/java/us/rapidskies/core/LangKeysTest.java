@@ -6,11 +6,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.KeybindComponent;
+import net.kyori.adventure.text.TextComponent;
 import org.junit.jupiter.api.Test;
 import us.rapidskies.common.lang.Lang;
 import us.rapidskies.common.rank.Rank;
@@ -47,6 +53,46 @@ class LangKeysTest {
             }
         }
         assertEquals(Set.of(), missing);
+    }
+
+    /**
+     * Interactive tags really parse. MiniMessage prints a malformed tag as plain text instead
+     * of failing, so a typo in {@code <hover:show_text:'...'>} or {@code <key:...>} would
+     * otherwise only show up in front of players.
+     */
+    @Test
+    void interactiveTagsRender() throws IOException {
+        Lang lang = Lang.fromResource(getClass().getClassLoader(), Lang.DEFAULT_RESOURCE, null);
+        List<String> problems = new ArrayList<>();
+        for (String key : new TreeSet<>(lang.keys())) {
+            String raw = lang.raw(key);
+            Component c = lang.get(key);
+            for (String tag : new String[] {"hover", "click", "key"}) {
+                if (raw.contains("<" + tag + ":") && text(c).contains("<" + tag)) {
+                    problems.add(key + ": <" + tag + "> printed as text");
+                }
+            }
+            if (raw.contains("<hover:") && !any(c, x -> x.hoverEvent() != null)) {
+                problems.add(key + ": no hover");
+            }
+            if (raw.contains("<click:") && !any(c, x -> x.clickEvent() != null)) {
+                problems.add(key + ": no click");
+            }
+            if (raw.contains("<key:") && !any(c, x -> x instanceof KeybindComponent)) {
+                problems.add(key + ": no keybind");
+            }
+        }
+        assertEquals(List.of(), problems);
+    }
+
+    private static boolean any(Component c, Predicate<Component> test) {
+        return test.test(c) || c.children().stream().anyMatch(child -> any(child, test));
+    }
+
+    private static String text(Component c) {
+        StringBuilder sb = new StringBuilder(c instanceof TextComponent t ? t.content() : "");
+        c.children().forEach(child -> sb.append(text(child)));
+        return sb.toString();
     }
 
     private static Set<String> keysInSources() throws IOException {

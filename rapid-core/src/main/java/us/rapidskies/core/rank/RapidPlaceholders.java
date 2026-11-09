@@ -16,7 +16,8 @@ import us.rapidskies.core.tailwind.TailwindService;
  * <ul>
  *   <li>{@code %rapid_prefix%}: the full chat prefix (team role or rank, with plus color and
  *       trailing space), as section-sign codes; empty for default players</li>
- *   <li>{@code %rapid_plus_color%}: the plus color as a legacy code, e.g. {@code §e}</li>
+ *   <li>{@code %rapid_plus_color%}: the plus color as a legacy code, e.g. {@code §e}; for
+ *       a gradient, its first color ({@code %rapid_prefix%} carries the whole gradient)</li>
  *   <li>{@code %rapid_rank%}: {@code Rapid++}, or empty</li>
  *   <li>{@code %rapid_staff%}: the team role's group name, or empty</li>
  *   <li>{@code %rapid_afk%}: lang {@code afk.tag} while the player is AFK, else empty</li>
@@ -88,7 +89,7 @@ public final class RapidPlaceholders extends PlaceholderExpansion {
         };
     }
 
-    /** "§e" for yellow. An empty component serializes to nothing, so encode one character and drop it. */
+    /** "§e" for yellow; a gradient's first color. An empty component serializes to nothing, so encode one character and drop it. */
     static String legacyCode(PlusColor color) {
         String s = LEGACY.serialize(Component.text("x", color.color()));
         return s.substring(0, s.length() - 1);
