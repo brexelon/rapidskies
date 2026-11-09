@@ -1,0 +1,57 @@
+# rapid-core messages (MiniMessage). Brand tags: <primary> <accent> <text> <muted> <dark>
+# <success> <error>, and <prefix> for "RAPIDSKIES »". Test every change on a 1.8.9 client:
+# hex colors fall back to the nearest legacy color there.
+
+# Rank and staff prefixes (PLAN.md §6.1, §9). <plus>...</plus> takes the player's plus color.
+rank:
+  prefix:
+    rapidplus: "<primary>[RAPID</primary><plus>+</plus><primary>]</primary> "
+    rapidplusplus: "<primary>[RAPID</primary><plus>++</plus><primary>]</primary> "
+    rapidplusplusplus: "<primary>[<bold>RAPID</bold></primary><plus>+++</plus><primary>]</primary> "
+  # Red shades are reserved for the team; plus colors can never use them.
+  staff:
+    owner: "<dark_red><bold>[OWNER]</bold></dark_red> "
+    admin: "<dark_red>[ADMIN]</dark_red> "
+    developer: "<red>[DEV]</red> "
+    srmod: "<red>[SR. MOD]</red> "
+    moderator: "<red>[MOD]</red> "
+    helper: "<red>[HELPER]</red> "
+    builder: "<red>[BUILDER]</red> "
+
+# <rank> is the prefix above (empty for default players), <player> the name, <message> what they typed.
+chat:
+  default: "<muted><player></muted><dark>:</dark> <muted><message></muted>"
+  ranked: "<rank><text><player></text><dark>:</dark> <text><message></text>"
+  staff: "<rank><text><player></text><dark>:</dark> <text><message></text>"
+
+login:
+  # Shown on the disconnect screen if the profile can't be loaded (database trouble).
+  profile-failed: |-
+    <primary><bold>RAPID</bold></primary><white><bold>SKIES</bold></white>
+
+    <text>We couldn't load your profile.</text>
+    <muted>Please try again in a minute.</muted>
+
+plus:
+  # /plus with no argument: header, then one clickable line per color.
+  header: "<prefix><text>Pick a plus color</text> <muted>(click one):</muted>"
+  # The whole entry line runs /plus <color> when clicked.
+  entry: "<dark>•</dark> <preview> <muted><name></muted>"
+  entry-hover: "<muted>Click to use</muted> <text><name></text>"
+  locked-entry: "<dark>•</dark> <preview> <dark><name> (needs <rank>)</dark>"
+  set: "<prefix><success>Plus color set.</success> <text>Your prefix:</text> <preview>"
+  reset: "<prefix><success>Plus color reset.</success> <text>Your prefix:</text> <preview>"
+  needs-rank: "<prefix><error>Plus colors are a Rapid+ perk.</error> <muted>See</muted> <primary><click:open_url:'https://store.rapidskies.us'>store.rapidskies.us</click></primary>"
+  locked: "<prefix><error><name> needs <rank> or higher.</error>"
+  unknown: "<prefix><error>There's no color called <text><input></text>.</error> <muted>Type /plus to see your options.</muted>"
+  reserved: "<prefix><error>Red shades are reserved for staff.</error>"
+  failed: "<prefix><error>Couldn't save that right now; please try again.</error>"
+
+bolts:
+  balance: "<prefix><primary>⚡</primary> <text>You have</text> <accent><balance> Bolts</accent><text>.</text>"
+  balance-other: "<prefix><primary>⚡</primary> <text><player> has</text> <accent><balance> Bolts</accent><text>.</text>"
+  unknown-player: "<prefix><error>No player <text><player></text> has ever joined.</error>"
+  failed: "<prefix><error>Couldn't load Bolts right now; please try again.</error>"
+
+errors:
+  players-only: "<prefix><error>Only players can use this.</error>"

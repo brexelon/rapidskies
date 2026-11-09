@@ -1,0 +1,34 @@
+# rapid-core (every Paper backend). Written on first start; rsdeploy then fills in this
+# server's identity and the connection settings
+# (infra/profiles/paper-base/plugins/rapid-core/config.yml.patch).
+
+server:
+  # This server's name: its key in network.yml and velocity.toml (e.g. hub-1).
+  id: ""
+  # Role shared by interchangeable servers (hub, skyrealms, smp, build, staging). The proxy
+  # balances joins across servers in the `hub` group.
+  group: ""
+  # host:port the proxy can reach this server at. Only needed for instances that aren't in
+  # velocity.toml yet (the proxy registers them from the heartbeat). Private IPs only.
+  advertise-address: ""
+
+# Shared MariaDB schema used by every rapid-* plugin.
+database:
+  host: 127.0.0.1
+  port: 3306
+  name: rapidskies
+  user: rapidskies
+  password: ""
+  pool-size: 6
+
+redis:
+  host: 127.0.0.1
+  port: 6379
+  password: ""
+
+# 1.8-style combat for every client version (PLAN.md §3, cross-version design rules).
+combat:
+  # 1.8 clients can't see or use the 1.9+ attack cooldown, so nobody gets one.
+  no-attack-cooldown: true
+  # Sweeping edge hits don't exist on 1.8; turning them off keeps fights equal.
+  disable-sweep-attacks: true

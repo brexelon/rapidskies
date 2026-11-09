@@ -1,4 +1,4 @@
-# LuckPerms bootstrap: groups, tracks and the phase-0 permissions (plan §6.1, §9).
+# LuckPerms bootstrap: groups, tracks and the phase 0–1 permissions (plan §6.1, §9).
 # Run once, line by line, in the **Velocity console** (`lpv` is LuckPerms' Velocity command).
 # Everything lands in the shared MariaDB and syncs to every backend over Redis.
 # Re-running is safe: every command just sets the same value again.
@@ -69,6 +69,15 @@ lpv group helper permission set velocity.command.server true server=proxy
 lpv group builder permission set velocity.command.server true server=proxy
 lpv group developer permission set velocity.command.server true server=proxy
 lpv group helper permission set velocity.command.glist true server=proxy
+
+# rapid-proxy / rapid-core (phase 1). Staff stay connected during maintenance; admins can
+# toggle it and adjust Bolts (the store uses the console, which has every permission).
+lpv group helper permission set rapid.maintenance.bypass true server=proxy
+lpv group builder permission set rapid.maintenance.bypass true server=proxy
+lpv group developer permission set rapid.maintenance.bypass true server=proxy
+lpv group admin permission set rapid.command.maintenance true server=proxy
+lpv group admin permission set rapid.admin.bolts true server=proxy
+lpv group moderator permission set rapid.command.bolts.others true
 
 # Builders: full control on the build server only. (Add FAWE to the build server's
 # plugin set in network.yml; it isn't in plugins/ yet.)

@@ -1,0 +1,9 @@
+# rapid-proxy (Velocity). Same MariaDB schema and Redis as every backend's rapid-core.
+database.host: "${DB_HOST}"
+database.port: "${DB_PORT}"
+database.name: "${RAPID_DB_NAME}"
+database.user: "${RAPID_DB_USER}"
+database.password: "${RAPID_DB_PASSWORD}"
+redis.host: "${REDIS_HOST}"
+redis.port: "${REDIS_PORT}"
+redis.password: "${REDIS_PASSWORD}"

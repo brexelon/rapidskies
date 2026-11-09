@@ -64,7 +64,8 @@ servers:
     ptero_id: ""
     profiles: [paper-base, survival, smp, staging]
     plugins: [paper-base, survival, worldgen]
-    vars: { LP_SERVER: staging }
+    # Own schema for rapid-* data (Bolts, profiles, ...), so tests never touch production.
+    vars: { LP_SERVER: staging, RAPID_DB_NAME: rapidskies_staging }
 
 # Pterodactyl schedules (plan §3: hourly backups for skyrealms and smp, daily for the
 # rest). cron is "minute hour day-of-month month day-of-week" in the panel's timezone.

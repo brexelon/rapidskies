@@ -1,0 +1,68 @@
+# rapid-proxy messages (MiniMessage). Brand tags: <primary> <accent> <text> <muted> <dark>
+# <success> <error>, and <prefix> for "RAPIDSKIES »". Keep server-list lines short: 1.8
+# clients cut the MOTD at about 45 characters per line.
+
+motd:
+  line1: "<primary><bold>RAPID</bold></primary><white><bold>SKIES</bold></white> <dark>»</dark> <muted>1.8 – 26.3</muted>"
+  # Line 2 rotates (config motd.rotate-seconds): news, the current Season/Frontier, the store.
+  rotation:
+    - "<accent>Skyrealms</accent> <dark>•</dark> <accent>Horizons SMP</accent>"
+    - "<text>Store:</text> <primary>store.rapidskies.us</primary>"
+  maintenance: "<error>Down for maintenance.</error> <muted>Back soon!</muted>"
+  # Shown in red in place of the ping bar.
+  version-unsupported: "1.8 – 26.3"
+  version-maintenance: "Maintenance"
+
+kick:
+  version: |-
+    <primary><bold>RAPID</bold></primary><white><bold>SKIES</bold></white>
+
+    <text>We support Minecraft <accent>1.8</accent> to <accent>26.3</accent>.</text>
+    <muted>Please switch versions and join again.</muted>
+  maintenance: |-
+    <primary><bold>RAPID</bold></primary><white><bold>SKIES</bold></white>
+
+    <text>We're down for maintenance.</text>
+    <muted>Check <primary>rapidskies.us</primary> or our Discord for updates.</muted>
+  # The proxy is up but can't reach the database or Redis yet; it retries on its own.
+  starting: |-
+    <primary><bold>RAPID</bold></primary><white><bold>SKIES</bold></white>
+
+    <text>The network is starting up.</text>
+    <muted>Please try again in a minute.</muted>
+  no-hub: |-
+    <primary><bold>RAPID</bold></primary><white><bold>SKIES</bold></white>
+
+    <text>No lobby is available right now.</text>
+    <muted>Please try again in a minute.</muted>
+
+    <muted><reason></muted>
+  # <reason> is the backend's own kick message.
+  redirected: "<prefix><muted>You were moved to a lobby:</muted> <reason>"
+
+maintenance:
+  usage: '<prefix><muted>Usage:</muted> <text>/maintenance \<on|off|status></text>'
+  enabled: "<prefix><text>Maintenance is now <error>ON</error>. Players without bypass were disconnected.</text>"
+  disabled: "<prefix><text>Maintenance is now <success>OFF</success>.</text>"
+  status-on: "<prefix><text>Maintenance is <error>ON</error>.</text>"
+  status-off: "<prefix><text>Maintenance is <success>OFF</success>.</text>"
+  failed: "<prefix><error>Couldn't reach Redis; maintenance unchanged.</error>"
+
+# Console/admin command used by Tebex (PLAN.md §6.3) and staff.
+admin:
+  usage: |-
+    <prefix><muted>Usage:</muted>
+    <text>/rapid bolts add \<player|uuid> \<amount> [txn-id]</text>
+    <text>/rapid bolts remove \<player|uuid> \<amount> [txn-id]</text>
+    <text>/rapid bolts balance \<player|uuid></text>
+  unknown-player: "<prefix><error>No player <text><player></text> has ever joined.</error>"
+  bad-amount: "<prefix><error><amount> isn't a positive whole number.</error>"
+  bolts-applied: "<prefix><text><player></text> <muted>now has</muted> <accent><balance> ⚡</accent> <muted>(<delta>).</muted>"
+  bolts-duplicate: "<prefix><muted>Transaction</muted> <text><txn></text> <muted>was already applied; nothing changed. Balance:</muted> <accent><balance> ⚡</accent>"
+  bolts-insufficient: "<prefix><error><player> only has <balance> ⚡.</error>"
+  bolts-balance: "<prefix><text><player></text> <muted>has</muted> <accent><balance> ⚡</accent>"
+  failed: "<prefix><error>Database error; nothing changed. See the proxy console.</error>"
+
+# Sent to the player when Bolts arrive (store purchase or staff grant).
+bolts:
+  received: "<prefix><primary>⚡</primary> <text>You received</text> <accent><amount> Bolts</accent><text>!</text> <muted>Balance: <balance></muted>"

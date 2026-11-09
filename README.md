@@ -17,5 +17,6 @@ Velocity + Paper 26.3 network for Java clients 1.8 → 26.3. See [PLAN.md](PLAN.
 ```
 
 Needs only a JDK 17+ to launch Gradle; the Java 25 toolchain is downloaded automatically if
-missing. CI (`.github/workflows/build.yml`) builds every push and pull request, uploads the jars
+missing. Integration tests (`*IT`) start MariaDB and Redis with Testcontainers, so they need
+Docker; without it they're skipped, and CI always runs them. CI (`.github/workflows/build.yml`) builds every push and pull request, uploads the jars
 as an artifact, and validates `infra/`.

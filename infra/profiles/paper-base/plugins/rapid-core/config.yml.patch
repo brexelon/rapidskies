@@ -1,0 +1,13 @@
+# rapid-core (every Paper backend). server.id must match the server's key in network.yml
+# and velocity.toml so the proxy can pair heartbeats with backends; server.group is the
+# role (hub servers share "hub", which is what the proxy balances joins across).
+server.id: "${SERVER_NAME}"
+server.group: "${LP_SERVER}"
+database.host: "${DB_HOST}"
+database.port: "${DB_PORT}"
+database.name: "${RAPID_DB_NAME}"
+database.user: "${RAPID_DB_USER}"
+database.password: "${RAPID_DB_PASSWORD}"
+redis.host: "${REDIS_HOST}"
+redis.port: "${REDIS_PORT}"
+redis.password: "${REDIS_PASSWORD}"

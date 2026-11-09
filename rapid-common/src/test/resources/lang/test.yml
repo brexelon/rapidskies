@@ -1,0 +1,7 @@
+greeting: "<prefix><text>Hello, <accent><name></accent>!</text>"
+nested:
+  key: "<success>ok</success>"
+lines:
+  - "<primary>one</primary>"
+  - "<muted>two</muted>"
+override-me: "default"

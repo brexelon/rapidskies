@@ -5,3 +5,10 @@ api-version: '26.3'
 description: "Profiles, Bolts, chat, cosmetics, staff mode and the GUI framework (PLAN.md §4)."
 author: RapidSkies
 website: https://rapidskies.us
+# Ranks and staff roles are read from LuckPerms groups.
+depend: [LuckPerms]
+
+permissions:
+  rapid.command.bolts.others:
+    description: See another player's Bolts balance with /bolts <player>.
+    default: false

@@ -6,6 +6,8 @@ dependencies {
     compileOnly(libs.velocity.api)
     annotationProcessor(libs.velocity.api) // generates velocity-plugin.json from @Plugin
     implementation(project(":rapid-common"))
+
+    testImplementation(libs.velocity.api)
 }
 
 // BuildConstants.VERSION feeds the @Plugin annotation, which needs a compile-time constant.

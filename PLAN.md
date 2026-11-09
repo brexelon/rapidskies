@@ -2,7 +2,7 @@
 
 > Velocity proxy + Paper 26.3 backends · Java clients 1.8 → 26.3 · Hosted on Pterodactyl (VPS/dedicated)
 > Server address: **rapidskies.us** · Store: **store.rapidskies.us**
-> Status: planning · Last updated 2026-11-08
+> Status: Phase 1 in progress (see §11) · Last updated 2026-11-08
 
 ---
 
@@ -153,7 +153,7 @@ The **Panel runs on its own server**, separate from the **game node** (one dedic
 
 | Module | Runs on | Responsibilities |
 |---|---|---|
-| `rapid-common` | — | Shared models, Redis pub/sub, HikariCP DB layer + Flyway migrations, MiniMessage lang loader, config |
+| `rapid-common` | — | Shared models, Redis pub/sub, HikariCP DB layer + versioned SQL migrations, MiniMessage lang loader, config |
 | `rapid-proxy` | Velocity | Server registry and load balancing, **parties**, **friends**, join queue, cross-server `/msg`, staff chat, MOTD/branding, maintenance mode, version gate |
 | `rapid-core` | All Paper | Player profiles, **Bolts economy API**, rank display (including **plus color**, §6.1), per-mode Vault economy provider, chat formatting, **cosmetics engine**, network XP/levels, quests and achievements, **Tailwind** rested bonus (§5.3), **staff mode**, GUI framework, combat-timing module, AFK and anti-farm detection |
 | `rapid-hub` | Hub | Spawn, mode selector, double-jump, visibility toggle, parkour, leaderboards, cosmetics and Bolt shop menus |
@@ -436,7 +436,7 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 
 ---
 
-## 10. Data model (MariaDB, Flyway migrations)
+## 10. Data model (MariaDB, versioned migrations)
 
 - `players` (uuid, name, first_join, last_join, last_server, network_xp, locale, **plus_color**, tailwind_banked)
 - `bolts_ledger` (id, uuid, delta, reason, source, txn_id UNIQUE, created_at), with `bolts_balance` as a cached view. Use a ledger, not a single balance column, for auditability.
@@ -455,7 +455,9 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 
 SuperiorSkyblock2 keeps its own tables in the same MariaDB instance, under its own schema.
 
-Redis: `server:<id>` heartbeat and state, `queue:<server>`, `party:<id>`, `presence:<uuid>`, plus pub/sub channels for cross-server messages, staff chat, profile and plus-color updates, and cache invalidation.
+Redis (every key and channel is prefixed `rapid:`, since LuckPerms shares the instance): `server:<id>` heartbeat and state, `queue:<server>`, `party:<id>`, `presence:<uuid>`, plus pub/sub channels for cross-server messages, staff chat, profile and plus-color updates, and cache invalidation.
+
+**Migrations:** each module keeps `V<n>__<name>.sql` scripts plus an `index` file under `db/migration/<module>/`, applied once under a MariaDB named lock and checksum-verified on every start (`rapid-common` `Migrator`). This replaced Flyway: it's one small class with no classloader or relocation quirks inside shaded plugin jars. Shipped scripts are never edited; fixes go in a new version.
 
 ---
 
@@ -475,6 +477,22 @@ Durations assume 1–2 developers plus 1–2 builders working in parallel. Phase
 | **5. Monetization & retention** | 8–16 | Cosmetics engine and launch catalog, Bolt shop, Featured Shop, `/plus` GUI, quests, levels, Season Pass, Tebex store at `store.rapidskies.us`, compliance review |
 | **6. Beta & launch** | 17–22 | Closed beta (Horizons first, then both), open beta, load test with bots (for example, SoulFire), version test matrix, anti-cheat and X-ray tuning, economy tuning, launch |
 | **7. Gamemode 3** | launch + 6–8 | Choose the mode from telemetry (§5.4), then build `rapid-minigame` if it's match-based |
+
+### Phase 1 progress
+
+Done (with tests; the MariaDB/Redis ones run in CI through Testcontainers):
+
+- [x] `rapid-common`: YAML config, MiniMessage lang bundles with brand tags and per-server overrides, HikariCP pool, migrations, Redis bus (pub/sub with reconnect), server registry and hub selection, player profiles, Bolts and per-mode ledgers (atomic debits, idempotent `txn_id`), rank / staff role / plus-color model
+- [x] `rapid-proxy`: joins and kicks routed to the least-loaded live hub, auto-registration of new backends (private IPs only), 1.8 version gate, rotating MOTD with network player count, `/maintenance` (Redis-backed, staff bypass), `rapid bolts add|remove|balance` for Tebex, logins refused until MariaDB and Redis are reachable
+- [x] `rapid-core`: heartbeat, profile load on pre-login, chat with rank/staff prefixes and plus color (via LuckPerms groups), `/plus` (clickable list), `/bolts`, no attack cooldown and no sweep hits
+- [x] Deploy config: `rapid-proxy` / `rapid-core` config patches, `RAPID_DB_*` secrets, staging on its own schema, LuckPerms permissions
+
+Next:
+
+- [ ] `rsdeploy.py` uploads `build/dist/*.jar` (custom jars need a content check, not just a size check)
+- [ ] `rapid-proxy`: parties, friends, join queue, cross-server `/msg`, staff chat
+- [ ] `rapid-core`: GUI framework (then `/plus` as a chest GUI), staff mode, Tailwind, AFK and anti-farm detection, per-mode Vault economy provider, PlaceholderAPI expansion (`%rapid_plus_color%`, prefix) for TAB
+- [ ] LiteBans, Grim and TAB onto the servers (`network.yml` plugin sets)
 
 **Recommended launch strategy:** launch both modes together. With only two modes, launching one at a time would feel thin. Run Horizons as the first closed beta, though, since it relies more on premade plugins and will stress-test the core platform early. Don't wipe beta progress on Skyrealms or Horizons at launch.
 
