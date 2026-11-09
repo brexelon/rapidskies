@@ -1,13 +1,17 @@
 package us.rapidskies.core;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import us.rapidskies.common.registry.ServerRegistry;
 import us.rapidskies.common.registry.ServerStatus;
 import us.rapidskies.common.registry.ServerStatus.State;
+import us.rapidskies.core.staff.Vanish;
 
 /**
- * Publishes this server's {@link ServerStatus} to Redis every few seconds. The values are
+ * Publishes this server's {@link ServerStatus} to Redis every few seconds. Vanished staff
+ * count towards {@code online} (they take a slot) but not {@code visible}, the number the
+ * network shows players. The values are
  * read on the main thread and written to Redis off it, so a slow Redis never costs a tick.
  */
 final class Heartbeat {
@@ -33,8 +37,17 @@ final class Heartbeat {
     private void beat() {
         // A whitelisted server (build, staging) only lets staff in: keep hub traffic away.
         State state = Bukkit.hasWhitelist() && Bukkit.isWhitelistEnforced() ? State.RESTRICTED : State.ONLINE;
+        Vanish vanish = plugin.staffMode().vanish();
+        int online = 0;
+        int visible = 0;
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            online++;
+            if (!vanish.isVanished(player)) {
+                visible++;
+            }
+        }
         ServerStatus status = new ServerStatus(settings.serverId(), settings.group(), settings.advertiseAddress(),
-                state, Bukkit.getOnlinePlayers().size(), Bukkit.getMaxPlayers(), startedAt, System.currentTimeMillis());
+                state, online, visible, Bukkit.getMaxPlayers(), startedAt, System.currentTimeMillis());
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
                 registry.publish(status);

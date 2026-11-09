@@ -36,9 +36,104 @@ belowname-objective:
   enabled: false
 bossbar:
   enabled: false
-# Sidebars are per gamemode and arrive with the mode plugins.
+# Sidebars (plan §2, §3): one per kind of server, picked by the backend's name in
+# velocity.toml (hub-1, skyrealms-1, smp-1, ...); the first whose display-condition matches
+# is shown, so the plain one for build/staging goes last. `<-` is "contains" (TAB's `|`
+# means OR, so the starts-with operator would be ambiguous here).
+# Lines use TAB's own color codes (&#RRGGBB, &7, &l) so the legacy-colored values from
+# rapid-core (%rapid_rank_name% carries the plus color) mix in cleanly. There's no right
+# column, and nothing relies on hiding the score numbers, so 1.20–1.20.2 (red numbers)
+# reads the same as 26.3. At most 15 lines.
+# Placeholders: TAB's own (%server%, %player%, %online% = network, %serveronline%, %world%,
+# %ping%) and, through TAB-Bridge, rapid-core's %rapid_rank_name%, %rapid_bolts%,
+# %rapid_tailwind_status%, %rapid_balance_status% (Coins/Crowns) and rapid-hub's
+# %rapidhub_players_<group>%.
 scoreboard:
-  enabled: false
+  enabled: true
+  toggle-command: /sb
+  remember-toggle-choice: true
+  hidden-by-default: false
+  delay-on-join-milliseconds: 0
+  scoreboards:
+    hub:
+      display-condition: "%server%<-hub"
+      title: "&#FFD800&lRAPID&f&lSKIES"
+      lines:
+        - "&8Lobby %server%"
+        - ""
+        - "&f%player%"
+        - "&7Rank: %rapid_rank_name%"
+        - "&7Bolts: &#FFAA00%rapid_bolts% ⚡"
+        - ""
+        - "&#FFD800&lGames"
+        - "&7SkyRealms: &f%rapidhub_players_skyrealms% playing"
+        - "&7Horizons SMP: &f%rapidhub_players_smp% playing"
+        - ""
+        - "&7Network: &f%online% online"
+        - ""
+        - "&#FFD800rapidskies.us"
+    skyrealms:
+      display-condition: "%server%<-skyrealms"
+      title: "&#FFD800&lRAPID&f&lSKIES"
+      lines:
+        - "&8SkyRealms %server%"
+        - ""
+        - "&f%player%"
+        - "&7Rank: %rapid_rank_name%"
+        - "&7Bolts: &#FFAA00%rapid_bolts% ⚡"
+        - "&7Tailwind: &f%rapid_tailwind_status%"
+        - ""
+        - "&#FFD800&lSkyRealms"
+        - "&7Coins: &#FFAA00%rapid_balance_status%"
+        # Phase 4b, with SuperiorSkyblock2 on the server (survival plugin set):
+        #   - "&7Island level: &f%superior_island_level%"
+        #   - "&7Island worth: &f%superior_island_worth%"
+        - "&7Players here: &f%serveronline%"
+        - ""
+        - "&#FFD800rapidskies.us"
+    smp:
+      display-condition: "%server%<-smp"
+      title: "&#FFD800&lRAPID&f&lSKIES"
+      lines:
+        - "&8Horizons %server%"
+        - ""
+        - "&f%player%"
+        - "&7Rank: %rapid_rank_name%"
+        - "&7Bolts: &#FFAA00%rapid_bolts% ⚡"
+        - "&7Tailwind: &f%rapid_tailwind_status%"
+        - ""
+        - "&#FFD800&lHorizons SMP"
+        - "&7Crowns: &#FFAA00%rapid_balance_status%"
+        - "&7World: &f%world%"
+        - "&7Players here: &f%serveronline%"
+        - ""
+        - "&#FFD800rapidskies.us"
+    # Build, staging and anything else: who you are and where.
+    default:
+      title: "&#FFD800&lRAPID&f&lSKIES"
+      lines:
+        - "&8%server%"
+        - ""
+        - "&f%player%"
+        - "&7Rank: %rapid_rank_name%"
+        - "&7Ping: &f%ping%ms"
+        - ""
+        - "&7Players here: &f%serveronline%"
+        - "&7Network: &f%online% online"
+        - ""
+        - "&#FFD800rapidskies.us"
+# How often TAB asks for each placeholder (ms). Values read through TAB-Bridge cost a plugin
+# message per player each time, so slow-moving ones are polled less (Bolts are re-read from
+# the database once a minute anyway). Replaces TAB's example list.
+placeholder-refresh-intervals:
+  default-refresh-interval: 500
+  "%rapid_rank_name%": 1000
+  "%rapid_bolts%": 2000
+  "%rapid_tailwind_status%": 5000
+  "%rapid_balance_status%": 1000
+  "%rapidhub_players_skyrealms%": 2000
+  "%rapidhub_players_smp%": 2000
+  "%ping%": 2000
 layout:
   enabled: false
 placeholder-output-replacements: {}

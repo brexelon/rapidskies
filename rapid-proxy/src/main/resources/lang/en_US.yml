@@ -12,7 +12,7 @@ motd:
   line1: "<primary><bold>RAPID</bold></primary><white><bold>SKIES</bold></white> <dark>»</dark> <muted>1.20 – 26.3</muted>"
   # Line 2 rotates (config motd.rotate-seconds): news, the current Season/Frontier, the store.
   rotation:
-    - "<accent>Skyrealms</accent> <dark>•</dark> <accent>Horizons SMP</accent>"
+    - "<accent>SkyRealms</accent> <dark>•</dark> <accent>Horizons SMP</accent>"
     - "<text>Store:</text> <primary>store.rapidskies.us</primary>"
   maintenance: "<error>Down for maintenance.</error> <muted>Back soon!</muted>"
   # Shown in red in place of the ping bar.
@@ -253,16 +253,16 @@ grant:
     revoked: "<error>revoked</error> <muted>by <by></muted>"
   # Ranks look like their chat prefixes (default plus color); <node> is the permission.
   name:
-    rapidplus: "<primary>[RAPID</primary><yellow>+</yellow><primary>]</primary>"
-    rapidplusplus: "<primary>[RAPID</primary><yellow>++</yellow><primary>]</primary>"
-    rapidplusplusplus: "<primary>[<bold>RAPID</bold></primary><yellow>+++</yellow><primary>]</primary>"
-    owner: "<dark_red><bold>[OWNER]</bold></dark_red>"
-    admin: "<dark_red>[ADMIN]</dark_red>"
-    developer: "<red>[DEV]</red>"
-    srmod: "<red>[SR. MOD]</red>"
-    moderator: "<red>[MOD]</red>"
-    helper: "<red>[HELPER]</red>"
-    builder: "<red>[BUILDER]</red>"
+    rapidplus: "<primary>RAPID</primary><yellow>+</yellow>"
+    rapidplusplus: "<primary>RAPID</primary><yellow>++</yellow>"
+    rapidplusplusplus: "<primary><bold>RAPID</bold></primary><yellow>+++</yellow>"
+    owner: "<dark_red><bold>OWNER</bold></dark_red>"
+    admin: "<dark_red>ADMIN</dark_red>"
+    developer: "<red>DEV</red>"
+    srmod: "<red>SR. MOD</red>"
+    moderator: "<red>MOD</red>"
+    helper: "<red>HELPER</red>"
+    builder: "<red>BUILDER</red>"
     permission: "<accent><node></accent>"
   revoke:
     usage: "<red>Grants</red> <dark>»</dark> <muted>Usage:</muted> <text>/grants revoke \\<id> [reason]</text> <muted>(ids are in</muted> <text>/grants \\<player></text><muted>)</muted>"

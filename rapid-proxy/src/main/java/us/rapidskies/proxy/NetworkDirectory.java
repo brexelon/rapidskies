@@ -128,10 +128,10 @@ final class NetworkDirectory {
         return servers;
     }
 
-    /** Players across all backends (heartbeat counts). */
+    /** Players across all backends (heartbeat counts), leaving vanished staff out. */
     int networkOnline() {
         long now = System.currentTimeMillis();
-        return servers.stream().filter(s -> s.isFresh(now, ServerRegistry.STALE_MILLIS)).mapToInt(ServerStatus::online).sum();
+        return servers.stream().filter(s -> s.isFresh(now, ServerRegistry.STALE_MILLIS)).mapToInt(ServerStatus::visible).sum();
     }
 
     /** The best hub to send someone to, other than {@code except} (may be null). */

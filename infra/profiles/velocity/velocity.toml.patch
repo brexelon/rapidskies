@@ -5,11 +5,13 @@
 
 # `bind` is left alone: the Pterodactyl egg manages it. Velocity's allocation is the only
 # public one (0.0.0.0:25565 or the public IP).
-motd: "<#FFD800><bold>RAPID</bold></#FFD800><white><bold>SKIES</bold></white> <#555555>»</#555555> <#AAAAAA>1.20 – 26.3</#AAAAAA>\n<#FFAA00>Skyrealms</#FFAA00> <#555555>•</#555555> <#FFAA00>Horizons SMP</#FFAA00> <#555555>•</#555555> <white>store.rapidskies.us</white>"
+motd: "<#FFD800><bold>RAPID</bold></#FFD800><white><bold>SKIES</bold></white> <#555555>»</#555555> <#AAAAAA>1.20 – 26.3</#AAAAAA>\n<#FFAA00>SkyRealms</#FFAA00> <#555555>•</#555555> <#FFAA00>Horizons SMP</#FFAA00> <#555555>•</#555555> <white>store.rapidskies.us</white>"
 show-max-players: 1000
 online-mode: true
 # 1.19.1+ chat signing keys. Off, because chat is formatted server-side and
 # backends run enforce-secure-profile=false (plan §3, cross-version rules).
+# Clients still sign chat when they have keys, so cancelling chat on the proxy
+# needs SignedVelocity (network.yml, proxy and paper-base plugin sets).
 force-key-authentication: false
 prevent-client-proxy-connections: false
 player-info-forwarding-mode: "MODERN"

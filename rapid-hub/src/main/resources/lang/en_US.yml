@@ -1,0 +1,134 @@
+# rapid-hub messages (MiniMessage). Brand tags: <primary> <accent> <text> <muted> <dark>
+# <success> <error>, and <prefix> for "RAPIDSKIES »".
+#
+# Every supported client (1.20 – 26.3) renders hex colors, <gradient>, <hover>, <click>
+# and <key> exactly; <key:key.use> shows the player's own keybind. Don't use <shadow>
+# (1.21.4+), <sprite>/<head> (1.21.9+) or anything else newer than 1.20. Item names, lore,
+# menu titles and the floating labels are components too, but clicks and hovers do nothing there.
+
+# The gamemodes in the game menu and on the NPCs (config modes.<id>).
+modes:
+  skyrealms:
+    name: "<primary><bold>SkyRealms</bold></primary>"
+    lore:
+      - "<text>Co-op SkyBlock.</text>"
+      - "<muted>Grow your island, race other islands</muted>"
+      - "<muted>on Expeditions and climb the island</muted>"
+      - "<muted>leaderboards. Your island is forever.</muted>"
+  smp:
+    name: "<primary><bold>Horizons SMP</bold></primary>"
+    lore:
+      - "<text>Survival with claims and towns.</text>"
+      - "<muted>Build in the Heartland, explore a new</muted>"
+      - "<muted>Frontier every month and take on</muted>"
+      - "<muted>Skyborne fortresses with friends.</muted>"
+
+# Hotbar items. Each name says what it does, so meaning never rests on the item alone.
+item:
+  selector-name: "<primary><bold>Game Menu</bold></primary> <muted>(<key:key.use>)</muted>"
+  selector-lore:
+    - "<muted>Pick a game to play.</muted>"
+  parkour-name: "<accent><bold>Sky Parkour</bold></accent> <muted>(<key:key.use>)</muted>"
+  parkour-lore:
+    - "<muted>A fresh random course every run,</muted>"
+    - "<muted>with checkpoints along the way.</muted>"
+  players-shown-name: "<text>Players:</text> <success>Shown</success> <muted>(<key:key.use>)</muted>"
+  players-shown-lore:
+    - "<muted>Use to hide other players.</muted>"
+  players-hidden-name: "<text>Players:</text> <error>Hidden</error> <muted>(<key:key.use>)</muted>"
+  players-hidden-lore:
+    - "<muted>Use to show other players again.</muted>"
+  checkpoint-name: "<primary>Back to Checkpoint</primary> <muted>(<key:key.use>)</muted>"
+  checkpoint-lore:
+    - "<muted>The clock keeps running.</muted>"
+  restart-name: "<accent>Restart Run</accent> <muted>(<key:key.use>)</muted>"
+  restart-lore:
+    - "<muted>Back to the start of this course;</muted>"
+    - "<muted>the clock restarts when you jump off.</muted>"
+  leave-name: "<error>Leave Parkour</error> <muted>(<key:key.use>)</muted>"
+  leave-lore:
+    - "<muted>Stops the clock without a time.</muted>"
+
+selector:
+  title: "<dark>Pick a game</dark>"
+  # <count>: players on the mode's servers right now.
+  players: "<accent><count></accent> <muted>playing</muted>"
+  closed: "<error>Not open right now</error>"
+  click: "<primary>Click to play!</primary>"
+  joining: "<prefix><text>Sending you to</text> <mode><text>...</text>"
+
+# The floating label above each mode NPC. <mode> is modes.<id>.name, <status> selector.players or selector.closed.
+npc:
+  label: "<mode>\n<status>\n<accent>Click to play!</accent>"
+
+visibility:
+  hidden: "<prefix><text>Other players are now</text> <error>hidden</error><text>.</text>"
+  shown: "<prefix><text>Other players are</text> <success>visible</success> <text>again.</text>"
+  cooldown: "<prefix><muted>Slow down a little.</muted>"
+
+fly:
+  enabled: "<prefix><success>Hub flight on.</success> <muted>Double-tap</muted> <text><key:key.jump></text> <muted>to fly.</muted>"
+  disabled: "<prefix><text>Hub flight off.</text>"
+  not-now: "<prefix><error>You can't use hub flight right now.</error>"
+  parkour: "<prefix><error>No flying on the parkour!</error> <muted>Leave the run first.</muted>"
+
+parkour:
+  # Course names by id (config parkour.courses.<id>); a course without one shows its id.
+  course-name:
+    main: "Sky Parkour"
+  # <length>: the course's distance in blocks; <total>: its checkpoints.
+  started: "<prefix><text>Your</text> <accent><course></accent> <text>course is ready:</text> <accent><length> blocks</accent><text>,</text> <accent><total> checkpoints</accent><text>. Jump off the platform to start the clock!</text>"
+  # <number>/<total>: checkpoints; <time>: the run so far.
+  checkpoint: "<prefix><success>Checkpoint <number>/<total>!</success> <muted><time></muted>"
+  missed: "<prefix><error>You missed checkpoint <number>.</error> <muted>Go back for it to finish.</muted>"
+  finished: "<prefix><success>You finished</success> <accent><course></accent> <success>in</success> <primary><time></primary><success>!</success>"
+  finish-title: "<primary><bold>FINISH!</bold></primary>"
+  finish-subtitle: "<accent><time></accent>"
+  # <time> and <rank>: the player's all-time best on the course.
+  first-finish: "<prefix><primary>First finish!</primary> <text>That's</text> <accent>#<rank></accent> <text>of all time.</text>"
+  personal-best: "<prefix><primary>New personal best!</primary> <text>You're</text> <accent>#<rank></accent> <text>of all time.</text>"
+  not-best: "<prefix><muted>Your best is</muted> <text><time></text> <muted>(#<rank> of all time).</muted>"
+  weekly-best: "<prefix><text>Your best this week:</text> <accent><time></accent> <muted>(#<rank> this week).</muted>"
+  # Sent to the whole hub. <player>, <course>, <time>.
+  record: "<prefix><primary><player></primary> <text>set a new</text> <accent><course></accent> <text>record:</text> <primary><time></primary><text>!</text>"
+  save-failed: "<prefix><error>We couldn't save that time.</error> <muted>Sorry! Please try again in a moment.</muted>"
+  cancelled: "<prefix><muted>Parkour run cancelled.</muted>"
+  cancelled-flying: "<prefix><muted>Parkour run cancelled: no flying on the course.</muted>"
+  timed-out: "<prefix><muted>Parkour run cancelled: it ran for over an hour.</muted>"
+  left: "<prefix><muted>You left the parkour.</muted>"
+  not-running: "<prefix><muted>You're not on a parkour run.</muted> <click:run_command:'/parkour start'><hover:show_text:'<muted>Click for a fresh course'><text>Start one with</text> <accent>/parkour start</accent></hover></click><text>.</text>"
+  not-now: "<prefix><error>You can't start a parkour run right now.</error>"
+  closed: "<prefix><muted>The parkour opens soon!</muted>"
+  unknown-course: "<prefix><error>There's no parkour called <course>.</error>"
+  # The action bar before the clock starts.
+  ready: "<primary><course></primary> <dark>»</dark> <text>Jump off the platform to start the clock</text>"
+  # The action bar during a run. <distance>/<length>: blocks along the course; <reached>/<total>: checkpoints.
+  timer: "<primary><course></primary> <dark>»</dark> <accent><time></accent> <dark>•</dark> <text><distance>/<length>m</text> <dark>•</dark> <muted>Checkpoint <reached>/<total></muted>"
+  stats: "<prefix><text><course>: your best is</text> <primary><time></primary> <muted>(#<rank> of all time).</muted> <click:run_command:'/parkour top'><hover:show_text:'<muted>Click to see the top 10'><accent>[Top 10]</accent></hover></click>"
+  stats-none: "<prefix><text>You haven't finished</text> <accent><course></accent> <text>yet.</text> <click:run_command:'/parkour start'><hover:show_text:'<muted>Click for a fresh course'><accent>[Start a run]</accent></hover></click>"
+  top-header: "<prefix><primary><bold><course></bold></primary> <dark>»</dark> <text>fastest of all time</text>"
+  top-header-weekly: "<prefix><primary><bold><course></bold></primary> <dark>»</dark> <text>fastest this week</text>"
+  top-line: "  <accent>#<rank></accent> <text><player></text> <dark>-</dark> <primary><time></primary>"
+  top-empty: "  <muted>No times yet. Be the first!</muted>"
+  usage: "<prefix><text>/parkour</text> <muted>[start [course] | leave | checkpoint | restart | top [course] [weekly]]</muted>"
+
+# Leaderboard holograms (config leaderboards). One text display each; lines are joined with newlines.
+leaderboard:
+  title: "<primary><bold><course></bold></primary>\n<muted>Fastest of all time</muted>"
+  title-weekly: "<primary><bold><course></bold></primary>\n<muted>Fastest this week</muted>"
+  line: "<accent>#<rank></accent> <text><player></text> <dark>-</dark> <primary><time></primary>"
+  empty: "<muted>No times yet. Be the first!</muted>"
+  opening-soon: "<muted>Opening soon!</muted>"
+  # <time>: until Monday 00:00 UTC.
+  resets: "<muted>Resets in <time></muted>"
+
+admin:
+  # <point>: an NPC/leaderboard location; <block>: a parkour block. Both copy on click.
+  here: "<prefix><text>Here:</text> <accent><point></accent> <muted>· block</muted> <accent><block></accent> <muted>(click either to copy; put it in the hub profile in infra/)</muted>"
+  copy-hint: "<muted>Click to copy"
+  reloaded: "<prefix><success>rapid-hub reloaded.</success> <muted>NPCs, leaderboards and courses rebuilt.</muted>"
+  reload-failed: "<prefix><error>The config has a mistake; nothing changed.</error> <muted>See the console.</muted>"
+  usage: "<prefix><text>/rapidhub</text> <muted>here | reload</muted>"
+
+errors:
+  players-only: "<prefix><error>Only players can use this.</error>"

@@ -1,0 +1,68 @@
+# rapid-hub (hub servers only). Written on first start; the hub profile in infra/ fills in
+# the positions for the hub build (infra/profiles/hub/plugins/rapid-hub/config.yml.patch).
+#
+# Positions are "world, x, y, z, yaw, pitch" like rapid-core's spawn.location: world is a key
+# (minecraft:overworld is the hub world), yaw 0 faces south, 90 west, 180 north, -90 east.
+# Parkour points are block positions "x, y, z". `/rapidhub here` prints both for where you
+# stand; `/rapidhub reload` applies changes without a restart.
+
+# The game menu (hotbar compass, /games) and the NPCs on the stage, one entry per gamemode.
+# Names and descriptions are in lang/en_US.yml under modes.<id>.
+modes:
+  skyrealms:
+    # Server group the proxy's queue knows (rapid-proxy queue.groups).
+    group: skyrealms
+    # Menu icon: an item that exists in 1.20, so every client sees the same thing.
+    icon: grass_block
+    # Menu slot (0-26 in the 3-row menu).
+    slot: 11
+    # Where the NPC stands; empty for no NPC.
+    npc: ""
+    # The NPC's skin: a Minecraft account name (looked up once by Citizens), or a fixed
+    # texture and signature (from mineskin.org) so it never changes. Empty: a default skin.
+    skin: ""
+    skin-texture: ""
+    skin-signature: ""
+  smp:
+    group: smp
+    icon: oak_sapling
+    slot: 15
+    npc: ""
+    skin: ""
+    skin-texture: ""
+    skin-signature: ""
+
+# Double jump for everyone in survival or adventure mode; rapid.hub.trail adds a particle
+# trail (PLAN.md §6.1, hub perks). Off during parkour runs.
+double-jump:
+  enabled: true
+  # Push along the way you look, and straight up.
+  forward: 1.2
+  up: 0.9
+
+# Parkour (PLAN.md §7). Every run gets its own randomly generated course: single-block
+# jumps any 1.20+ player can make, a gold checkpoint platform every `checkpoint-every`
+# blocks and a finish platform after `length` blocks. Courses are built in a lane of their
+# own in `world` (a void world: add it to rapid-core's worlds with `create: void` on the
+# hub) and removed when the run ends. The clock starts when the player jumps off the start
+# platform. Players start from the hotbar feather (the first course below), with
+# /parkour start [course], or by stepping on a course's optional entrance block in the hub.
+#   length: 150              blocks from start to finish (30 to 1000)
+#   checkpoint-every: 50     blocks between checkpoints (at least 15)
+#   entrance: "x, y, z"      optional: a block in the hub (put a pressure plate there)
+# Times go on the leaderboards per course, so keep a course's length and checkpoint-every
+# fixed once it has times; make a new course id for a different distance.
+# The course's name is lang parkour.course-name.<id>.
+parkour:
+  world: "rapidskies:parkour"
+  courses:
+    main:
+      length: 150
+      checkpoint-every: 50
+
+# Leaderboard holograms, by id: text displays, which every supported client renders.
+#   location: "minecraft:overworld, x, y, z"   bottom centre of the board
+#   course: main                               the parkour course it ranks
+#   weekly: false                              true: this week's times (resets Mondays, UTC)
+#   size: 10                                   lines
+leaderboards: {}

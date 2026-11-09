@@ -75,6 +75,7 @@ public final class RapidCore extends JavaPlugin {
     private ProfileRepository profileRepository;
     private ProfileService profiles;
     private Ledger bolts;
+    private us.rapidskies.core.economy.BoltsCache boltsCache;
     private final Map<EconomyMode, Ledger> modeLedgers = new EnumMap<>(EconomyMode.class);
     private RankDisplay ranks;
     private Heartbeat heartbeat;
@@ -129,6 +130,9 @@ public final class RapidCore extends JavaPlugin {
         tailwind = new TailwindService(this, database, profiles, afk, settings, lang);
         pm.registerEvents(tailwind, this);
         tailwind.start();
+        boltsCache = new us.rapidskies.core.economy.BoltsCache(this, database, bolts);
+        pm.registerEvents(boltsCache, this);
+        boltsCache.start();
         earning = new EarnGuard(this, database, bolts, redis, afk, settings.serverId());
         pm.registerEvents(earning, this);
         earning.start();
@@ -258,6 +262,9 @@ public final class RapidCore extends JavaPlugin {
         if (afk != null) {
             afk.stop();
         }
+        if (boltsCache != null) {
+            boltsCache.stop();
+        }
         if (tailwind != null) {
             // Writes unsaved spending, so it must run before the database closes.
             tailwind.stop();
@@ -302,6 +309,11 @@ public final class RapidCore extends JavaPlugin {
     /** The network-wide Bolts ledger. */
     public Ledger bolts() {
         return bolts;
+    }
+
+    /** Bolts balances of the players online here, for displays (never for spending). */
+    public us.rapidskies.core.economy.BoltsCache boltsCache() {
+        return boltsCache;
     }
 
     /** A gamemode's own currency (Crowns, Coins). Vault providers per mode build on this. */

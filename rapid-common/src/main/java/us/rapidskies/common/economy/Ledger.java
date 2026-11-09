@@ -8,7 +8,10 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -51,7 +54,7 @@ public final class Ledger {
         return new Ledger(db, "bolts", "bolts_ledger", "bolts_balance", null, null);
     }
 
-    /** A gamemode's earn-only currency: Crowns on Horizons, Coins on Skyrealms. */
+    /** A gamemode's earn-only currency: Crowns on Horizons, Coins on SkyRealms. */
     public static Ledger mode(Database db, EconomyMode mode) {
         return new Ledger(db, mode.id(), "mode_economy_ledger", "mode_balance", "mode", mode.id());
     }
@@ -84,6 +87,34 @@ public final class Ledger {
 
     public CompletableFuture<Long> balanceAsync(UUID player) {
         return db.async(() -> balance(player));
+    }
+
+    /**
+     * Balances of several players in one query (sidebar caches). Players without a balance
+     * row are left out; their balance is 0.
+     */
+    public Map<UUID, Long> balances(Collection<UUID> players) throws SQLException {
+        Map<UUID, Long> out = new HashMap<>();
+        if (players.isEmpty()) {
+            return out;
+        }
+        List<UUID> ids = List.copyOf(players);
+        String marks = String.join(", ", java.util.Collections.nCopies(ids.size(), "?"));
+        return db.withConnection(c -> {
+            try (PreparedStatement ps = c.prepareStatement("SELECT uuid, balance FROM " + balanceTable
+                    + " WHERE " + scopeWhere() + "uuid IN (" + marks + ")")) {
+                int i = bindScope(ps, 1);
+                for (UUID id : ids) {
+                    ps.setString(i++, id.toString());
+                }
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        out.put(UUID.fromString(rs.getString(1)), rs.getLong(2));
+                    }
+                }
+            }
+            return out;
+        });
     }
 
     /** Adds {@code amount} (must be positive). */

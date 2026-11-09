@@ -1,4 +1,4 @@
-# Skyrealms (SkyBlock). SuperiorSkyblock2 creates and manages the island worlds itself
+# SkyRealms (SkyBlock). SuperiorSkyblock2 creates and manages the island worlds itself
 # (phase 4b); the vanilla level is the spawn: the Trading Post sky island
 # (worlds/TradingPost, shipped by `rsdeploy.py worlds`).
 level-name: "skyrealms_spawn"

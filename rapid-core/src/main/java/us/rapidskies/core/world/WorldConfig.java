@@ -12,7 +12,7 @@ import us.rapidskies.common.config.ConfigView;
 
 /**
  * The {@code spawn} and {@code worlds} sections of rapid-core's config: where players appear
- * on this server, and how rapid-core looks after its spawn worlds (the hub, the Skyrealms
+ * on this server, and how rapid-core looks after its spawn worlds (the hub, the SkyRealms
  * Trading Post, the Horizons spawn). The profiles in infra/ fill these in per server.
  */
 public record WorldConfig(Optional<SpawnPoint> spawn, JoinSpawn onJoin, boolean respawnAtSpawn,

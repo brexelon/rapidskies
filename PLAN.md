@@ -2,7 +2,7 @@
 
 > Velocity proxy + Paper 26.3 backends · Java clients 1.20 → 26.3 · Hosted on Pterodactyl (VPS/dedicated)
 > Server address: **rapidskies.us** · Store: **store.rapidskies.us**
-> Status: Phase 1 code complete, in-game checks pending; Phase 2 started (hub and spawn worlds imported, see §11) · Last updated 2026-11-09
+> Status: Phase 1 complete; Phase 2 code complete (spawns, `rapid-hub`), in-game checks pending (see §11) · Last updated 2026-11-09
 
 ---
 
@@ -140,7 +140,7 @@ The **Panel runs on its own server**, separate from the **game node** (one dedic
 | Player shops | **QuickShop-Hikari** | smp | Chest shops. It must respect `rapid-claims` (shops only in claims you have Member or higher in), via its protection-check hook. |
 | Pre-generation | **Chunky** + ChunkyBorder | smp | Pre-generate Heartland and every new Frontier before it opens |
 | Scoreboard / tab | **TAB** | Velocity | Per-server layouts, MiniMessage, nametags and sorting |
-| Holograms | **DecentHolograms** | Paper | Hub and lobby holograms |
+| Holograms | Text display entities (in `rapid-hub`); **DecentHolograms** only if staff want hand-placed ones | Paper | Leaderboards and NPC labels are rapid-hub's own text displays, rebuilt from its config on every start |
 | NPCs | **Citizens** | Paper | Hub gamemode NPCs, shopkeepers, quest givers |
 | Placeholders | PlaceholderAPI (Paper), MiniPlaceholders (Velocity) | Both | |
 | Block logging | **CoreProtect** | smp, skyrealms | Grief and rollback investigations |
@@ -211,7 +211,7 @@ Building on `rapid-common` keeps one source of truth.
 
 ### 4.2 Custom auction house (`rapid-market`)
 
-**Scope:** one codebase deployed to Horizons and Skyrealms. Listings and currencies are **scoped per mode** (Crowns on Horizons, Coins on Skyrealms) and are never shared.
+**Scope:** one codebase deployed to Horizons and SkyRealms. Listings and currencies are **scoped per mode** (Crowns on Horizons, Coins on SkyRealms) and are never shared.
 
 **Listing**
 - Hold an item and run `/ah sell <price>`, with a duration of 12, 24 or 48 hours.
@@ -248,7 +248,7 @@ Building on `rapid-common` keeps one source of truth.
 
 RapidSkies launches with **two persistent gamemodes**. Both are long-term worlds where progress is never wiped, and each has its own earn-only economy. A third mode is chosen after launch (§5.4).
 
-### 5.1 Skyrealms: co-op SkyBlock
+### 5.1 SkyRealms: co-op SkyBlock
 
 **Core loop:** start on a small floating island, expand it, automate resources, grow an island economy, and climb the island-value leaderboards.
 
@@ -258,7 +258,7 @@ RapidSkies launches with **two persistent gamemodes**. Both are long-term worlds
 - **Trade Routes:** islands can sign recurring trade contracts with other islands (for example, 64 cactus delivered weekly for 2,000 coins). Delivery is automated through a contract chest. This creates an interdependent player economy and gives smaller islands a niche.
 - **Seasons (~3 months):** the island-value leaderboard resets and seasonal cosmetic titles and badges are awarded. **Islands themselves persist.**
 
-**Economy:** **Skyrealms Coins** are earned only, by selling to the server shop, completing Trade Routes, and trading on the auction house. Coins can't be bought, and they never convert to or from Bolts or SMP Crowns.
+**Economy:** **SkyRealms Coins** are earned only, by selling to the server shop, completing Trade Routes, and trading on the auction house. Coins can't be bought, and they never convert to or from Bolts or SMP Crowns.
 
 ### 5.2 Horizons: survival SMP
 
@@ -302,12 +302,12 @@ The architecture reserves a server slot, and `rapid-minigame` is deferred until 
 
 Ranks are sold as **Tebex subscriptions** at `store.rapidskies.us` and are also available as **30-day passes bought with Bolts**. Higher tiers include all perks of lower tiers. Prices are starting points to tune in beta.
 
-**Prefix format:** the word `RAPID` always uses the brand color (`#FFD800`), and the pluses use the player's chosen **plus color**:
+**Prefix format:** no brackets, just the rank name and its colors. The word `RAPID` always uses the brand color (`#FFD800`), and the pluses use the player's chosen **plus color**. Team prefixes follow the same style (`OWNER`, `MOD`, …) in the reserved reds:
 
 ```
-[RAPID+]  Steve: hello          ← "+"   in chosen color
-[RAPID++] Alex: hello           ← "++"  in chosen color
-[RAPID+++] Notch: hello         ← "+++" in chosen color, RAPID in bold
+RAPID+ Steve: hello            ← "+"   in chosen color
+RAPID++ Alex: hello            ← "++"  in chosen color
+RAPID+++ Notch: hello          ← "+++" in chosen color, RAPID in bold
 ```
 
 **Plus color (`/plus`):**
@@ -329,7 +329,7 @@ Ranks are sold as **Tebex subscriptions** at `store.rapidskies.us` and are also 
 |---|---|---|---|
 | Price (subscription) | $4.99/mo | $9.99/mo | $19.99/mo |
 | Bolts pass (30 days) | 1,000 ⚡ | 2,000 ⚡ | 4,000 ⚡ |
-| Prefix | `[RAPID+]` | `[RAPID++]` | **`[RAPID+++]`** |
+| Prefix | `RAPID+` | `RAPID++` | **`RAPID+++`** |
 | Plus color choices | 6 | 11 | 14 + gradients |
 | Monthly Bolts stipend | 100 | 250 | 600 |
 | Cosmetic catalog access | Rapid+ set | + Rapid++ set | + Rapid+++ set + early access to new drops |
@@ -344,7 +344,7 @@ Ranks are sold as **Tebex subscriptions** at `store.rapidskies.us` and are also 
 
 | Mode | Rapid+ | Rapid++ | Rapid+++ |
 |---|---|---|---|
-| Skyrealms | Island name hologram color | + ambient island particles | + animated island title, extra warp-sign styles |
+| SkyRealms | Island name hologram color | + ambient island particles | + animated island title, extra warp-sign styles |
 | Horizons | `/hat`, claim-border particle style | + exclusive banner patterns, nametag emblem | + town title effects, exclusive trail |
 
 **Explicitly *not* sold, at any tier:** kits, gear, items, extra claim blocks, extra homes, extra co-op slots or island size, `/fly` outside the hub, `/craft` / `/ec` / `/repair` shortcuts, Trade slots, XP, coin or Crown multipliers, larger Tailwind banks, cooldown reductions, or Frontier early access.
@@ -399,7 +399,7 @@ Bolts are one global currency stored in `rapid-core`'s DB. They can be bought on
 - **Season Pass** (about 8 weeks, aligned with Chapters): free track plus a premium track bought with Bolts. Cosmetics only.
 - **Leaderboards:** hub holograms and `/lb` for island value, town size, Trade levels, Chapter completion, and parkour times.
 - **Social:** parties, friends, cross-server messaging, friend join notifications, "join friend" from the friends GUI.
-- **Hub parkour** with a time leaderboard and cosmetic rewards.
+- **Hub parkour** with a time leaderboard and cosmetic rewards. Every run is a freshly generated course of a fixed length (checkpoints at set distances), built in its own lane of a void world, so the hub map needs no course and no two runs are the same.
 - **Events:** Expeditions, Skyborne fortresses, Frontier openings, End dragon fights, build contests (judged on the build server, cosmetic prizes).
 - **Discord:** account linking (a one-time Bolts reward), report and punishment feeds, event announcements, a Frontier rotation countdown.
 
@@ -455,6 +455,7 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 - `friends` (two rows per friendship), `friend_requests`. Parties and the join queue are ephemeral and live in the proxy's memory: there is one proxy and a restart drops every player anyway. Move them to Redis (`party:<id>`, `queue:<target>`) if a second proxy is ever added.
 - `reports`, `staff_actions` (staff, action, target, server, detail: freezes, inspections, vanish and staff-mode toggles), `chat_log`
 - `grants` (uuid, kind [rank/permission], value, granted_by, reason, txn_id UNIQUE, created_at, starts_at, expires_at, revoked_at/by/reason): the record behind `/grant`; LuckPerms holds the effective nodes
+- `parkour_times` (course, period, uuid, time_ms, achieved_at; PK course+period+uuid): each player's best per hub parkour course, all time (`period` = `all`) and per ISO week (`2026-W46`, UTC), for the hub leaderboards and `/parkour top`
 - `store_transactions` (txn_id, uuid, package, status, timestamps)
 
 SuperiorSkyblock2 keeps its own tables in the same MariaDB instance, under its own schema.
@@ -477,7 +478,7 @@ Durations assume 1–2 developers plus 1–2 builders working in parallel. Phase
 | **3a. Claims & towns** | 5–11 | `rapid-claims`: chunk claims, claim map GUI, trust roles, flags, full protection suite, towns, plots, upkeep, ruins, Town Projects, `/claimadmin`, QuickShop hook |
 | **3b. Horizons SMP** | 7–16 | Heartland generation, Trades, Frontier rotation system + 2 launch modifiers, Skyborne events (1 fortress design), PvP toggle and Wildlands, chest shops, Chapter 1 |
 | **4a. Auction house** | 10–13 | `rapid-market` for both modes: listings, browse/search GUI, collection bin, price history, Redis notifications, `/ah admin`, concurrency and anti-dupe test suite |
-| **4b. Skyrealms** | 8–17 | SuperiorSkyblock2 setup and island schematics, Realm Tiers 1–3, Expeditions (3 themes), Trade Routes, server shop |
+| **4b. SkyRealms** | 8–17 | SuperiorSkyblock2 setup and island schematics, Realm Tiers 1–3, Expeditions (3 themes), Trade Routes, server shop |
 | **5. Monetization & retention** | 8–16 | Cosmetics engine and launch catalog, Bolt shop, Featured Shop, `/plus` GUI, quests, levels, Season Pass, Tebex store at `store.rapidskies.us`, compliance review |
 | **6. Beta & launch** | 17–22 | Closed beta (Horizons first, then both), open beta, load test with bots (for example, SoulFire), version test matrix, anti-cheat and X-ray tuning, economy tuning, launch |
 | **7. Gamemode 3** | launch + 6–8 | Choose the mode from telemetry (§5.4), then build `rapid-minigame` if it's match-based |
@@ -507,19 +508,30 @@ Done (with tests; the MariaDB/Redis ones run in CI through Testcontainers):
 
 Next:
 
-- [ ] Check on 1.20.1 and 26.3: LiteBans mutes block `/msg`, `/r` and `/pc`; party follow and the queue action bar; `/plus` menu items and lore; staff mode tools (keybind names in item names and lore), the freeze notice and title; `[RAPID+++]` nametags; vanished staff missing from the tab list; button hovers; `/grant` a rank to an online player and see the prefix change on their backend without a relog
+- [x] Check on 1.20.1 and 26.3: LiteBans mutes block `/msg`, `/r` and `/pc`; party follow and the queue action bar; `/plus` menu items and lore; staff mode tools (keybind names in item names and lore), the freeze notice and title; `RAPID+++` nametags; vanished staff missing from the tab list; button hovers; `/grant` a rank to an online player and see the prefix change on their backend without a relog
 - [ ] Tune in beta: Tailwind rate and starter bank, playtime Bolts, AFK timeout
 - [ ] Later staff tooling from §9 that needs other plugins' APIs: CPS/reach view (Grim), X-ray ore ratios, LiteBans punishment GUI
 
 ### Phase 2 progress
 
-- [x] Hub and spawn worlds imported (`worlds/`): Free Lobby as the hub, the Trading Post as the Skyrealms spawn, the CottageCore Lobby as Horizons' `rapidskies:spawn` world beside the Heartland. `rsdeploy.py worlds` ships their chunks and entities into the Paper 26.1+ layout (`<level>/dimensions/...`), never a level.dat, and only replaces an existing world with `--replace` (old one kept in `world-backups/`)
+- [x] Hub and spawn worlds imported (`worlds/`): Free Lobby as the hub, the Trading Post as the SkyRealms spawn, the CottageCore Lobby as Horizons' `rapidskies:spawn` world beside the Heartland. `rsdeploy.py worlds` ships their chunks and entities into the Paper 26.1+ layout (`<level>/dimensions/...`), never a level.dat, and only replaces an existing world with `--replace` (old one kept in `world-backups/`)
 - [x] `rapid-core` spawn and world management: spawn point per server (hub on every join, gamemodes on first join and bedless deaths), void rescue under the sky islands, per-world game rules / time / weather / border from the profiles, protected spawn builds (`rapid.world.build`), `/spawn`, `/setspawn`. A test checks every game rule named in the profiles exists in Paper 26.3
-- [ ] First boot of each world: walk the builds for blocks the upgrade got wrong (the hub's chunks are from 1.8), and check the spawn facing on 1.20.1 and 26.3
+- [x] First boot of each world: walk the builds for blocks the upgrade got wrong (the hub's chunks are from 1.8), and check the spawn facing on 1.20.1 and 26.3
+- [x] Spawns re-checked against in-game screenshots and the world data. Hub: moved from the courtyard (which faced away from the gate) to the stone-slab marker on the south terrace, `-5.5 87.5 9.5` facing north over the courtyard to the stage and gate hall. SkyRealms: the compass rose's true centre is `28.5 150 -29.5` (block -30 spans -30..-29; the old `-30.5` was a block off), now facing west to the pavilion. Horizons: unchanged, `0.5 74.1 0.5` facing north up the path to the fountain
 - [ ] A way from the Horizons spawn to the Heartland (portal or `/rtp`, rapid-horizons, phase 3b); SuperiorSkyblock2's `spawn.location` set to the Trading Post spawn (phase 4b)
-- [ ] `rapid-hub`: mode selector NPCs on the stage in front of the gate hall, double jump, parkour, leaderboards
+- [x] `rapid-hub`: game menu (hotbar compass and `/games`) with live player counts per mode from the server heartbeats; Citizens NPCs for SkyRealms and Horizons on the stage's inner slab pedestals (centre pedestal kept for gamemode 3), in an in-memory registry so Citizens never saves them, with text-display labels showing the live count; clicking either joins through the proxy queue (`RapidCore#connect`). Hotbar items are locked in place and never touch staff mode's tools
+- [x] Double jump for everyone (re-armed on landing), a particle trail for `rapid.hub.trail` (Rapid+) and `/fly` for `rapid.hub.fly` (Rapid++); player visibility toggle (per viewer, remembered, independent of vanish)
+- [x] Parkour engine: courses from config (start, ordered checkpoints, finish, `fail-y`), runs end on flying, teleports, gamemode or world changes; action-bar timer, back-to-checkpoint / restart / leave hotbar, `/parkour [leave|checkpoint|restart|top [weekly]]`. Bests all time and per week in `parkour_times` (core V5); a new #1 is announced to the hub
+- [x] Leaderboards: all-time and this-week holograms over the courtyard's floor emblems, redrawn every minute and after each finish; "opening soon" until the course exists. `/rapidhub here` prints copyable positions, `/rapidhub reload` rebuilds NPCs, boards and courses
+- [x] Parkour is generated instead of built: each run gets its own random course (`CourseGenerator`: single-block jumps any 1.20+ player can make, a gold checkpoint platform every `checkpoint-every` blocks, a finish platform at `length`) in a lane of the `rapidskies:parkour` void world (rapid-core creates it on the hub). The clock starts when the player jumps off the start platform; falls go back to the last checkpoint; blocks are removed when the run ends, and lanes in use are written to `parkour-lanes.txt` so a crash never leaves a course behind. Started from the hotbar feather, `/parkour start [course]` or an optional entrance block in the hub. Course `main`: 150 blocks, checkpoints at 50 and 100
+- [x] Sidebars per server (TAB on the proxy, `velocity/plugins/tab/config.yml.patch`): hub (rank, Bolts, players per gamemode, network count), SkyRealms (rank, Bolts, Tailwind, Coins, players), Horizons (rank, Bolts, Tailwind, Crowns, world, players), and a plain one for build/staging; `/sb` toggles it. New placeholders: `%rapid_rank_name%`, `%rapid_bolts%` (rapid-core's `BoltsCache`, re-read once a minute), `%rapid_tailwind_status%`, `%rapid_balance_status%`, and rapid-hub's `%rapidhub_players_<group>%`
+- [x] Rank and team prefixes without brackets (`RAPID++`, `MOD`), in chat, tab, nametags and `/grants`
+- [ ] SkyRealms sidebar: island level and worth (`%superior_island_level%`, `%superior_island_worth%`) once SuperiorSkyblock2 is on the server (phase 4b)
+- [ ] Optional: an entrance pressure plate for the parkour in the courtyard (`parkour.courses.main.entrance`, from `/rapidhub here`)
+- [x] Check on 1.20.1 and 26.3: NPC skins and that their nameplates stay hidden alongside TAB's nametags, label and leaderboard readability from the spawn, game menu counts and joining, hotbar items can't be moved or dropped, double jump and `/fly`, visibility toggle with a vanished staff member online, a full parkour run including a new record (jumps feel fair on 1.20.1 too, blocks are gone afterwards), and every sidebar (lines fit, values fill in, 1.20.1's red numbers don't clash)
+- [x] Pick NPC skins (`modes.<id>.skin-texture` / `skin-signature` from mineskin.org, so they never change)
 
-**Recommended launch strategy:** launch both modes together. With only two modes, launching one at a time would feel thin. Run Horizons as the first closed beta, though, since it relies more on premade plugins and will stress-test the core platform early. Don't wipe beta progress on Skyrealms or Horizons at launch.
+**Recommended launch strategy:** launch both modes together. With only two modes, launching one at a time would feel thin. Run Horizons as the first closed beta, though, since it relies more on premade plugins and will stress-test the core platform early. Don't wipe beta progress on SkyRealms or Horizons at launch.
 
 ### Test matrix (every release)
 
@@ -527,7 +539,7 @@ Clients: **1.20.1, 1.20.4, 1.21.11, 26.1.2, 26.3.** For each client, check:
 - Login via `rapidskies.us` (SRV) and `mc.rapidskies.us`
 - Chat colors, including every plus color and gradient
 - Sidebar and tab, every GUI, holograms and NPCs, cosmetics visibility
-- Skyrealms: create an island and complete one Expedition
+- SkyRealms: create an island and complete one Expedition
 - Horizons: claim land via `/claim map`, found a town, use a chest shop, travel to the Frontier, and fight in a Skyborne event
 - Both modes: list, buy and collect on the auction house, and confirm the true item name shows for newer items on 1.20
 
@@ -541,7 +553,7 @@ Clients: **1.20.1, 1.20.4, 1.21.11, 26.1.2, 26.3.** For each client, check:
 
 - **Weekly:** Featured Shop rotation, quest rotation, Expedition themes, staff report review, economy health check.
 - **Monthly:** new Frontier with a new or remixed modifier, a new Horizons Chapter, a Skyborne fortress variant.
-- **Each season (~8–12 weeks):** new Season Pass, cosmetic drop, Skyrealms leaderboard reset with new Realm Tier(s), Trade and Town Project additions.
+- **Each season (~8–12 weeks):** new Season Pass, cosmetic drop, SkyRealms leaderboard reset with new Realm Tier(s), Trade and Town Project additions.
 - **Each Minecraft release:** wait for stable Paper + Via + Velocity + SuperiorSkyblock2 builds, test on staging against the full matrix, then upgrade.
 
 ---

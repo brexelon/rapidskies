@@ -1,11 +1,12 @@
-# Skyrealms: rapid-core serves Coins through Vault (SuperiorSkyblock2) and spends Tailwind here.
+# SkyRealms: rapid-core serves Coins through Vault (SuperiorSkyblock2) and spends Tailwind here.
 server.gamemode: "skyrealms"
 
-# Spawn: centre of the Trading Post's compass rose (the mud pedestal at y 149, as in the
-# map's README), facing south-west down the main path to the plaza. When SuperiorSkyblock2
-# joins (phase 4b), set its spawn.location to the same point:
-#   skyrealms_spawn, 28.5, 150, -30.5, 45, 0
-spawn.location: "minecraft:overworld, 28.5, 150, -30.5, 45, 0"
+# Spawn: centre of the Trading Post's compass rose (the mud block at 28 149 -30, as in the
+# map's README; block -30 spans z -30..-29, so its centre is -29.5), under the ring of oak
+# pillars, facing west across the rose to the pavilion. When SuperiorSkyblock2 joins
+# (phase 4b), set its spawn.location to the same point:
+#   skyrealms_spawn, 28.5, 150, -29.5, 90, 0
+spawn.location: "minecraft:overworld, 28.5, 150, -29.5, 90, 0"
 spawn.on-join: "first-join"
 spawn.on-death: true
 worlds:

@@ -1,0 +1,16 @@
+# rapid-core's lang/en_US.yml is a full copy of the bundled messages, written on first start,
+# and every key in it overrides the jar's. Keys whose wording changed after that are pinned
+# here so the live copies follow. Delete a line once every server's copy has been regenerated
+# (remove plugins/rapid-core/lang/en_US.yml and restart).
+tailwind.banked: "<prefix><primary>Tailwind:</primary> <text><time> banked.</text> <muted>It's spent while you play SkyRealms or Horizons, for</muted> <accent>+<bonus>%</accent> <muted>mode XP and Trade income.</muted>"
+# Rank and staff prefixes without brackets: the name and its colors only.
+rank.prefix.rapidplus: "<primary>RAPID</primary><plus>+</plus> "
+rank.prefix.rapidplusplus: "<primary>RAPID</primary><plus>++</plus> "
+rank.prefix.rapidplusplusplus: "<primary><bold>RAPID</bold></primary><plus>+++</plus> "
+rank.staff.owner: "<dark_red><bold>OWNER</bold></dark_red> "
+rank.staff.admin: "<dark_red>ADMIN</dark_red> "
+rank.staff.developer: "<red>DEV</red> "
+rank.staff.srmod: "<red>SR. MOD</red> "
+rank.staff.moderator: "<red>MOD</red> "
+rank.staff.helper: "<red>HELPER</red> "
+rank.staff.builder: "<red>BUILDER</red> "

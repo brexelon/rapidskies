@@ -42,7 +42,7 @@ queue:
   # (build, staging) are left out on purpose; staff use /server.
   groups:
     hub: Lobby
-    skyrealms: Skyrealms
+    skyrealms: SkyRealms
     smp: Horizons SMP
   # Place in line on full servers, highest first (PLAN.md §6.1). `staff` is any team role.
   priority:

@@ -1,0 +1,18 @@
+# The proxy's lang/en_US.yml is a full copy of the bundled messages, written on first start,
+# and every key in it overrides the jar's. Keys whose wording changed after that are pinned
+# here so the live copy follows. Delete a line once the server's copy has been regenerated
+# (remove plugins/rapid-proxy/lang/en_US.yml and restart).
+motd.rotation:
+  - "<accent>SkyRealms</accent> <dark>•</dark> <accent>Horizons SMP</accent>"
+  - "<text>Store:</text> <primary>store.rapidskies.us</primary>"
+# Rank names in /grants, matching the chat prefixes (no brackets).
+grant.name.rapidplus: "<primary>RAPID</primary><yellow>+</yellow>"
+grant.name.rapidplusplus: "<primary>RAPID</primary><yellow>++</yellow>"
+grant.name.rapidplusplusplus: "<primary><bold>RAPID</bold></primary><yellow>+++</yellow>"
+grant.name.owner: "<dark_red><bold>OWNER</bold></dark_red>"
+grant.name.admin: "<dark_red>ADMIN</dark_red>"
+grant.name.developer: "<red>DEV</red>"
+grant.name.srmod: "<red>SR. MOD</red>"
+grant.name.moderator: "<red>MOD</red>"
+grant.name.helper: "<red>HELPER</red>"
+grant.name.builder: "<red>BUILDER</red>"

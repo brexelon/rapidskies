@@ -1,6 +1,7 @@
 package us.rapidskies.common.economy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -40,6 +41,23 @@ class LedgerIT {
         assertEquals(2, history.size());
         assertEquals(-40, history.getFirst().delta(), "newest first");
         assertEquals(60, history.stream().mapToLong(Ledger.Entry::delta).sum(), "ledger sums to the balance");
+    }
+
+    @Test
+    void balancesReadsManyPlayersInOneQuery() throws Exception {
+        UUID alex = UUID.randomUUID();
+        UUID nobody = UUID.randomUUID();
+        bolts.credit(steve, 25, "test", "test", null);
+        bolts.credit(alex, 7, "test", "test", null);
+        Ledger coins = Ledger.mode(TestServices.database(), EconomyMode.SKYREALMS);
+        coins.credit(steve, 999, "test", "test", null);
+
+        var balances = bolts.balances(List.of(steve, alex, nobody));
+        assertEquals(25L, balances.get(steve), "only this ledger's balances");
+        assertEquals(7L, balances.get(alex));
+        assertFalse(balances.containsKey(nobody), "no row, no entry");
+        assertEquals(0, bolts.balances(List.of()).size());
+        assertEquals(999L, coins.balances(List.of(steve)).get(steve));
     }
 
     @Test

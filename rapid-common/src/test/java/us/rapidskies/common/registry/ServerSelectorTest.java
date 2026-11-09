@@ -43,8 +43,15 @@ class ServerSelectorTest {
 
     @Test
     void heartbeatHashRoundTrips() {
-        var s = new ServerStatus("smp-1", "smp", "172.18.0.1:25570", State.RESTRICTED, 12, 200, 5, 6);
+        var s = new ServerStatus("smp-1", "smp", "172.18.0.1:25570", State.RESTRICTED, 12, 11, 200, 5, 6);
         assertEquals(s, ServerStatus.fromHash("smp-1", s.toHash()));
         assertEquals(null, ServerStatus.fromHash("x", java.util.Map.of("state", "BOGUS")));
+    }
+
+    @Test
+    void anOlderHeartbeatWithoutAVisibleCountShowsEveryone() {
+        var hash = new java.util.HashMap<>(new ServerStatus("smp-1", "smp", "", State.ONLINE, 12, 200, 5, 6).toHash());
+        hash.remove("visible");
+        assertEquals(12, ServerStatus.fromHash("smp-1", hash).visible());
     }
 }

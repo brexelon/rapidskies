@@ -2,7 +2,27 @@ name: rapid-hub
 version: '${version}'
 main: us.rapidskies.hub.RapidHub
 api-version: '26.3'
-description: "Hub: spawn, mode selector, parkour, leaderboards (PLAN.md §4)."
+description: "Hub: mode selector and NPCs, double jump, player visibility, parkour, leaderboards (PLAN.md §4)."
 author: RapidSkies
 website: https://rapidskies.us
 depend: [rapid-core]
+# The mode selector NPCs on the stage. Without Citizens the hub still works (hotbar selector).
+# PlaceholderAPI: the sidebar's per-mode player counts (%rapidhub_players_<group>%).
+softdepend: [Citizens, PlaceholderAPI]
+
+permissions:
+  rapid.hub.fly:
+    description: Fly in the hub with /fly (Rapid++ and up, PLAN.md §6.1).
+    default: op
+  rapid.hub.trail:
+    description: A particle trail behind your double jumps (Rapid+ and up, PLAN.md §6.1).
+    default: op
+  rapid.hub.admin:
+    description: /rapidhub here (print positions for the config) and /rapidhub reload.
+    default: op
+  rapid.command.parkour:
+    description: Use /parkour.
+    default: true
+  rapid.command.games:
+    description: Open the game menu with /games.
+    default: true

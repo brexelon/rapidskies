@@ -27,7 +27,7 @@ public record QueueSettings(Map<String, String> groups, RankValues priority, int
         }
         if (groups.isEmpty()) {
             groups.put("hub", "Lobby");
-            groups.put("skyrealms", "Skyrealms");
+            groups.put("skyrealms", "SkyRealms");
             groups.put("smp", "Horizons SMP");
         }
         return new QueueSettings(Collections.unmodifiableMap(groups), // keeps file order for /play

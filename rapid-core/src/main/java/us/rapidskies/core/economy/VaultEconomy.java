@@ -17,7 +17,7 @@ import us.rapidskies.common.economy.EconomyMode;
 
 /**
  * The Vault economy for this server's gamemode currency (PLAN.md §4), registered with
- * VaultUnlocked so SuperiorSkyblock2 (Skyrealms) and QuickShop-Hikari (Horizons) charge and
+ * VaultUnlocked so SuperiorSkyblock2 (SkyRealms) and QuickShop-Hikari (Horizons) charge and
  * pay in Coins or Crowns. This is the classic Vault API; VaultUnlocked serves it as is.
  * QuickShop must be set to its classic Vault economy, since nothing implements the newer
  * VaultUnlocked interface yet.

@@ -2,8 +2,8 @@ package us.rapidskies.skyrealms;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
-/** Skyrealms: Expeditions, Realm Tiers, Trade Routes, seasons (PLAN.md §5.1). */
-public final class RapidSkyrealms extends JavaPlugin {
+/** SkyRealms: Expeditions, Realm Tiers, Trade Routes, seasons (PLAN.md §5.1). */
+public final class RapidSkyRealms extends JavaPlugin {
 
     @Override
     public void onEnable() {

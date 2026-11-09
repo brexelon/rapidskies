@@ -17,7 +17,7 @@ import us.rapidskies.common.redis.Channels;
 import us.rapidskies.common.redis.RedisBus;
 
 /**
- * This server's gamemode currency (Coins on Skyrealms, Crowns on Horizons; PLAN.md §5),
+ * This server's gamemode currency (Coins on SkyRealms, Crowns on Horizons; PLAN.md §5),
  * shaped for synchronous callers such as the Vault API (PLAN.md §4: per-mode Vault
  * economy provider).
  *

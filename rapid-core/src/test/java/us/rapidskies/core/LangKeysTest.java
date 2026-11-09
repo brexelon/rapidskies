@@ -26,7 +26,7 @@ import us.rapidskies.common.rank.StaffRole;
 class LangKeysTest {
 
     private static final Pattern KEY = Pattern.compile(
-            "\"((?:afk|bolts|chat|errors|login|plus|rank|rewards|spawn|staff|tailwind)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
+            "\"((?:afk|bolts|chat|errors|login|placeholder|plus|rank|rewards|spawn|staff|tailwind)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
 
     @Test
     void everyKeyInTheCodeIsInTheBundle() throws IOException {

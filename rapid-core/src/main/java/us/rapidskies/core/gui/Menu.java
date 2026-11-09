@@ -101,8 +101,14 @@ public class Menu implements InventoryHolder {
         render(viewer);
     }
 
+    /**
+     * Opens the menu. A subclass is redrawn first ({@link #refresh}); a plain {@code Menu}
+     * shows what was {@link #set} on it, which a refresh would wipe.
+     */
     public void open(Player player) {
-        refresh(player);
+        if (getClass() != Menu.class) {
+            refresh(player);
+        }
         player.openInventory(inventory);
     }
 

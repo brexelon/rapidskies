@@ -20,7 +20,7 @@ import us.rapidskies.core.gui.Menu;
  * {@code /plus}: one block per plus color and gradient with a live preview of the prefix in
  * its lore (PLAN.md §6.1). Colors above the player's rank are shown locked, previewed on the
  * player's own rank so they see what they'd get. Gradients are Rapid+++ only and a single
- * "+" can't show one, so locked gradients are previewed on {@code [RAPID+++]}. Five rows:
+ * "+" can't show one, so locked gradients are previewed on {@code RAPID+++}. Five rows:
  *
  * <pre>
  *   row 0  . . . . [current prefix] . . . .

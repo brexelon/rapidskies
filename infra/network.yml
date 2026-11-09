@@ -30,7 +30,7 @@ servers:
   hub-1:
     ptero_id: "474c9fe6"
     profiles: [paper-base, hub]
-    plugins: [paper-base]
+    plugins: [paper-base, hub]
     schedules: [daily-backup]
     vars: { LP_SERVER: hub }
     worlds: { hub: hub }
@@ -38,7 +38,7 @@ servers:
   hub-2:
     ptero_id: ""
     profiles: [paper-base, hub]
-    plugins: [paper-base]
+    plugins: [paper-base, hub]
     schedules: [daily-backup]
     vars: { LP_SERVER: hub }
     worlds: { hub: hub }
@@ -69,7 +69,7 @@ servers:
 
   staging:
     # Mirror of a game server for testing updates. Defaults to mirroring smp;
-    # swap `smp` for `skyrealms` (and the plugin sets) when testing Skyrealms.
+    # swap `smp` for `skyrealms` (and the plugin sets) when testing SkyRealms.
     ptero_id: ""
     profiles: [paper-base, survival, smp, staging]
     plugins: [paper-base, survival, worldgen]
@@ -88,10 +88,10 @@ servers:
 #   source   Folder holding the world's region/ (and entities/, poi/) directories.
 worlds:
   # Free Lobby (Qualis Builds): sky-island hub. 1.8-era chunks; Paper upgrades them on first load.
-  # Spawn: courtyard centre in front of the gate hall, -5.5 85 -2.5 facing south.
+  # Spawn: the slab on the south terrace, -5.5 87.5 9.5 facing north to the gate hall.
   hub:
     source: "worlds/Free Lobby (Hub)/world"
-  # SkyBlock Spawn 150x150 (Mongen's Cave), 1.21.8. Spawn: the compass rose, 28.5 150 -30.5.
+  # SkyBlock Spawn 150x150 (Mongen's Cave), 1.21.8. Spawn: the compass rose, 28.5 150 -29.5 facing west.
   trading-post:
     source: "worlds/TradingPost (SkyRealm)/TradingPost"
   # CottageCore Lobby, 1.21.8: a floating island (x -206..161, z -209..175, y 42..155) with a
@@ -125,6 +125,11 @@ plugin_sets:
     - "MiniPlaceholders-Velocity-*.jar"
     # Paid and git-ignored: keep LiteBans.jar in plugins/ locally (infra/README.md).
     - "LiteBans.jar"
+    # Velocity kicks 1.19.1+ clients ("A proxy plugin caused an illegal protocol state")
+    # when a proxy plugin cancels a signed chat message or command, as LiteBans does for
+    # mutes and rapid-proxy does for frozen players. SignedVelocity hands the cancel to
+    # the backend instead, so it must also be on every Paper server (paper-base below).
+    - "SignedVelocity-Proxy-*.jar"
     - "TAB v*.jar"
     # TAB on Velocity needs it for scoreboard teams (nametag prefixes, tab sorting).
     - "VelocityScoreboardAPI*.jar"
@@ -140,8 +145,16 @@ plugin_sets:
     - "grimac-bukkit-*.jar"
     # Passes PlaceholderAPI values (%rapid_prefix%) and vanish state up to TAB on the proxy.
     - "TAB-Bridge*.jar"
+    # Backend half of SignedVelocity (see the proxy set): drops chat and commands that
+    # the proxy cancelled, so the client's signed-chat chain stays valid.
+    - "SignedVelocity-Paper-*.jar"
     - "dist/rapid-core.jar"
-    # Phase 2: "DecentHolograms-*.jar", "Citizens-*.jar"
+
+  hub:
+    # The mode NPCs on the stage (rapid-hub builds them from its config; Citizens never
+    # saves them). Holograms are rapid-hub's own text displays, so DecentHolograms isn't needed.
+    - "Citizens-*.jar"
+    - "dist/rapid-hub.jar"
 
   survival:
     # Vault API for the Coins/Crowns economy rapid-core provides (server.gamemode).

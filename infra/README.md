@@ -112,8 +112,8 @@ The hub and the two spawns are pre-built maps in the repo's `worlds/` folder. `n
 
 | Server | World | Goes to | Spawn (`spawn.location` in the rapid-core profile) |
 |---|---|---|---|
-| hub-1, hub-2 | Free Lobby | `hub` (main world) | `-5.5 85 -2.5`, facing south: courtyard centre, toward the gate hall |
-| skyrealms-1 | Trading Post | `skyrealms_spawn` (main world) | `28.5 150 -30.5`, facing south-west: the compass rose, toward the plaza |
+| hub-1, hub-2 | Free Lobby | `hub` (main world) | `-5.5 87.5 9.5`, facing north: the slab on the south terrace, over the courtyard to the stage and gate hall |
+| skyrealms-1 | Trading Post | `skyrealms_spawn` (main world) | `28.5 150 -29.5`, facing west: the centre of the compass rose, toward the pavilion |
 | smp-1, staging | CottageCore Lobby | `heartland/dimensions/rapidskies/spawn` (`rapidskies:spawn`) | `0.5 74.1 0.5`, facing north: the village plaza's centrepiece, toward the town hall |
 
 ```bash
@@ -141,13 +141,41 @@ python infra/rsdeploy.py worlds hub-1 --replace         # server must be stopped
   moved to `world-backups/` (excluded from Pterodactyl backups; delete them once you're happy).
   Never use `--replace` on a world players have built in.
 - **Spawn behaviour** (rapid-core, `spawn.*` and `worlds.*` in each profile): the hub puts
-  players at the spawn on every join; Skyrealms and Horizons only on a player's first join, and
+  players at the spawn on every join; SkyRealms and Horizons only on a player's first join, and
   after deaths without a bed or respawn anchor. All three worlds are `protect`ed: only
   `rapid.world.build` (ops by default) can change blocks, containers, item frames or armor
   stands, and fire, explosions, leaf decay and fading are off. Falling below `void-y` (all
   three are sky islands) sends players back to the spawn. `/spawn` works everywhere;
   `/setspawn` (op) moves the spawn until the next restart and prints the line to put in the
   profile, which is where the spawn really lives.
+
+## Hub (rapid-hub)
+
+The hub servers get the `hub` plugin set on top of `paper-base`: Citizens and `rapid-hub`. Its
+positions live in `profiles/hub/plugins/rapid-hub/config.yml.patch`, like the spawn:
+
+| What | Where on the Free Lobby |
+|---|---|
+| Mode NPCs (SkyRealms, Horizons) | The stage's inner slab pedestals, `-7.5 86.5 -10.5` and `-3.5 86.5 -10.5`, facing the spawn. The centre pedestal is kept for gamemode 3. |
+| Leaderboards (parkour, all time / this week) | Over the floor emblems either side of the courtyard, `-16 86 -1` and `5 86 -1` |
+| Parkour course `main` | Generated per run in the `rapidskies:parkour` void world (rapid-core creates it from the hub profile), 150 blocks with checkpoints at 50 and 100. Started from the hotbar feather or `/parkour start`; an entrance plate in the courtyard is optional (`parkour.courses.main.entrance`) |
+
+- **Nothing is saved into the world.** NPCs (an in-memory Citizens registry) and the floating
+  labels (text displays) are built from the config on every start, so moving one is a config
+  change, never a cleanup job. Their chunks are kept loaded with plugin tickets.
+- **Placing things:** stand where it should go and run `/rapidhub here`: it prints the
+  position as an NPC/leaderboard line and as a parkour block, each click-to-copy. Edit the
+  live `plugins/rapid-hub/config.yml`, `/rapidhub reload` to try it, then copy the final
+  values into the profile (or the next `apply` puts the old ones back).
+- **Perks** come from permissions (`luckperms/bootstrap.txt`): `rapid.hub.trail` (Rapid+) and
+  `rapid.hub.fly` (Rapid++), both with `server=hub`.
+
+## Lang overrides
+
+Each rapid plugin copies its bundled `lang/en_US.yml` into its data folder on first start, and
+every key in that copy overrides the jar. Reworded messages therefore don't reach a server by
+updating the jar alone: pin them in a `lang/en_US.yml.patch` in the right profile (as done for
+the SkyRealms rename), or delete the server's copy so the next start writes a fresh one.
 
 ## Backups
 
@@ -214,6 +242,9 @@ and Discord embed colors are restyled to the brand in `velocity/plugins/litebans
 (LiteBans reads `&` codes, not MiniMessage). **TAB** runs on Velocity with
 **VelocityScoreboardAPI** (needed for scoreboard teams); **TAB-Bridge** on every backend passes
 rapid-core's `%rapid_prefix%` and vanish state up to it, so the tab list and nametags match chat.
+TAB also draws the sidebar, one layout per kind of server, chosen by the backend's name
+(`%server%<-hub`, `<-skyrealms`, `<-smp`, else a plain one); the values come from rapid-core
+and rapid-hub placeholders through TAB-Bridge (`tab/config.yml.patch` lists them).
 
 **VaultUnlocked** (the `survival` set) carries the Vault API on the gamemode servers. rapid-core
 registers the Coins (skyrealms) or Crowns (smp, staging) economy through it, picked by

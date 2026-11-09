@@ -11,18 +11,25 @@
 # Rank and staff prefixes (PLAN.md §6.1, §9). <plus>...</plus> takes the player's plus color.
 rank:
   prefix:
-    rapidplus: "<primary>[RAPID</primary><plus>+</plus><primary>]</primary> "
-    rapidplusplus: "<primary>[RAPID</primary><plus>++</plus><primary>]</primary> "
-    rapidplusplusplus: "<primary>[<bold>RAPID</bold></primary><plus>+++</plus><primary>]</primary> "
+    rapidplus: "<primary>RAPID</primary><plus>+</plus> "
+    rapidplusplus: "<primary>RAPID</primary><plus>++</plus> "
+    rapidplusplusplus: "<primary><bold>RAPID</bold></primary><plus>+++</plus> "
   # Red shades are reserved for the team; plus colors can never use them.
   staff:
-    owner: "<dark_red><bold>[OWNER]</bold></dark_red> "
-    admin: "<dark_red>[ADMIN]</dark_red> "
-    developer: "<red>[DEV]</red> "
-    srmod: "<red>[SR. MOD]</red> "
-    moderator: "<red>[MOD]</red> "
-    helper: "<red>[HELPER]</red> "
-    builder: "<red>[BUILDER]</red> "
+    owner: "<dark_red><bold>OWNER</bold></dark_red> "
+    admin: "<dark_red>ADMIN</dark_red> "
+    developer: "<red>DEV</red> "
+    srmod: "<red>SR. MOD</red> "
+    moderator: "<red>MOD</red> "
+    helper: "<red>HELPER</red> "
+    builder: "<red>BUILDER</red> "
+
+# Sidebar placeholders (%rapid_rank_name%, %rapid_bolts%, %rapid_tailwind_status%) when
+# there's nothing to show.
+placeholder:
+  no-rank: "<muted>Member</muted>"
+  no-tailwind: "<muted>None</muted>"
+  loading: "<dark>…</dark>"
 
 # <rank> is the prefix above (empty for default players), <player> the name, <message> what they typed.
 chat:
@@ -77,7 +84,7 @@ tailwind:
   join: "<prefix><primary>Tailwind:</primary> <text><time> of</text> <accent>+<bonus>%</accent> <text>mode XP and Trade income.</text>"
   depleted: "<prefix><muted>Your Tailwind has run out. Time away from the network builds it back up.</muted>"
   empty: "<prefix><text>No Tailwind banked.</text> <muted>Time away from the network banks a</muted> <accent>+<bonus>%</accent> <muted>bonus for your next session.</muted>"
-  banked: "<prefix><primary>Tailwind:</primary> <text><time> banked.</text> <muted>It's spent while you play Skyrealms or Horizons, for</muted> <accent>+<bonus>%</accent> <muted>mode XP and Trade income.</muted>"
+  banked: "<prefix><primary>Tailwind:</primary> <text><time> banked.</text> <muted>It's spent while you play SkyRealms or Horizons, for</muted> <accent>+<bonus>%</accent> <muted>mode XP and Trade income.</muted>"
   active: "<prefix><primary>Tailwind:</primary> <text><time> left,</text> <accent>+<bonus>%</accent> <text>mode XP and Trade income right now.</text>"
   paused: "<prefix><primary>Tailwind:</primary> <text><time> left,</text> <muted>paused while you're AFK.</muted>"
 

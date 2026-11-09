@@ -1,0 +1,13 @@
+# rapid-hub's lang/en_US.yml is a full copy of the bundled messages, written on first start,
+# and every key in it overrides the jar's. Keys whose wording changed after that are pinned
+# here so the live copies follow. Delete a line once every hub's copy has been regenerated
+# (remove plugins/rapid-hub/lang/en_US.yml and restart).
+# Generated parkour courses: the start message, action bar and hints changed.
+parkour.started: "<prefix><text>Your</text> <accent><course></accent> <text>course is ready:</text> <accent><length> blocks</accent><text>,</text> <accent><total> checkpoints</accent><text>. Jump off the platform to start the clock!</text>"
+parkour.not-running: "<prefix><muted>You're not on a parkour run.</muted> <click:run_command:'/parkour start'><hover:show_text:'<muted>Click for a fresh course'><text>Start one with</text> <accent>/parkour start</accent></hover></click><text>.</text>"
+parkour.timer: "<primary><course></primary> <dark>»</dark> <accent><time></accent> <dark>•</dark> <text><distance>/<length>m</text> <dark>•</dark> <muted>Checkpoint <reached>/<total></muted>"
+parkour.stats-none: "<prefix><text>You haven't finished</text> <accent><course></accent> <text>yet.</text> <click:run_command:'/parkour start'><hover:show_text:'<muted>Click for a fresh course'><accent>[Start a run]</accent></hover></click>"
+parkour.usage: "<prefix><text>/parkour</text> <muted>[start [course] | leave | checkpoint | restart | top [course] [weekly]]</muted>"
+item.restart-lore:
+  - "<muted>Back to the start of this course;</muted>"
+  - "<muted>the clock restarts when you jump off.</muted>"

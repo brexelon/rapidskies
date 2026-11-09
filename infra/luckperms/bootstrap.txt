@@ -128,6 +128,20 @@ lpv group developer permission set * true server=staging
 lpv group admin permission set rapid.command.setspawn true
 lpv group admin permission set rapid.world.build true
 
+# Hub perks (rapid-hub, phase 2; plan §6.1): everyone double-jumps; Rapid+ adds a particle
+# trail, Rapid++ (and up, through inheritance) can /fly in the hub. The team gets both.
+# Admins and builders can print positions for the hub config and reload it (/rapidhub).
+lpv group rapidplus permission set rapid.hub.trail true server=hub
+lpv group rapidplusplus permission set rapid.hub.fly true server=hub
+lpv group helper permission set rapid.hub.trail true server=hub
+lpv group helper permission set rapid.hub.fly true server=hub
+lpv group builder permission set rapid.hub.trail true server=hub
+lpv group builder permission set rapid.hub.fly true server=hub
+lpv group developer permission set rapid.hub.trail true server=hub
+lpv group developer permission set rapid.hub.fly true server=hub
+lpv group builder permission set rapid.hub.admin true server=hub
+lpv group admin permission set rapid.hub.admin true server=hub
+
 # Admins manage permissions; the owner has everything.
 lpv group admin permission set luckperms.* true
 lpv group admin permission set spark true

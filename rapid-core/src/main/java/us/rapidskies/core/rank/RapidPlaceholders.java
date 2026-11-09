@@ -25,6 +25,18 @@ import us.rapidskies.core.tailwind.TailwindService;
  *   <li>{@code %rapid_balance%}: Coins or Crowns on a gamemode server, else empty</li>
  * </ul>
  *
+ * <p>For sidebars, which show a line whether or not it has a value:
+ *
+ * <ul>
+ *   <li>{@code %rapid_rank_name%}: the prefix without its trailing space (team role or rank
+ *       with plus color), or lang {@code placeholder.no-rank} for default players</li>
+ *   <li>{@code %rapid_bolts%}: the Bolts balance ({@code 1,250}), or lang
+ *       {@code placeholder.loading} until it has been read</li>
+ *   <li>{@code %rapid_tailwind_status%}: Tailwind left, or lang {@code placeholder.no-tailwind}</li>
+ *   <li>{@code %rapid_balance_status%}: like {@code %rapid_balance%}, or lang
+ *       {@code placeholder.loading} while it loads</li>
+ * </ul>
+ *
  * <p>Hex brand colors are written as {@code §x§F§F§D§8§0§0}, which TAB reads back as hex.
  * Only loaded when PlaceholderAPI is installed.
  */
@@ -85,8 +97,25 @@ public final class RapidPlaceholders extends PlaceholderExpansion {
             case "balance" -> core.economy() == null ? ""
                     : core.economy().cachedBalance(player.getUniqueId()).stream()
                             .mapToObj(b -> String.format("%,d", b)).findFirst().orElse("");
+            case "balance_status" -> core.economy() == null ? ""
+                    : core.economy().cachedBalance(player.getUniqueId()).stream()
+                            .mapToObj(b -> String.format("%,d", b)).findFirst().orElseGet(() -> text("placeholder.loading"));
+            case "rank_name" -> {
+                String prefix = LEGACY.serialize(ranks.prefix(player)).stripTrailing();
+                yield prefix.isEmpty() ? text("placeholder.no-rank") : prefix;
+            }
+            case "bolts" -> core.boltsCache().cached(player.getUniqueId()).stream()
+                    .mapToObj(b -> String.format("%,d", b)).findFirst().orElseGet(() -> text("placeholder.loading"));
+            case "tailwind_status" -> {
+                long left = core.tailwind().remainingSeconds(player);
+                yield left > 0 ? TailwindService.format(left) : text("placeholder.no-tailwind");
+            }
             default -> null; // unknown placeholder: PlaceholderAPI leaves it as typed
         };
+    }
+
+    private String text(String key) {
+        return LEGACY.serialize(core.lang().get(key));
     }
 
     /** "§e" for yellow; a gradient's first color. An empty component serializes to nothing, so encode one character and drop it. */
