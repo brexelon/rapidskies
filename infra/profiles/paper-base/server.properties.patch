@@ -1,0 +1,24 @@
+# Shared by every Paper 26.3 backend. server-ip and server-port are left alone: the
+# Pterodactyl egg manages them inside the container. What decides exposure is the
+# allocation's host IP, which must be 172.18.0.1 (internal Docker interface), never the
+# public IP. `rsdeploy.py servers` shows it, and `${addr:...}` refuses public ones.
+#
+# Note: pvp, allow-nether and spawn-monsters are game rules on 26.x, not properties.
+
+# Velocity authenticates players; backends trust the forwarded identity.
+online-mode: "false"
+# Chat is formatted server-side and 1.8 clients can't sign messages (plan §3).
+enforce-secure-profile: "false"
+# Velocity compresses for the client; compressing again between proxy and backend wastes CPU.
+network-compression-threshold: "-1"
+prevent-proxy-connections: "false"
+# Grim does movement checks; vanilla's flight kick would fire on hub double-jump.
+allow-flight: "true"
+spawn-protection: "0"
+enable-query: "false"
+enable-rcon: "false"
+# Pausing the tick loop on empty servers would also stop plugin heartbeats (server registry).
+pause-when-empty-seconds: "-1"
+hide-online-players: "true"
+max-players: "500"
+motd: "RapidSkies backend"

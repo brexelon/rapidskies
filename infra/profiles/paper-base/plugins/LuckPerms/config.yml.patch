@@ -1,0 +1,20 @@
+# LuckPerms (Paper). Same database and Redis channel as the proxy.
+# `server` is the context used for server-specific permissions, shared by servers of
+# the same role (hub-1 and hub-2 are both "hub"). Set per server in network.yml.
+server: "${LP_SERVER}"
+storage-method: mariadb
+data.address: "${DB_HOST}:${DB_PORT}"
+data.database: "${LP_DB_NAME}"
+data.username: "${LP_DB_USER}"
+data.password: "${LP_DB_PASSWORD}"
+data.table-prefix: "luckperms_"
+data.pool-settings.maximum-pool-size: 6
+data.pool-settings.minimum-idle: 6
+messaging-service: redis
+redis.enabled: true
+redis.address: "${REDIS_HOST}:${REDIS_PORT}"
+redis.password: "${REDIS_PASSWORD}"
+watch-files: false
+# Ranks come from LuckPerms groups only; nobody gets op-based permissions.
+enable-ops: false
+auto-op: false

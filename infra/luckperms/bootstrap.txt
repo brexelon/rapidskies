@@ -1,0 +1,95 @@
+# LuckPerms bootstrap: groups, tracks and the phase-0 permissions (plan §6.1, §9).
+# Run once, line by line, in the **Velocity console** (`lpv` is LuckPerms' Velocity command).
+# Everything lands in the shared MariaDB and syncs to every backend over Redis.
+# Re-running is safe: every command just sets the same value again.
+#
+# Contexts: server=proxy (Velocity), hub, skyrealms, smp, build, staging (see network.yml `LP_SERVER`).
+# Prefixes are not set here: rapid-core renders rank and staff prefixes, including the
+# player's plus color (§6.1), in phase 1.
+
+# ---------------------------------------------------------------- player ranks
+lpv creategroup rapidplus
+lpv creategroup rapidplusplus
+lpv creategroup rapidplusplusplus
+lpv group rapidplus setweight 10
+lpv group rapidplusplus setweight 20
+lpv group rapidplusplusplus setweight 30
+lpv group rapidplus setdisplayname Rapid+
+lpv group rapidplusplus setdisplayname Rapid++
+lpv group rapidplusplusplus setdisplayname Rapid+++
+lpv group rapidplusplus parent add rapidplus
+lpv group rapidplusplusplus parent add rapidplusplus
+lpv createtrack ranks
+lpv track ranks append rapidplus
+lpv track ranks append rapidplusplus
+lpv track ranks append rapidplusplusplus
+# Ranks are granted as temporary parents that stack (§6.3), e.g. from Tebex:
+#   lpv user <uuid> parent addtemp rapidplusplus 30d accumulate
+
+# ---------------------------------------------------------------- staff
+lpv creategroup helper
+lpv creategroup moderator
+lpv creategroup srmod
+lpv creategroup admin
+lpv creategroup owner
+lpv group helper setweight 100
+lpv group moderator setweight 200
+lpv group srmod setweight 300
+lpv group admin setweight 400
+lpv group owner setweight 500
+lpv group helper setdisplayname Helper
+lpv group moderator setdisplayname Moderator
+lpv group srmod setdisplayname Sr. Moderator
+lpv group admin setdisplayname Admin
+lpv group owner setdisplayname Owner
+lpv group moderator parent add helper
+lpv group srmod parent add moderator
+lpv group admin parent add srmod
+lpv group owner parent add admin
+lpv createtrack staff
+lpv track staff append helper
+lpv track staff append moderator
+lpv track staff append srmod
+lpv track staff append admin
+lpv track staff append owner
+
+# Separate groups, not on the staff track.
+lpv creategroup builder
+lpv creategroup developer
+lpv group builder setweight 150
+lpv group developer setweight 350
+lpv group builder setdisplayname Builder
+lpv group developer setdisplayname Developer
+
+# ---------------------------------------------------------------- permissions
+# Players change servers through the hub selector (rapid-hub), not /server. Velocity
+# grants /server to everyone by default, so deny it for the default group.
+lpv group default permission set velocity.command.server false server=proxy
+lpv group helper permission set velocity.command.server true server=proxy
+lpv group builder permission set velocity.command.server true server=proxy
+lpv group developer permission set velocity.command.server true server=proxy
+lpv group helper permission set velocity.command.glist true server=proxy
+
+# Builders: full control on the build server only. (Add FAWE to the build server's
+# plugin set in network.yml; it isn't in plugins/ yet.)
+lpv group builder permission set worldedit.* true server=build
+lpv group builder permission set fawe.* true server=build
+lpv group builder permission set minecraft.command.gamemode true server=build
+lpv group builder permission set minecraft.command.teleport true server=build
+
+# Developers: profiling everywhere, everything on staging.
+lpv group developer permission set spark true
+lpv group developer permission set * true server=staging
+
+# Admins manage permissions; the owner has everything.
+lpv group admin permission set luckperms.* true
+lpv group admin permission set spark true
+lpv group owner permission set * true
+
+# ---------------------------------------------------------------- first owner
+# Replace <name> and run. Ops are disabled on the backends (enable-ops: false), so
+# this is the only way in.
+#   lpv user <name> parent add owner
+#
+# build and staging also use the vanilla whitelist (white-list + enforce-whitelist).
+# From each server's console:  whitelist add <name>

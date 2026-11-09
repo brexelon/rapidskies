@@ -1,0 +1,5 @@
+# Horizons SMP. The vanilla level is the Heartland: permanent, claimable, never reset.
+# Frontier worlds are created by rapid-horizons (phase 3b). Pre-generate with Chunky
+# and set a ChunkyBorder before opening (plan §3).
+level-name: "heartland"
+generate-structures: "true"

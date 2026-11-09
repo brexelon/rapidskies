@@ -1,0 +1,48 @@
+# Patch for velocity.toml (Velocity 4.3.x, config-version 2.9).
+# Each top-level key is a dotted path; its value replaces whatever is there.
+# A table value (like `servers`) replaces the whole table, which clears Velocity's
+# example lobby/factions/minigames entries.
+
+# `bind` is left alone: the Pterodactyl egg manages it. Velocity's allocation is the only
+# public one (0.0.0.0:25565 or the public IP).
+motd: "<#FFD800><bold>RAPID</bold></#FFD800><white><bold>SKIES</bold></white> <#555555>»</#555555> <#AAAAAA>1.8 – 26.3</#AAAAAA>\n<#FFAA00>Skyrealms</#FFAA00> <#555555>•</#555555> <#FFAA00>Horizons SMP</#FFAA00> <#555555>•</#555555> <white>store.rapidskies.us</white>"
+show-max-players: 1000
+online-mode: true
+# 1.19.1+ chat signing keys. Off, because chat is formatted server-side and
+# backends run enforce-secure-profile=false (plan §3, cross-version rules).
+force-key-authentication: false
+prevent-client-proxy-connections: false
+player-info-forwarding-mode: "MODERN"
+forwarding-secret-file: "forwarding.secret"
+announce-forge: false
+kick-existing-players: false
+sample-players-in-ping: false
+enable-player-address-logging: true
+
+servers:
+  hub-1: "${addr:hub-1}"
+  hub-2: "${addr:hub-2}"
+  skyrealms-1: "${addr:skyrealms-1}"
+  smp-1: "${addr:smp-1}"
+  # Staff-only. Both run white-list + enforce-whitelist, so anyone else is kicked
+  # back to a hub. /server is also denied to non-staff in LuckPerms (luckperms/bootstrap.txt).
+  build: "${addr:build}"
+  staging: "${addr:staging}"
+  try: ["hub-1", "hub-2"]
+
+# No forced hosts: rapidskies.us and mc.rapidskies.us both land on a hub via `try`.
+forced-hosts: {}
+
+advanced.compression-threshold: 256
+advanced.login-ratelimit: 3000
+# Set to true only when the DDoS-protection front (TCPShield, Spectrum, ...) sends PROXY protocol.
+advanced.haproxy-protocol: false
+# Pterodactyl runs on Linux with epoll, so TCP fast open works.
+advanced.tcp-fast-open: true
+advanced.bungee-plugin-message-channel: true
+advanced.failover-on-unexpected-server-disconnect: true
+advanced.log-command-executions: true
+advanced.log-player-connections: true
+advanced.accepts-transfers: false
+
+query.enabled: false

@@ -1,0 +1,8 @@
+# Excluded from Pterodactyl backups: everything here is regenerated or re-downloaded.
+cache/
+libraries/
+versions/
+logs/
+crash-reports/
+plugins/spark/tmp/
+plugins/spark/tmp-client/

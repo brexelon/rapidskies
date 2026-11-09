@@ -1,0 +1,9 @@
+# spigot.yml. Must stay false with Velocity modern forwarding.
+settings.bungeecord: false
+# Pterodactyl restarts crashed servers; Spigot's restart script would fight it.
+settings.restart-on-crash: false
+commands.log: true
+# Legacy & codes: these strings reach every client version, including 1.8.
+messages.unknown-command: "&6&lRAPID&f&lSKIES &8» &7Unknown command. Try &6/help&7."
+messages.whitelist: "&6&lRAPID&f&lSKIES\n&7This server is for staff only."
+messages.server-full: "&6&lRAPID&f&lSKIES\n&7This server is full. Please try again in a moment."

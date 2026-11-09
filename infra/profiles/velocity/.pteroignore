@@ -1,0 +1,3 @@
+# Excluded from Pterodactyl backups.
+logs/
+plugins/spark/tmp/

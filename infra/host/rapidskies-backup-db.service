@@ -1,0 +1,10 @@
+[Unit]
+Description=RapidSkies MariaDB dump and offsite backup copy
+After=network-online.target mariadb.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/rapidskies-backup-db
+Nice=10
+IOSchedulingClass=idle

@@ -1,0 +1,25 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+.kotlin/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+out/
+bin/
+
+# Secrets: never commit these
+infra/secrets.env
+infra/host/backup-db.env
+*.secret
+!infra/profiles/velocity/forwarding.secret
+
+# Paid plugins can't be redistributed; keep them local (see infra/README.md)
+plugins/LiteBans.jar
+
+# Python
+__pycache__/
+.venv/

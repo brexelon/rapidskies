@@ -1,0 +1,9 @@
+# Paper 26.3 global config (config/paper-global.yml).
+proxies.velocity.enabled: true
+proxies.velocity.online-mode: true
+proxies.velocity.secret: "${VELOCITY_SECRET}"
+
+# Upgrades are tested on staging and rolled out by hand (plan §12), so no nagging.
+update-checker.enabled: false
+
+messages.no-permission: "<#FFD800><bold>RAPID</bold></#FFD800><white><bold>SKIES</bold></white> <#555555>»</#555555> <#FF5555>You don't have permission to do that.</#FF5555>"

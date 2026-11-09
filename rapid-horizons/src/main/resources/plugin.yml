@@ -1,0 +1,8 @@
+name: rapid-horizons
+version: '${version}'
+main: us.rapidskies.horizons.RapidHorizons
+api-version: '26.3'
+description: "Horizons SMP: Frontiers, Skyborne events, Trades, Chapters (PLAN.md §5.2)."
+author: RapidSkies
+website: https://rapidskies.us
+depend: [rapid-core]

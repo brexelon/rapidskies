@@ -1,0 +1,16 @@
+# LuckPerms (Velocity). Shares one MariaDB database with every backend, and pushes
+# changes over Redis so rank grants apply network-wide without a sync delay.
+server: proxy
+storage-method: mariadb
+data.address: "${DB_HOST}:${DB_PORT}"
+data.database: "${LP_DB_NAME}"
+data.username: "${LP_DB_USER}"
+data.password: "${LP_DB_PASSWORD}"
+data.table-prefix: "luckperms_"
+data.pool-settings.maximum-pool-size: 10
+data.pool-settings.minimum-idle: 10
+messaging-service: redis
+redis.enabled: true
+redis.address: "${REDIS_HOST}:${REDIS_PORT}"
+redis.password: "${REDIS_PASSWORD}"
+watch-files: false

@@ -1,0 +1,8 @@
+name: rapid-hub
+version: '${version}'
+main: us.rapidskies.hub.RapidHub
+api-version: '26.3'
+description: "Hub: spawn, mode selector, parkour, leaderboards (PLAN.md §4)."
+author: RapidSkies
+website: https://rapidskies.us
+depend: [rapid-core]

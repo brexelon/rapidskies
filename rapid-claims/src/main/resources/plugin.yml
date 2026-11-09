@@ -1,0 +1,8 @@
+name: rapid-claims
+version: '${version}'
+main: us.rapidskies.claims.RapidClaims
+api-version: '26.3'
+description: "Chunk claims, trust roles, towns, plots and Town Projects (PLAN.md §4.1)."
+author: RapidSkies
+website: https://rapidskies.us
+depend: [rapid-core]

@@ -1,0 +1,10 @@
+# Anti-xray, engine mode 2 (fake ores sent to the client), for both survival economies
+# (plan §4). Paper's default hidden-blocks and replacement-blocks lists are already the
+# recommended overworld set, so only the switches are set here. Nether worlds want their
+# own list (ancient debris, nether gold/quartz); add per-world overrides with the
+# Frontier rotation in phase 3b.
+anticheat.anti-xray.enabled: true
+anticheat.anti-xray.engine-mode: 2
+anticheat.anti-xray.max-block-height: 64
+anticheat.anti-xray.update-radius: 2
+anticheat.anti-xray.lava-obscures: false

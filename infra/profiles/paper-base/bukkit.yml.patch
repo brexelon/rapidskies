@@ -1,0 +1,4 @@
+# bukkit.yml. Every login arrives from the proxy's address, so the per-IP connection
+# throttle would block legitimate joins; Velocity's login-ratelimit does this job instead.
+settings.connection-throttle: -1
+settings.shutdown-message: "RapidSkies is restarting. You'll be back in a moment."

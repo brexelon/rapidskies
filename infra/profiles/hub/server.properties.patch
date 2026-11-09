@@ -1,0 +1,9 @@
+# Hub: floating sky-island lobby. PvP, mobs and damage are handled by rapid-hub
+# (phase 2) and hub world game rules, which are set in-game once the build is imported.
+level-name: "hub"
+gamemode: "adventure"
+force-gamemode: "true"
+difficulty: "peaceful"
+generate-structures: "false"
+view-distance: "8"
+simulation-distance: "4"

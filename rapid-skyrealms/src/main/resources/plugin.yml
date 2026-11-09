@@ -1,0 +1,8 @@
+name: rapid-skyrealms
+version: '${version}'
+main: us.rapidskies.skyrealms.RapidSkyrealms
+api-version: '26.3'
+description: "Skyrealms: Expeditions, Realm Tiers, Trade Routes, seasons (PLAN.md §5.1)."
+author: RapidSkies
+website: https://rapidskies.us
+depend: [rapid-core]

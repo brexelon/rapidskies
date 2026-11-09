@@ -1,0 +1,8 @@
+name: rapid-market
+version: '${version}'
+main: us.rapidskies.market.RapidMarket
+api-version: '26.3'
+description: "Auction house, scoped per mode and currency (PLAN.md §4.2)."
+author: RapidSkies
+website: https://rapidskies.us
+depend: [rapid-core]

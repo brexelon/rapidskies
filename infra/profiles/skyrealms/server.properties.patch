@@ -1,0 +1,4 @@
+# Skyrealms (SkyBlock). SuperiorSkyblock2 creates and manages the island worlds itself
+# (phase 4b); the vanilla level is just the spawn/fallback world.
+level-name: "skyrealms_spawn"
+generate-structures: "false"

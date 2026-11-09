@@ -1,0 +1,101 @@
+# RapidSkies network inventory: the single place that says which servers exist,
+# which config profiles and plugins each one gets, and how to reach it.
+#
+# rsdeploy.py reads this file. Values written as ${NAME} are filled from
+# infra/secrets.env (never committed) or from the per-server `vars` below.
+#
+#   name          Pterodactyl server name (the tool looks the server up by this name;
+#                 set `ptero_id` to the 8-char identifier instead if names differ)
+#   address       Internal host:port Velocity uses to reach the backend. Leave it out to
+#                 use the server's default Pterodactyl allocation (must be on 172.18.0.1).
+#   profiles      Applied in order; later profiles override earlier keys.
+#   plugins       Plugin sets from `plugin_sets` below, uploaded to /plugins.
+#   schedules     Pterodactyl schedules from `schedules` below.
+
+servers:
+  velocity:
+    profiles: [velocity]
+    plugins: [proxy]
+    schedules: [daily-backup]
+
+  hub-1:
+    profiles: [paper-base, hub]
+    plugins: [paper-base]
+    schedules: [daily-backup]
+    vars: { LP_SERVER: hub }
+
+  hub-2:
+    profiles: [paper-base, hub]
+    plugins: [paper-base]
+    schedules: [daily-backup]
+    vars: { LP_SERVER: hub }
+
+  skyrealms-1:
+    profiles: [paper-base, survival, skyrealms]
+    plugins: [paper-base, survival]
+    schedules: [hourly-backup]
+    vars: { LP_SERVER: skyrealms }
+
+  smp-1:
+    profiles: [paper-base, survival, smp]
+    plugins: [paper-base, survival, worldgen]
+    schedules: [hourly-backup]
+    vars: { LP_SERVER: smp }
+
+  build:
+    profiles: [paper-base, build]
+    plugins: [paper-base, worldgen]
+    schedules: [daily-backup]
+    vars: { LP_SERVER: build }
+
+  staging:
+    # Mirror of a game server for testing updates. Defaults to mirroring smp;
+    # swap `smp` for `skyrealms` (and the plugin sets) when testing Skyrealms.
+    profiles: [paper-base, survival, smp, staging]
+    plugins: [paper-base, survival, worldgen]
+    vars: { LP_SERVER: staging }
+
+# Pterodactyl schedules (plan §3: hourly backups for skyrealms and smp, daily for the
+# rest). cron is "minute hour day-of-month month day-of-week" in the panel's timezone.
+# When a server is at its backup limit, a scheduled backup replaces the oldest unlocked
+# one, so set each server's backup limit to the retention you want (e.g. 48 for hourly
+# = 2 days, 7 for daily). Long-term retention is the offsite copy (infra/host/).
+schedules:
+  hourly-backup:
+    cron: "0 * * * *"
+    action: backup
+  daily-backup:
+    cron: "30 4 * * *"
+    action: backup
+
+# Plugin sets. Each entry is a glob matched against the repo's plugins/ folder.
+# Exactly one local jar must match. On upload, any other jar already in the
+# server's /plugins folder that matches the same glob (an older version) is removed.
+plugin_sets:
+  proxy:
+    - "LuckPerms-Velocity-*.jar"
+    - "spark-*-velocity.jar"
+    - "MiniPlaceholders-Velocity-*.jar"
+    # Phase 1: "LiteBans.jar", "TAB v*.jar"
+    # Phase 5: "tebex-velocity-*.jar"
+
+  paper-base:
+    - "ViaVersion-*.jar"
+    - "ViaBackwards-*.jar"
+    - "ViaRewind-[0-9]*.jar"
+    - "ViaRewind-Legacy-Support-*.jar"
+    - "LuckPerms-Bukkit-*.jar"
+    - "spark-*-bukkit.jar"
+    - "PlaceholderAPI-*.jar"
+    # Phase 1: "grimac-bukkit-*.jar"
+    # Phase 2: "DecentHolograms-*.jar", "Citizens-*.jar"
+
+  survival:
+    []
+    # Phase 3: "CoreProtect-CE-*.jar"
+    # smp only, phase 3b: "QuickShop-Hikari-*.jar"
+    # skyrealms only, phase 4b: "SuperiorSkyblock2-*.jar"
+
+  worldgen:
+    - "Chunky-Paper-*.jar"
+    - "ChunkyBorder-Paper-*.jar"

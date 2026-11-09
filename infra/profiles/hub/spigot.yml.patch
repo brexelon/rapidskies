@@ -1,0 +1,4 @@
+# Nothing in the hub needs vanilla advancements or stats; skip the disk writes and toasts.
+advancements.disable-saving: true
+advancements.disabled: ["*"]
+stats.disable-saving: true

@@ -1,0 +1,10 @@
+[Unit]
+Description=Nightly RapidSkies database backup
+
+[Timer]
+OnCalendar=*-*-* 05:00:00
+RandomizedDelaySec=10m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

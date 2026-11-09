@@ -1,0 +1,7 @@
+name: rapid-core
+version: '${version}'
+main: us.rapidskies.core.RapidCore
+api-version: '26.3'
+description: "Profiles, Bolts, chat, cosmetics, staff mode and the GUI framework (PLAN.md §4)."
+author: RapidSkies
+website: https://rapidskies.us
