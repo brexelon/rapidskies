@@ -11,6 +11,7 @@ holds what goes *on* them. The panel and the game node are separate machines (se
 | `rsdeploy.py` | Applies profiles, uploads plugin jars and sets backup schedules via the Pterodactyl client API |
 | `secrets.env.example` | Template for `secrets.env` (git-ignored): forwarding secret, DB and Redis credentials, panel API key |
 | `luckperms/bootstrap.txt` | One-time LuckPerms groups, tracks and permissions |
+| `../worlds/` | Pre-built hub and spawn worlds, shipped by `rsdeploy.py worlds` (see [Worlds](#worlds)) |
 | `host/` | Nightly MariaDB dump + offsite copy (systemd timer, rclone) |
 
 ## Where things run
@@ -77,12 +78,14 @@ show an ID, and every backend an allocation on `172.18.0.1`.
    The configs only exist after this.
 4. **Configs.** `python infra/rsdeploy.py diff` to review, then
    `python infra/rsdeploy.py apply --restart`.
-5. **Backups.** `python infra/rsdeploy.py schedules` (Pterodactyl's own backups, stored on the
+5. **Worlds.** With the servers stopped: `python infra/rsdeploy.py worlds --replace` swaps the
+   worlds generated in step 3 for the hub and spawn builds (see [Worlds](#worlds)). Start them again.
+6. **Backups.** `python infra/rsdeploy.py schedules` (Pterodactyl's own backups, stored on the
    node). Then install `host/backup-db.sh` as described in [Backups](#backups).
-6. **Permissions.** Paste `luckperms/bootstrap.txt` into the Velocity console, then give yourself
+7. **Permissions.** Paste `luckperms/bootstrap.txt` into the Velocity console, then give yourself
    `owner`. Add staff to the `build`/`staging` whitelists from those consoles.
-7. **Verify** (from a 1.20.1 client and a 26.3 client): join `rapidskies.us` and `mc.rapidskies.us`,
-   land on a hub, `/server` is denied for a default player, a 1.19.4 client gets the branded kick,
+8. **Verify** (from a 1.20.1 client and a 26.3 client): join `rapidskies.us` and `mc.rapidskies.us`,
+   land on the hub courtyard facing the gate hall, `/server` is denied for a default player, a 1.19.4 client gets the branded kick,
    and `/lp info` on the proxy shows MariaDB storage and Redis messaging connected.
 
 Re-run `diff` / `apply` whenever a profile changes; both are idempotent.
@@ -92,7 +95,7 @@ Re-run `diff` / `apply` whenever a profile changes; both are idempotent.
 - **Changing `level-name`** on a server that already booted makes it generate a new world
   (`hub`, `heartland`, `skyrealms_spawn`, `build`). Do it before builders import anything.
 - **pvp, allow-nether and spawn-monsters are game rules on 26.x**, not server.properties keys.
-  Set hub game rules in-game once the hub build is imported (rapid-hub also enforces them in phase 2).
+  rapid-core sets them per world from the profiles (`worlds.*.game-rules`, see [Worlds](#worlds)).
 - **Staging** mirrors smp by default and shares the LuckPerms database (separate `staging`
   context). When game plugins with their own databases go on staging, point them at separate
   schemas so tests never touch production data.
@@ -101,6 +104,50 @@ Re-run `diff` / `apply` whenever a profile changes; both are idempotent.
 - **FAWE** for the build server isn't in `plugins/` yet. Add the jar and a glob to the `build`
   plugin sets when you have it.
 - **Paid jars** (LiteBans) are git-ignored so they're never pushed; keep them in `plugins/` locally.
+
+## Worlds
+
+The hub and the two spawns are pre-built maps in the repo's `worlds/` folder. `network.yml` →
+`worlds` names them, and each server's `worlds:` says where they go:
+
+| Server | World | Goes to | Spawn (`spawn.location` in the rapid-core profile) |
+|---|---|---|---|
+| hub-1, hub-2 | Free Lobby | `hub` (main world) | `-5.5 85 -2.5`, facing south: courtyard centre, toward the gate hall |
+| skyrealms-1 | Trading Post | `skyrealms_spawn` (main world) | `28.5 150 -30.5`, facing south-west: the compass rose, toward the plaza |
+| smp-1, staging | CottageCore Lobby | `heartland/dimensions/rapidskies/spawn` (`rapidskies:spawn`) | `0.5 74.1 0.5`, facing north: the village plaza's centrepiece, toward the town hall |
+
+```bash
+python infra/rsdeploy.py worlds --dry-run               # what would happen
+python infra/rsdeploy.py worlds hub-1 --replace         # server must be stopped
+```
+
+- **Only chunk storage is shipped:** `region/`, plus `entities/` (item frames, paintings, armor
+  stands) and `poi/` where the map has them. On Paper 26.1+ every world lives inside the main
+  save: the main world in `<level-name>/dimensions/minecraft/overworld/`, a world loaded by
+  key in `<level-name>/dimensions/<namespace>/<key>/`. rsdeploy puts them there; the
+  downloads' own layout (region/ at the top) would be ignored and an empty world generated
+  instead.
+- **No level.dat is shipped.** The server writes fresh world data on the next start:
+  the generator comes from the profile (`level-type`/`generator-settings` in server.properties
+  for the main world, so run `apply` first; `create:` in rapid-core's `worlds` for the rest),
+  and rapid-core sets the spawn point, game rules, time, weather and border on every start.
+  The downloads' level.dat files had wrong spawns, flat grass under the Trading Post, vanilla
+  terrain around the CottageCore island and a 1.8 village preset under the hub.
+- **Old chunks are upgraded by Paper on first load.** The hub's chunks are from 1.8 (numeric
+  block IDs), the Trading Post's and the CottageCore Lobby's from 1.21.8. Walk the whole build once after the first start
+  and look for missing or wrong blocks; to upgrade everything up front instead, start the
+  server once with `--forceUpgrade` added to its startup command.
+- **Existing worlds are never overwritten** unless you pass `--replace`, and then they're
+  moved to `world-backups/` (excluded from Pterodactyl backups; delete them once you're happy).
+  Never use `--replace` on a world players have built in.
+- **Spawn behaviour** (rapid-core, `spawn.*` and `worlds.*` in each profile): the hub puts
+  players at the spawn on every join; Skyrealms and Horizons only on a player's first join, and
+  after deaths without a bed or respawn anchor. All three worlds are `protect`ed: only
+  `rapid.world.build` (ops by default) can change blocks, containers, item frames or armor
+  stands, and fire, explosions, leaf decay and fading are off. Falling below `void-y` (all
+  three are sky islands) sends players back to the spawn. `/spawn` works everywhere;
+  `/setspawn` (op) moves the spawn until the next restart and prints the line to put in the
+  profile, which is where the spawn really lives.
 
 ## Backups
 

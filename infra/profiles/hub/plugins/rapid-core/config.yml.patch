@@ -1,0 +1,37 @@
+# Hub spawn and world (rapid-core WorldService). minecraft:overworld is the `hub` level.
+# The courtyard centre, on the build's axis (x -5.5), facing south up the walkway to the
+# stage in front of the gate hall. Info.txt's "0 90 0" is the paste origin, not a spawn.
+# Tweak in-game with /setspawn, which prints the replacement line.
+spawn.location: "minecraft:overworld, -5.5, 85, -2.5, 0, 0"
+spawn.on-join: "always"
+spawn.on-death: true
+worlds:
+  "minecraft:overworld":
+    protect: true
+    # The island's underside ends at y 76.
+    void-y: 60
+    time: 6000
+    clear-weather: true
+    game-rules:
+      advance_time: false
+      advance_weather: false
+      spawn_mobs: false
+      spawn_monsters: false
+      spawn_phantoms: false
+      spawn_patrols: false
+      spawn_wandering_traders: false
+      pvp: false
+      fall_damage: false
+      mob_griefing: false
+      # Keeps leaves, grass and the build exactly as delivered (the builders shipped it with 0).
+      random_tick_speed: 0
+      fire_spread_radius_around_player: 0
+      fire_damage: false
+      drowning_damage: false
+      freeze_damage: false
+      keep_inventory: true
+      immediate_respawn: true
+      show_advancement_messages: false
+      show_death_messages: false
+      locator_bar: false
+      allow_entering_nether_using_portals: false

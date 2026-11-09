@@ -6,3 +6,5 @@ logs/
 crash-reports/
 plugins/spark/tmp/
 plugins/spark/tmp-client/
+# Worlds replaced by `rsdeploy.py worlds --replace`: already a backup; delete once happy.
+world-backups/

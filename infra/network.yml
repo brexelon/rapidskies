@@ -15,6 +15,10 @@
 #   profiles      Applied in order; later profiles override earlier keys.
 #   plugins       Plugin sets from `plugin_sets` below, uploaded to /plugins.
 #   schedules     Pterodactyl schedules from `schedules` below.
+#   worlds        Pre-built worlds (`worlds` below) by the folder they go in on the server:
+#                 the level-name folder for the main world, or
+#                 <level-name>/dimensions/<namespace>/<key> for a world rapid-core loads by
+#                 key. Shipped by `rsdeploy.py worlds` (infra/README.md → Worlds).
 
 servers:
   velocity:
@@ -29,6 +33,7 @@ servers:
     plugins: [paper-base]
     schedules: [daily-backup]
     vars: { LP_SERVER: hub }
+    worlds: { hub: hub }
 
   hub-2:
     ptero_id: ""
@@ -36,6 +41,7 @@ servers:
     plugins: [paper-base]
     schedules: [daily-backup]
     vars: { LP_SERVER: hub }
+    worlds: { hub: hub }
 
   skyrealms-1:
     ptero_id: "59776d6d"
@@ -43,6 +49,7 @@ servers:
     plugins: [paper-base, survival]
     schedules: [hourly-backup]
     vars: { LP_SERVER: skyrealms }
+    worlds: { skyrealms_spawn: trading-post }
 
   smp-1:
     ptero_id: "5440367e"
@@ -50,6 +57,8 @@ servers:
     plugins: [paper-base, survival, worldgen]
     schedules: [hourly-backup]
     vars: { LP_SERVER: smp }
+    # The spawn is its own world next to the Heartland (rapid-core loads it as rapidskies:spawn).
+    worlds: { heartland/dimensions/rapidskies/spawn: horizons-spawn }
 
   build:
     ptero_id: ""
@@ -66,6 +75,30 @@ servers:
     plugins: [paper-base, survival, worldgen]
     # Own schema for rapid-* data (Bolts, profiles, ...), so tests never touch production.
     vars: { LP_SERVER: staging, RAPID_DB_NAME: rapidskies_staging }
+    worlds: { heartland/dimensions/rapidskies/spawn: horizons-spawn }
+
+# Pre-built worlds from the repo's worlds/ folder. Only chunk storage (region/, entities/,
+# poi/) is shipped: each
+# server writes its own world data on the next start, using the generator from its profile
+# (server.properties for the main world, rapid-core's `worlds` config for the rest), and
+# rapid-core sets the spawn point and game rules (profiles/*/plugins/rapid-core/). The
+# downloads' level.dat files are ignored on purpose: their spawns, generators (flat grass
+# under the sky island, a 1.8 village preset on the hub) and formats don't fit.
+#
+#   source   Folder holding the world's region/ (and entities/, poi/) directories.
+worlds:
+  # Free Lobby (Qualis Builds): sky-island hub. 1.8-era chunks; Paper upgrades them on first load.
+  # Spawn: courtyard centre in front of the gate hall, -5.5 85 -2.5 facing south.
+  hub:
+    source: "worlds/Free Lobby (Hub)/world"
+  # SkyBlock Spawn 150x150 (Mongen's Cave), 1.21.8. Spawn: the compass rose, 28.5 150 -30.5.
+  trading-post:
+    source: "worlds/TradingPost (SkyRealm)/TradingPost"
+  # CottageCore Lobby, 1.21.8: a floating island (x -206..161, z -209..175, y 42..155) with a
+  # moated village; barrier walls ring the edge. 108 item frames, 4 paintings and an armor
+  # stand live in its entities/. Spawn: the centrepiece of the round plaza, 0.5 74.1 0.5.
+  horizons-spawn:
+    source: "worlds/CottageCoreLobby (Horizons SMP)"
 
 # Pterodactyl schedules (plan §3: hourly backups for skyrealms and smp, daily for the
 # rest). cron is "minute hour day-of-month month day-of-week" in the panel's timezone.

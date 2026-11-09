@@ -26,6 +26,7 @@ Usage:
   python infra/rsdeploy.py apply [server ...] [--restart]
   python infra/rsdeploy.py plugins [server ...] [--dry-run] [--restart]
   python infra/rsdeploy.py schedules [server ...] [--dry-run]   # backup schedules
+  python infra/rsdeploy.py worlds [server ...] [--replace] [--dry-run]  # pre-built worlds
   add --local DIR to work on DIR/<server>/ folders instead of the panel API.
 """
 from __future__ import annotations
@@ -40,6 +41,9 @@ import os
 import re
 import shutil
 import sys
+import tarfile
+import tempfile
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -68,6 +72,11 @@ LOCAL_PLUGINS = REPO / "plugins"
 DIST = REPO / "build" / "dist"
 DIST_PREFIX = "dist/"
 PLACEHOLDER = re.compile(r"\$\{([A-Za-z0-9_:.\-]+)\}")
+# Pre-built worlds: only their chunk storage is shipped (see `world_dimension_dir`).
+WORLD_FOLDER = re.compile(r"[a-z0-9_.\-]+(/dimensions/[a-z0-9_.\-]+/[a-z0-9_.\-/]+)?")
+WORLD_BACKUPS = "world-backups"
+# Per-dimension chunk storage: blocks, entities (item frames, armor stands...), points of interest.
+WORLD_STORAGE = ("region", "entities", "poi")
 PTERO_ID = re.compile(r"[0-9a-f]{8}(-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})?")
 INTERNAL_PREFIXES = ("172.", "10.", "192.168.", "127.")
 
@@ -117,6 +126,10 @@ def load_inventory(path: Path) -> dict:
         srv.setdefault("plugins", [])
         srv.setdefault("vars", {})
         srv.setdefault("schedules", [])
+        srv["worlds"] = srv.get("worlds") or {}
+        for folder, world in srv["worlds"].items():
+            if world not in (data.get("worlds") or {}):
+                raise DeployError(f"{name}: world '{world}' (for {folder}) not defined under `worlds`")
         for s in srv["schedules"]:
             if s not in data.get("schedules", {}):
                 raise DeployError(f"{name}: schedule '{s}' not defined")
@@ -560,11 +573,11 @@ class PanelBackend:
             raise
         return {x["attributes"]["name"]: x["attributes"]["size"] for x in res["data"] if x["attributes"]["is_file"]}
 
-    def upload(self, sid: str, directory: str, local: Path) -> None:
+    def upload(self, sid: str, directory: str, local: Path, ctype: str = "application/java-archive") -> None:
         url = self.api("GET", f"/servers/{sid}/files/upload")["attributes"]["url"]
         boundary = uuid.uuid4().hex
         body = (f"--{boundary}\r\nContent-Disposition: form-data; name=\"files\"; filename=\"{local.name}\"\r\n"
-                f"Content-Type: application/java-archive\r\n\r\n").encode() + local.read_bytes() + \
+                f"Content-Type: {ctype}\r\n\r\n").encode() + local.read_bytes() + \
             f"\r\n--{boundary}--\r\n".encode()
         sep = "&" if "?" in url else "?"
         self._req("POST", f"{url}{sep}directory={urllib.parse.quote(directory)}", body=body,
@@ -595,6 +608,37 @@ class PanelBackend:
 
     def restart(self, sid: str) -> None:
         self.api("POST", f"/servers/{sid}/power", body=b'{"signal":"restart"}', ctype="application/json", raw=True)
+
+    def power_state(self, sid: str) -> str:
+        """offline, starting, running or stopping."""
+        return self.api("GET", f"/servers/{sid}/resources")["attributes"]["current_state"]
+
+    def exists(self, sid: str, path: str) -> bool:
+        return not path.strip("/") or not self._absent(sid, path)
+
+    def move(self, sid: str, src: str, dst: str) -> None:
+        """Moves a file or folder elsewhere under the server root, creating dst's parent."""
+        parent = dst.strip("/").rpartition("/")[0]
+        if parent and not self.exists(sid, parent):
+            up, _, leaf = parent.rpartition("/")
+            self.api("POST", f"/servers/{sid}/files/create-folder",
+                     body=json.dumps({"root": "/" + up, "name": leaf}).encode(), ctype="application/json", raw=True)
+        self.rename(sid, "/", src.strip("/"), dst.strip("/"))
+
+    def put_files(self, sid: str, files: dict[str, Path], label: str) -> None:
+        """Uploads many files at once: one .tar.gz through Wings, unpacked in place."""
+        name = f"rsdeploy-{label}.tar.gz"
+        with tempfile.TemporaryDirectory() as tmp:
+            archive = Path(tmp) / name
+            with tarfile.open(archive, "w:gz") as tar:
+                for remote, local in files.items():
+                    tar.add(local, arcname=remote.strip("/"))
+            self.upload(sid, "/", archive, ctype="application/gzip")
+        try:
+            self.api("POST", f"/servers/{sid}/files/decompress",
+                     body=json.dumps({"root": "/", "file": name}).encode(), ctype="application/json", raw=True)
+        finally:
+            self.delete(sid, "/", [name])
 
     def ensure_schedule(self, sid: str, name: str, cron: str, action: str, dry_run: bool) -> None:
         minute, hour, dom, month, dow = cron.split()
@@ -674,6 +718,23 @@ class LocalBackend:
     def restart(self, sid: str) -> None:
         print(f"  (local mode: restart {sid} yourself)")
 
+    def power_state(self, sid: str) -> None:
+        return None  # unknown in local mode: make sure the server is stopped yourself
+
+    def exists(self, sid: str, path: str) -> bool:
+        return (self.root / sid / path.strip("/")).exists()
+
+    def move(self, sid: str, src: str, dst: str) -> None:
+        target = self.root / sid / dst.strip("/")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        (self.root / sid / src.strip("/")).rename(target)
+
+    def put_files(self, sid: str, files: dict[str, Path], label: str) -> None:
+        for remote, local in files.items():
+            p = self.root / sid / remote.strip("/")
+            p.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(local, p)
+
     def ensure_schedule(self, sid: str, name: str, cron: str, action: str, dry_run: bool) -> None:
         print(f"  (local mode: would ensure schedule {name} = {cron}, {action})")
 
@@ -752,6 +813,95 @@ def file_sha256(path: Path) -> str:
         while chunk := f.read(1 << 20):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def world_dimension_dir(folder: str) -> str:
+    """Where a world's chunk storage goes on the server, for a `worlds:` folder in network.yml.
+
+    Paper 26.1+ keeps every world of a server inside the main save (the `level-name` folder):
+    the main world in `<level>/dimensions/minecraft/overworld`, and a world a plugin loads by
+    key (`rapidskies:spawn`) in `<level>/dimensions/rapidskies/spawn`, each with its own
+    region/, entities/ and poi/. A plain folder name is a whole save, anything with
+    /dimensions/ is one world inside one.
+    """
+    folder = folder.strip("/")
+    if not WORLD_FOLDER.fullmatch(folder):
+        raise DeployError(f"world folder '{folder}' must be a level folder (`hub`) or "
+                          f"`<level>/dimensions/<namespace>/<key>`, lowercase")
+    if "/" not in folder:
+        return f"{folder}/dimensions/minecraft/overworld"
+    return folder
+
+
+def world_files(inv: dict, world: str) -> dict[str, Path]:
+    """A pre-built world's chunk storage from the repo, as {"region/r.0.0.mca": path}.
+
+    Entities have lived in their own entities/ files since 1.17; leaving them out would
+    strip a build of its item frames, paintings and armor stands.
+    """
+    src = REPO / inv["worlds"][world]["source"]
+    files = {f"{kind}/{f.name}": f for kind in WORLD_STORAGE for f in sorted((src / kind).glob("r.*.*.mca"))}
+    if not any(k.startswith("region/") for k in files):
+        raise DeployError(f"world {world}: no region files in {src / 'region'}")
+    return files
+
+
+def level_name(srv: dict) -> str | None:
+    plan = collect_profile_files(srv["profiles"]).get("server.properties")
+    return str(plan.patch["level-name"]) if plan and "level-name" in plan.patch else None
+
+
+def sync_worlds(name: str, inv: dict, backend, replace: bool, dry_run: bool) -> bool:
+    """Ships the server's pre-built worlds. Returns True if anything changed.
+
+    Only chunk data is shipped, never a level.dat: the server writes fresh world data on its
+    next start from server.properties (main world) or rapid-core's `worlds` config (worlds it
+    loads by key), so the generator, spawn and game rules are always ours, not the
+    download's. An existing world is never touched without --replace, and even then it's
+    moved to world-backups/ rather than deleted.
+    """
+    srv = inv["servers"][name]
+    if not srv["worlds"]:
+        print("  (no pre-built worlds)")
+        return False
+    sid = backend.server(name, inv)["id"]
+    state = None
+    changed = False
+    for folder, world in srv["worlds"].items():
+        folder = folder.strip("/")
+        dim = world_dimension_dir(folder)
+        files = world_files(inv, world)
+        size = sum(f.stat().st_size for f in files.values())
+        if backend.exists(sid, folder):
+            if not replace:
+                print(f"  = {folder} is already there. Pass --replace to swap in '{world}' "
+                      f"(the current one moves to {WORLD_BACKUPS}/).")
+                continue
+            if state is None:
+                state = backend.power_state(sid)
+            if state not in (None, "offline"):
+                raise DeployError(f"{name} is {state}. Stop it before replacing {folder}: a running "
+                                  f"server keeps writing the world it has loaded.")
+            backup = f"{WORLD_BACKUPS}/{folder.replace('/', '__')}-{time.strftime('%Y%m%d-%H%M%S')}"
+            print(f"  ~ {folder} -> {backup}")
+            if not dry_run:
+                backend.move(sid, folder, backup)
+        kinds = ", ".join(f"{sum(k.startswith(kind + '/') for k in files)} {kind}"
+                          for kind in WORLD_STORAGE if any(k.startswith(kind + "/") for k in files))
+        print(f"  + {world} -> {dim}/ ({kinds} files, {size / 1e6:.1f} MB)")
+        changed = True
+        if dry_run:
+            continue
+        backend.put_files(sid, {f"{dim}/{rel}": f for rel, f in files.items()}, label=f"world-{world}")
+        listings = {kind: backend.list_dir(sid, f"/{dim}/{kind}") for kind in WORLD_STORAGE}
+        wrong = [rel for rel, f in files.items()
+                 if listings[rel.split("/")[0]].get(f.name) != f.stat().st_size]
+        if wrong:
+            raise DeployError(f"{name}: {len(wrong)} file(s) didn't arrive intact in {dim}: "
+                              f"{', '.join(wrong[:5])}")
+    if changed and not dry_run:
+        print("  Start the server to generate the rest of the world data (apply the profiles first).")
+    return changed
 
 
 def plugin_source(glob: str) -> tuple[Path, str]:
@@ -855,6 +1005,19 @@ def check(inv: dict) -> int:
             if plan.patch and not target.endswith((".properties", ".yml", ".yaml", ".toml")):
                 print(f"{name}: {target}: can't patch this file type")
                 problems += 1
+        level = level_name(srv)
+        for folder, world in srv["worlds"].items():
+            try:
+                world_dimension_dir(folder)
+                world_files(inv, world)
+            except DeployError as e:
+                print(f"{name}: {e}")
+                problems += 1
+                continue
+            # Every world of a 26.x server lives inside its main save.
+            if folder.strip("/").split("/")[0] != level:
+                print(f"{name}: world folder '{folder}' isn't inside this server's level-name ({level})")
+                problems += 1
     modules = {p.name for p in REPO.glob("rapid-*") if (p / "build.gradle.kts").is_file()}
     for set_name, globs in inv.get("plugin_sets", {}).items():
         for g in globs or []:
@@ -877,14 +1040,16 @@ def check(inv: dict) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("command", choices=["check", "servers", "diff", "apply", "plugins", "schedules"])
+    ap.add_argument("command", choices=["check", "servers", "diff", "apply", "plugins", "schedules", "worlds"])
     ap.add_argument("targets", nargs="*", help="server names from network.yml (default: all)")
     ap.add_argument("--local", type=Path, help="operate on LOCAL/<server>/ folders instead of the panel")
     ap.add_argument("--network", type=Path, default=INFRA / "network.yml")
     ap.add_argument("--secrets", type=Path, default=INFRA / "secrets.env")
     ap.add_argument("--restart", action="store_true",
                     help="apply/plugins: restart servers whose configs or plugins changed")
-    ap.add_argument("--dry-run", action="store_true", help="plugins/schedules: only print what would change")
+    ap.add_argument("--dry-run", action="store_true", help="plugins/schedules/worlds: only print what would change")
+    ap.add_argument("--replace", action="store_true",
+                    help="worlds: swap out a world that's already on the server (it's moved to world-backups/)")
     args = ap.parse_args()
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
@@ -941,6 +1106,8 @@ def main() -> int:
                 if changed and args.restart and not args.dry_run:
                     print("  restarting")
                     backend.restart(backend.server(t, inv)["id"])
+            elif args.command == "worlds":
+                sync_worlds(t, inv, backend, args.replace, args.dry_run)
             elif args.command == "schedules":
                 sid = backend.server(t, inv)["id"]
                 for s in inv["servers"][t]["schedules"]:

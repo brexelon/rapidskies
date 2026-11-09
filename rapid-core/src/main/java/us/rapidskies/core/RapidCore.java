@@ -41,6 +41,9 @@ import us.rapidskies.core.staff.StaffLog;
 import us.rapidskies.core.staff.StaffMode;
 import us.rapidskies.core.staff.Vanish;
 import us.rapidskies.core.tailwind.TailwindService;
+import us.rapidskies.core.world.WorldConfig;
+import us.rapidskies.core.world.WorldProtection;
+import us.rapidskies.core.world.WorldService;
 
 /**
  * rapid-core: runs on every Paper backend and is the API the other rapid-* plugins build on
@@ -48,8 +51,9 @@ import us.rapidskies.core.tailwind.TailwindService;
  * chat with rank prefixes and plus colors, the chest-menu framework
  * ({@link us.rapidskies.core.gui.Menu}), the {@code /plus} menu, {@code /bolts}, the
  * PlaceholderAPI expansion, AFK detection, anti-farm rules and
- * playtime Bolts, Tailwind, staff mode (vanish, freeze, inspection), and on gamemode
- * servers the Vault economy for Coins or Crowns.
+ * playtime Bolts, Tailwind, staff mode (vanish, freeze, inspection), on gamemode
+ * servers the Vault economy for Coins or Crowns, and the spawn and spawn worlds
+ * ({@link us.rapidskies.core.world.WorldService}).
  *
  * <p>Other plugins get the services through {@link #get()} after declaring
  * {@code depend: [rapid-core]}.
@@ -64,6 +68,7 @@ public final class RapidCore extends JavaPlugin {
     private static final long CONNECT_RETRY_MILLIS = 5_000;
 
     private CoreSettings settings;
+    private WorldConfig worldConfig;
     private Lang lang;
     private Database database;
     private RedisBus redis;
@@ -79,6 +84,7 @@ public final class RapidCore extends JavaPlugin {
     private PlaytimeRewards playtime;
     private ModeEconomy economy;
     private StaffMode staffMode;
+    private WorldService worlds;
     private boolean vaultRegistered;
 
     /** The running instance, for plugins that depend on rapid-core. */
@@ -94,6 +100,7 @@ public final class RapidCore extends JavaPlugin {
         try {
             ConfigView config = ConfigView.loadOrCreate(cl, "config.yml", data.resolve("config.yml"));
             settings = CoreSettings.from(config, getServer().getPort(), log);
+            worldConfig = worldConfig(config, log);
             lang = Lang.load(cl, Lang.DEFAULT_RESOURCE, data.resolve(Lang.DEFAULT_RESOURCE), log);
             connect(config, cl, log);
         } catch (Exception e) {
@@ -140,6 +147,11 @@ public final class RapidCore extends JavaPlugin {
         freeze.restoreOnline();
         StaffCommands staffCommands = new StaffCommands(staffMode, lang);
 
+        worlds = new WorldService(this, worldConfig, lang);
+        worlds.start();
+        pm.registerEvents(worlds, this);
+        pm.registerEvents(new WorldProtection(worlds), this);
+
         settings.gamemode().ifPresent(mode -> {
             economy = new ModeEconomy(this, mode, modeLedgers.get(mode), redis, settings.serverId());
             pm.registerEvents(economy, this);
@@ -170,6 +182,9 @@ public final class RapidCore extends JavaPlugin {
             event.registrar().register("invsee", "Inspect a player's inventory", List.of(), staffCommands.invsee());
             event.registrar().register("endersee", "Inspect a player's ender chest", List.of("echest"),
                     staffCommands.endersee());
+            event.registrar().register("spawn", "Go to the spawn", List.of(), worlds.spawnCommand());
+            event.registrar().register("setspawn", "Move the spawn to where you stand", List.of(),
+                    worlds.setSpawnCommand());
         });
 
         if (pm.getPlugin("PlaceholderAPI") != null) {
@@ -181,6 +196,20 @@ public final class RapidCore extends JavaPlugin {
         heartbeat.start();
         log.info("rapid-core {} enabled as {} (group {})", getPluginMeta().getVersion(), settings.serverId(),
                 settings.group());
+    }
+
+    /**
+     * The spawn and spawn worlds. A mistake there is logged rather than fatal: players still
+     * get onto the server (at vanilla's spawn) while it's fixed.
+     */
+    private static WorldConfig worldConfig(ConfigView config, Logger log) {
+        try {
+            return WorldConfig.from(config);
+        } catch (IllegalArgumentException e) {
+            log.error("The spawn/worlds config is invalid, so rapid-core leaves spawns and worlds alone: {}",
+                    e.getMessage());
+            return WorldConfig.from(ConfigView.empty());
+        }
     }
 
     private void connect(ConfigView config, ClassLoader cl, Logger log) throws Exception {
@@ -306,6 +335,11 @@ public final class RapidCore extends JavaPlugin {
 
     public StaffMode staffMode() {
         return staffMode;
+    }
+
+    /** This server's spawn and the spawn worlds rapid-core looks after. */
+    public WorldService worlds() {
+        return worlds;
     }
 
     /**

@@ -26,7 +26,7 @@ import us.rapidskies.common.rank.StaffRole;
 class LangKeysTest {
 
     private static final Pattern KEY = Pattern.compile(
-            "\"((?:afk|bolts|chat|errors|login|plus|rank|rewards|staff|tailwind)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
+            "\"((?:afk|bolts|chat|errors|login|plus|rank|rewards|spawn|staff|tailwind)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
 
     @Test
     void everyKeyInTheCodeIsInTheBundle() throws IOException {
@@ -100,9 +100,11 @@ class LangKeysTest {
         assertTrue(Files.isDirectory(src), "run from the rapid-core module directory");
         Set<String> keys = new TreeSet<>();
         try (Stream<Path> files = Files.walk(src)) {
-            // CoreSettings reads config.yml paths (afk.idle-seconds...), which share prefixes with lang keys.
+            // CoreSettings and WorldConfig read config.yml paths (afk.idle-seconds, spawn.on-join...),
+            // which share prefixes with lang keys.
+            Set<String> configReaders = Set.of("CoreSettings.java", "WorldConfig.java");
             for (Path f : files.filter(p -> p.toString().endsWith(".java"))
-                    .filter(p -> !p.getFileName().toString().equals("CoreSettings.java")).toList()) {
+                    .filter(p -> !configReaders.contains(p.getFileName().toString())).toList()) {
                 Matcher m = KEY.matcher(Files.readString(f));
                 while (m.find()) {
                     keys.add(m.group(1));

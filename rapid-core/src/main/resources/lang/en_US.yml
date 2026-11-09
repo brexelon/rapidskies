@@ -159,6 +159,13 @@ staff:
     previous: "<accent>Previous page</accent>"
     next: "<accent>Next page</accent>"
 
+# /spawn and /setspawn (WorldService).
+spawn:
+  teleported: "<prefix><text>Welcome back to the spawn.</text>"
+  # <line> is the spawn.location line for the server's profile; clicking it copies the value.
+  set: "<prefix><success>Spawn moved here until the next restart.</success> <muted>To keep it, put this in the server's rapid-core profile:</muted> <accent><line></accent>"
+  copy-hint: "<muted>Click to copy"
+
 errors:
   players-only: "<prefix><error>Only players can use this.</error>"
   # RapidCore#connect couldn't reach the proxy (Redis down).

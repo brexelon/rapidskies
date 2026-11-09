@@ -122,6 +122,12 @@ lpv group builder permission set minecraft.command.teleport true server=build
 lpv group developer permission set spark true
 lpv group developer permission set * true server=staging
 
+# Spawn worlds (rapid-core): /spawn is for everyone (plugin default). Admins can move the
+# spawn and change the protected hub and spawn builds; give builders rapid.world.build too
+# (with a server= context) when they need to fix a build in place.
+lpv group admin permission set rapid.command.setspawn true
+lpv group admin permission set rapid.world.build true
+
 # Admins manage permissions; the owner has everything.
 lpv group admin permission set luckperms.* true
 lpv group admin permission set spark true

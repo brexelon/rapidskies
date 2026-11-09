@@ -2,7 +2,7 @@
 
 > Velocity proxy + Paper 26.3 backends · Java clients 1.20 → 26.3 · Hosted on Pterodactyl (VPS/dedicated)
 > Server address: **rapidskies.us** · Store: **store.rapidskies.us**
-> Status: Phase 1 code complete, in-game checks pending (see §11) · Last updated 2026-11-09
+> Status: Phase 1 code complete, in-game checks pending; Phase 2 started (hub and spawn worlds imported, see §11) · Last updated 2026-11-09
 
 ---
 
@@ -510,6 +510,14 @@ Next:
 - [ ] Check on 1.20.1 and 26.3: LiteBans mutes block `/msg`, `/r` and `/pc`; party follow and the queue action bar; `/plus` menu items and lore; staff mode tools (keybind names in item names and lore), the freeze notice and title; `[RAPID+++]` nametags; vanished staff missing from the tab list; button hovers; `/grant` a rank to an online player and see the prefix change on their backend without a relog
 - [ ] Tune in beta: Tailwind rate and starter bank, playtime Bolts, AFK timeout
 - [ ] Later staff tooling from §9 that needs other plugins' APIs: CPS/reach view (Grim), X-ray ore ratios, LiteBans punishment GUI
+
+### Phase 2 progress
+
+- [x] Hub and spawn worlds imported (`worlds/`): Free Lobby as the hub, the Trading Post as the Skyrealms spawn, the CottageCore Lobby as Horizons' `rapidskies:spawn` world beside the Heartland. `rsdeploy.py worlds` ships their chunks and entities into the Paper 26.1+ layout (`<level>/dimensions/...`), never a level.dat, and only replaces an existing world with `--replace` (old one kept in `world-backups/`)
+- [x] `rapid-core` spawn and world management: spawn point per server (hub on every join, gamemodes on first join and bedless deaths), void rescue under the sky islands, per-world game rules / time / weather / border from the profiles, protected spawn builds (`rapid.world.build`), `/spawn`, `/setspawn`. A test checks every game rule named in the profiles exists in Paper 26.3
+- [ ] First boot of each world: walk the builds for blocks the upgrade got wrong (the hub's chunks are from 1.8), and check the spawn facing on 1.20.1 and 26.3
+- [ ] A way from the Horizons spawn to the Heartland (portal or `/rtp`, rapid-horizons, phase 3b); SuperiorSkyblock2's `spawn.location` set to the Trading Post spawn (phase 4b)
+- [ ] `rapid-hub`: mode selector NPCs on the stage in front of the gate hall, double jump, parkour, leaderboards
 
 **Recommended launch strategy:** launch both modes together. With only two modes, launching one at a time would feel thin. Run Horizons as the first closed beta, though, since it relies more on premade plugins and will stress-test the core platform early. Don't wipe beta progress on Skyrealms or Horizons at launch.
 

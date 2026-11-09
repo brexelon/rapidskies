@@ -58,3 +58,25 @@ staff:
   vanish-on-staff-mode: true
   # How often a frozen player is reminded (chat + title).
   freeze-reminder-seconds: 15
+
+# Spawn (WorldService). The profiles in infra/ set this per server.
+spawn:
+  # "world, x, y, z, yaw, pitch". world is a key: minecraft:overworld is the main world
+  # (level-name), rapidskies:spawn a world from `worlds` below. Yaw 0 faces south, 180 north.
+  # Empty: the main world's own spawn. /setspawn prints a line for this.
+  location: ""
+  # When joining players are put at the spawn: always (hub), first-join, or never.
+  on-join: first-join
+  # Players who die without a bed or respawn anchor respawn at the spawn.
+  on-death: true
+
+# Worlds rapid-core looks after, by key (no dots). Each may set:
+#   create: normal|flat|void   load it at startup, creating it if missing (not for the main world)
+#   protect: true              only rapid.world.build may change it
+#   void-y: 60                 players below this height go back to the spawn
+#   time: 6000                 fixed time of day, set at startup (with advance_time: false)
+#   clear-weather: true        clear the weather at startup
+#   border: { center-x: 0, center-z: 0, size: 200 }
+#   game-rules: { advance_time: false, pvp: false }   26.x names (minecraft:<name>)
+# The pre-built worlds are shipped with `rsdeploy.py worlds` (infra/README.md → Worlds).
+worlds: {}

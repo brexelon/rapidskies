@@ -1,6 +1,10 @@
-# Hub: floating sky-island lobby. PvP, mobs and damage are handled by rapid-hub
-# (phase 2) and hub world game rules, which are set in-game once the build is imported.
+# Hub: floating sky-island lobby (worlds/Free Lobby, shipped by `rsdeploy.py worlds`).
+# PvP, mobs, damage and the spawn are rapid-core's job (plugins/rapid-core/config.yml.patch).
 level-name: "hub"
+# Void around the island. Only read when the world data is created, i.e. on the first start
+# after `rsdeploy.py worlds` ships the build (it ships chunks, never a level.dat).
+level-type: "minecraft:flat"
+generator-settings: '{"layers":[{"block":"minecraft:air","height":1}],"biome":"minecraft:the_void","features":false,"lakes":false,"structure_overrides":[]}'
 gamemode: "adventure"
 force-gamemode: "true"
 difficulty: "peaceful"
