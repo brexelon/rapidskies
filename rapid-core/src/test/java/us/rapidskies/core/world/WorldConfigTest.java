@@ -59,6 +59,7 @@ class WorldConfigTest {
                 worlds:
                   "minecraft:overworld":
                     protect: true
+                    usable-blocks: false
                     void-y: 60
                     time: 6000
                     clear-weather: true
@@ -75,6 +76,7 @@ class WorldConfigTest {
 
         var hub = c.world("minecraft:overworld").orElseThrow();
         assertTrue(hub.protect());
+        assertFalse(hub.usableBlocks());
         assertEquals(OptionalInt.of(60), hub.voidY());
         assertEquals(6000, hub.time().orElseThrow());
         assertTrue(hub.clearWeather());
@@ -84,6 +86,7 @@ class WorldConfigTest {
         var spawn = c.world("rapidskies:spawn").orElseThrow();
         assertEquals(Optional.of(Generator.FLAT), spawn.create());
         assertFalse(spawn.protect());
+        assertTrue(spawn.usableBlocks());
         assertEquals(new WorldConfig.Border(48, 48, 96), spawn.border().orElseThrow());
         assertTrue(spawn.voidY().isEmpty());
     }

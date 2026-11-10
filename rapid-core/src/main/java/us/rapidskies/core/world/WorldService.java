@@ -50,6 +50,8 @@ public final class WorldService implements Listener {
     /** Void heights by world, for the move check. */
     private final Map<World, Integer> voidY = new HashMap<>();
     private final Set<World> protectedWorlds = new HashSet<>();
+    /** Protected worlds whose doors, buttons and the like can't be used either. */
+    private final Set<World> lockedWorlds = new HashSet<>();
     /** Read from the async spawn-location event, so it's swapped, never mutated. */
     private volatile Location spawn;
 
@@ -147,12 +149,23 @@ public final class WorldService implements Listener {
         settings.voidY().ifPresent(y -> voidY.put(world, y));
         if (settings.protect()) {
             protectedWorlds.add(world);
+            if (!settings.usableBlocks()) {
+                lockedWorlds.add(world);
+            }
         }
     }
 
     /** Whether only players in build mode may change {@code world} ({@link WorldProtection}). */
     public boolean isProtected(World world) {
         return protectedWorlds.contains(world);
+    }
+
+    /**
+     * Whether doors, gates, buttons, crafting tables and ender chests in protected {@code world}
+     * can still be used ({@code usable-blocks}, on unless a world turns it off).
+     */
+    public boolean allowsUsableBlocks(World world) {
+        return !lockedWorlds.contains(world);
     }
 
     /** What players see {@code world} called (config {@code world-names}), e.g. on the sidebar. */

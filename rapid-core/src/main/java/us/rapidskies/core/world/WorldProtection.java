@@ -52,8 +52,9 @@ import org.bukkit.inventory.ItemStack;
  * staff included, can change blocks, item frames, armor stands or vehicles, or open
  * containers and other decorated blocks (the Trading Post is full of lecterns and barrels),
  * unless they're in {@link BuildMode} ({@code /build}, which needs {@code rapid.world.build}).
- * Doors, gates, buttons, crafting tables and ender chests stay usable, but items can't be
- * used on blocks or mobs or thrown (food, potions, armor and shields still work). Nature is frozen too: no fire, explosions, fading, spreading, leaf decay or mobs
+ * Doors, gates, buttons, crafting tables and ender chests stay usable unless the world sets
+ * {@code usable-blocks: false} (the hub, where they're all scenery). Items can't be used on
+ * blocks or mobs or thrown (food, potions, armor and shields still work). Nature is frozen too: no fire, explosions, fading, spreading, leaf decay or mobs
  * changing blocks. PvP, mob spawning and damage are game rules ({@code worlds.*.game-rules}).
  */
 public final class WorldProtection implements Listener {
@@ -125,7 +126,7 @@ public final class WorldProtection implements Listener {
                 }
             }
             case RIGHT_CLICK_BLOCK -> {
-                if (block != null && !usable(block.getType())) {
+                if (block != null && !(worlds.allowsUsableBlocks(block.getWorld()) && usable(block.getType()))) {
                     event.setUseInteractedBlock(Event.Result.DENY);
                 }
                 denyItem(event, player);

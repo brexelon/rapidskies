@@ -10,6 +10,8 @@ spawn.on-death: true
 worlds:
   "minecraft:overworld":
     protect: true
+    # The doors, gates, buttons and ender chests in the build are scenery: none of them open.
+    usable-blocks: false
     # The island's underside ends at y 76.
     void-y: 60
     time: 6000

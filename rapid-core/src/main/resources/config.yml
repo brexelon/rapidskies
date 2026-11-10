@@ -73,6 +73,8 @@ spawn:
 # Worlds rapid-core looks after, by key (no dots). Each may set:
 #   create: normal|flat|void   load it at startup, creating it if missing (not for the main world)
 #   protect: true              nobody may change it outside build mode (/build, rapid.world.build)
+#   usable-blocks: false       (protected worlds) doors, gates, buttons, crafting tables and
+#                              ender chests can't be used either; on by default
 #   void-y: 60                 players below this height go back to the spawn
 #   time: 6000                 fixed time of day, set at startup (with advance_time: false)
 #   clear-weather: true        clear the weather at startup

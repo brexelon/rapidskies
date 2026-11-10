@@ -80,11 +80,14 @@ public record WorldConfig(Optional<SpawnPoint> spawn, JoinSpawn onJoin, boolean 
      * @param create     load the world at startup (creating it if it's missing) with this generator;
      *                   empty for worlds the server loads by itself (the main world)
      * @param protect    nobody may change anything outside build mode ({@code /build}, {@code rapid.world.build})
+     * @param usableBlocks in a protected world, doors, gates, buttons, crafting tables and ender
+     *                   chests can still be used; off for worlds where everything is scenery (the hub)
      * @param voidY      players below this height are sent back to the spawn instead of falling into the void
      * @param time       fixed time of day in ticks, set at startup (pair with {@code advance_time: false})
      * @param gameRules  game rule key (26.x names, e.g. {@code advance_time}) to value
      */
-    public record WorldSettings(String key, Optional<Generator> create, boolean protect, OptionalInt voidY,
+    public record WorldSettings(String key, Optional<Generator> create, boolean protect, boolean usableBlocks,
+                                OptionalInt voidY,
                                 Optional<Border> border, OptionalLong time, boolean clearWeather,
                                 Map<String, String> gameRules) {
     }
@@ -118,7 +121,7 @@ public record WorldConfig(Optional<SpawnPoint> spawn, JoinSpawn onJoin, boolean 
             w.section("game-rules").asMap().forEach((k, v) -> rules.put(k, String.valueOf(v)));
             worlds.add(new WorldSettings(key.trim(),
                     create.isEmpty() ? Optional.empty() : Optional.of(Generator.parse(path + ".create", create)),
-                    w.bool("protect", false), voidY, border, time, w.bool("clear-weather", false),
+                    w.bool("protect", false), w.bool("usable-blocks", true), voidY, border, time, w.bool("clear-weather", false),
                     Map.copyOf(rules)));
         }
         Map<String, String> names = new LinkedHashMap<>();

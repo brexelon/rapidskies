@@ -25,13 +25,15 @@ import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import us.rapidskies.core.RapidCore;
+import us.rapidskies.core.staff.Vanish;
 
 /**
  * Double jump and hub flight (PLAN.md §6.1, hub perks). Players in survival or adventure get
  * one boost per jump: the client's "start flying" (double-tapping jump) is turned into a push
  * along the way they look, and re-armed when they land. {@code rapid.hub.trail} (Rapid+)
  * adds a particle trail; {@code rapid.hub.fly} (Rapid++) can {@code /fly} instead. Both are
- * off during parkour runs, and staff mode's own flight is left alone.
+ * off during parkour runs, and staff mode's own flight is left alone. A vanished player's jump
+ * puff and trail are only shown to those who can see them.
  */
 public final class DoubleJump implements Listener {
 
@@ -39,6 +41,8 @@ public final class DoubleJump implements Listener {
     public static final String TRAIL_PERMISSION = "rapid.hub.trail";
 
     private static final int TRAIL_TICKS = 16;
+    /** How far particles are seen, as for {@code World#spawnParticle}. */
+    private static final double PARTICLE_RANGE_SQUARED = 32 * 32;
     private static final Sound JUMP_SOUND = Sound.sound(Key.key("entity.bat.takeoff"), Sound.Source.PLAYER, 0.5f, 1.4f);
 
     private final RapidHub hub;
@@ -172,7 +176,7 @@ public final class DoubleJump implements Listener {
         player.setFallDistance(0);
         player.playSound(JUMP_SOUND, Sound.Emitter.self());
         Location at = player.getLocation();
-        at.getWorld().spawnParticle(Particle.CLOUD, at, 8, 0.25, 0.05, 0.25, 0.02);
+        particles(player, Particle.CLOUD, at, 8, 0.25, 0.05, 0.25, 0.02);
         if (player.hasPermission(TRAIL_PERMISSION)) {
             trail(player);
         }
@@ -189,9 +193,20 @@ public final class DoubleJump implements Listener {
                     return;
                 }
                 Location at = player.getLocation().add(0, 0.2, 0);
-                at.getWorld().spawnParticle(Particle.END_ROD, at, 2, 0.1, 0.05, 0.1, 0.0);
+                particles(player, Particle.END_ROD, at, 2, 0.1, 0.05, 0.1, 0.0);
             }
         }.runTaskTimer(hub, 1, 1);
+    }
+
+    /** Shows {@code jumper}'s particles to nearby players who can see them (vanish). */
+    private static void particles(Player jumper, Particle particle, Location at, int count,
+                                  double dx, double dy, double dz, double speed) {
+        Vanish vanish = RapidCore.get().staffMode().vanish();
+        for (Player viewer : at.getWorld().getPlayers()) {
+            if (viewer.getLocation().distanceSquared(at) <= PARTICLE_RANGE_SQUARED && vanish.canSee(viewer, jumper)) {
+                viewer.spawnParticle(particle, at, count, dx, dy, dz, speed);
+            }
+        }
     }
 
     // ------------------------------------------------------------------ /fly
