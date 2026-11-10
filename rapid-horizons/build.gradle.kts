@@ -18,6 +18,13 @@ dependencies {
     // (plugins/, smp plugin set). Optional at runtime (softdepend): without it there are no
     // NPCs at the spawn; only CitizensSpawnNpcs touches its types.
     compileOnly(fileTree("${rootDir}/plugins") { include("Citizens-*.jar") })
+    // Chunky pre-generates each Frontier before it opens (softdepend; only ChunkyPregen
+    // touches its API). Also compiled against the deployed jar.
+    compileOnly(fileTree("${rootDir}/plugins") { include("Chunky-Paper-*.jar") })
+    // Multiverse-Core manages the Heartland and the Frontier worlds and records each Frontier's
+    // generator (rapid-horizons:<modifier>) (softdepend; only MultiverseWorldHost touches its API).
+    // Also compiled against the deployed jar.
+    compileOnly(fileTree("${rootDir}/plugins") { include("multiverse-core-*.jar") })
 
     testImplementation(libs.paper.api)
     testImplementation(project(":rapid-core"))

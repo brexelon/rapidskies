@@ -1,0 +1,4 @@
+# Test defaults for ConfigViewTest.
+greeting: hello
+nested:
+  added: 3

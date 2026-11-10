@@ -28,7 +28,7 @@ import us.rapidskies.horizons.trade.Trade;
 class LangKeysTest {
 
     private static final Pattern KEY = Pattern.compile(
-            "\"((?:admin|errors|npc|pvp|trades|travel)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
+            "\"((?:admin|chapter|dimension|errors|frontier|npc|pvp|rewards|skyborne|trades|travel|wildlands)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
 
     @Test
     void everyKeyInTheCodeIsInTheBundle() throws IOException {
@@ -38,6 +38,11 @@ class LangKeysTest {
         for (Trade trade : Trade.values()) {
             keys.add("trades.name." + trade.id());
             keys.add("trades.about." + trade.id());
+            keys.add("trades.perk." + trade.id());
+        }
+        for (us.rapidskies.horizons.frontier.Modifier m : us.rapidskies.horizons.frontier.Modifier.values()) {
+            keys.add("frontier.modifier." + m.id() + ".name");
+            keys.add("frontier.modifier." + m.id() + ".about");
         }
         // Built from the NPC ids in the bundled config ("npc." + id + ".name").
         HorizonsSettings bundled;
@@ -48,6 +53,18 @@ class LangKeysTest {
         for (HorizonsSettings.Npc npc : bundled.npcs()) {
             keys.add("npc." + npc.id() + ".name");
             keys.add("npc." + npc.id() + ".hint");
+        }
+        // Built from the chapter and entry ids ("chapter." + chapter.id() + ".name").
+        assertFalse(bundled.chapters().isEmpty(), "the bundled config has Chapter 1");
+        for (HorizonsSettings.Chapter chapter : bundled.chapters()) {
+            String base = "chapter." + chapter.id();
+            keys.add(base + ".name");
+            keys.add(base + ".lore");
+            keys.add(base + ".reward");
+            for (HorizonsSettings.ChapterEntry entry : chapter.entries()) {
+                keys.add(base + ".entries." + entry.id() + ".name");
+                keys.add(base + ".entries." + entry.id() + ".hint");
+            }
         }
         Set<String> missing = new TreeSet<>();
         for (String key : keys) {

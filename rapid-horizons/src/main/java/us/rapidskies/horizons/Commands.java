@@ -123,6 +123,243 @@ final class Commands {
         };
     }
 
+    private static java.util.function.Consumer<String> reporter(CommandSourceStack stack, RapidHorizons plugin) {
+        return line -> plugin.lang().send(stack.getSender(), "admin.result",
+                Placeholder.unparsed("text", line));
+    }
+
+    private static List<String> matching(String prefix, String... options) {
+        String p = prefix.toLowerCase(Locale.ROOT);
+        return Stream.of(options).filter(s -> s.startsWith(p)).toList();
+    }
+
+    /**
+     * {@code /frontier} (alias {@code /fr}): what's open and a travel button; {@code /frontier go}
+     * travels there. Admins ({@value us.rapidskies.horizons.frontier.FrontierService#ADMIN}):
+     * {@code status}, {@code prepare [modifier]}, {@code rotate}, {@code extend <days>},
+     * {@code openend}.
+     */
+    static BasicCommand frontier(RapidHorizons plugin) {
+        return new BasicCommand() {
+            @Override
+            public void execute(CommandSourceStack stack, String[] args) {
+                var frontier = plugin.frontier();
+                var sender = stack.getSender();
+                String sub = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
+                boolean admin = sender.hasPermission(us.rapidskies.horizons.frontier.FrontierService.ADMIN);
+                switch (sub) {
+                    case "" , "info" -> info(stack);
+                    case "go", "travel" -> {
+                        if (sender instanceof Player player) {
+                            frontier.travel(player);
+                        } else {
+                            plugin.lang().send(sender, "errors.players-only");
+                        }
+                    }
+                    case "status" -> {
+                        if (!admin) {
+                            plugin.lang().send(sender, "frontier.usage");
+                            return;
+                        }
+                        frontier.status().forEach(reporter(stack, plugin));
+                        reporter(stack, plugin).accept(plugin.skyborne().status());
+                        long held = plugin.trades().heldCrowns();
+                        if (held > 0) {
+                            reporter(stack, plugin).accept("Trades: " + held + " Crowns waiting for the database");
+                        }
+                    }
+                    case "prepare" -> {
+                        if (!admin) {
+                            plugin.lang().send(sender, "frontier.usage");
+                            return;
+                        }
+                        Optional<us.rapidskies.horizons.frontier.Modifier> forced = args.length > 1
+                                ? us.rapidskies.horizons.frontier.Modifier.parse(args[1]) : Optional.empty();
+                        if (args.length > 1 && forced.isEmpty()) {
+                            reporter(stack, plugin).accept("Unknown modifier " + args[1]);
+                            return;
+                        }
+                        frontier.prepare(forced, reporter(stack, plugin));
+                    }
+                    case "rotate" -> {
+                        if (!admin) {
+                            plugin.lang().send(sender, "frontier.usage");
+                            return;
+                        }
+                        if (args.length < 2 || !args[1].equalsIgnoreCase("confirm")) {
+                            reporter(stack, plugin).accept("This closes the open Frontier now and sends everyone in it "
+                                    + "to the spawn. Type /frontier rotate confirm");
+                            return;
+                        }
+                        frontier.rotate(reporter(stack, plugin));
+                    }
+                    case "extend" -> {
+                        if (!admin) {
+                            plugin.lang().send(sender, "frontier.usage");
+                            return;
+                        }
+                        try {
+                            frontier.extend(Integer.parseInt(args.length > 1 ? args[1] : ""), reporter(stack, plugin));
+                        } catch (NumberFormatException e) {
+                            reporter(stack, plugin).accept("Usage: /frontier extend <days> (negative: sooner)");
+                        }
+                    }
+                    case "openend" -> {
+                        if (!admin) {
+                            plugin.lang().send(sender, "frontier.usage");
+                            return;
+                        }
+                        frontier.openEndNow(reporter(stack, plugin));
+                    }
+                    default -> plugin.lang().send(sender, "frontier.usage");
+                }
+            }
+
+            private void info(CommandSourceStack stack) {
+                var frontier = plugin.frontier();
+                var current = frontier.current();
+                if (current.isEmpty()) {
+                    plugin.lang().send(stack.getSender(), "frontier.closed");
+                    return;
+                }
+                var row = current.get();
+                java.time.Instant now = java.time.Instant.now();
+                Component chapter = row.chapter().flatMap(id -> plugin.settings().chapter(id))
+                        .map(c -> plugin.lang().get("chapter." + c.id() + ".name"))
+                        .orElse(plugin.lang().get("frontier.no-chapter"));
+                Component end = !plugin.settings().frontier().end().enabled() ? plugin.lang().get("frontier.end-off")
+                        : frontier.endOpen() ? plugin.lang().get("frontier.end-open")
+                        : plugin.lang().get("frontier.end-opens", Placeholder.unparsed("time",
+                        us.rapidskies.common.time.Durations.format(
+                                us.rapidskies.horizons.frontier.FrontierSchedule.until(now,
+                                        row.endOpensAt().orElse(now)))));
+                plugin.lang().send(stack.getSender(), "frontier.info",
+                        Placeholder.component("frontier", frontier.title(row)),
+                        Placeholder.component("about", plugin.lang().get("frontier.modifier." + row.modifier().id()
+                                + ".about")),
+                        Placeholder.unparsed("time", us.rapidskies.common.time.Durations.format(
+                                us.rapidskies.horizons.frontier.FrontierSchedule.until(now, row.closesAt().orElse(now)))),
+                        Placeholder.unparsed("wildlands", Integer.toString(frontier.wildlands().innerRadius())),
+                        Placeholder.component("chapter", chapter), Placeholder.component("end", end));
+            }
+
+            @Override
+            public Collection<String> suggest(CommandSourceStack stack, String[] args) {
+                boolean admin = stack.getSender().hasPermission(us.rapidskies.horizons.frontier.FrontierService.ADMIN);
+                if (args.length <= 1) {
+                    String prefix = args.length == 0 ? "" : args[0];
+                    return admin ? matching(prefix, "go", "info", "status", "prepare", "rotate", "extend", "openend")
+                            : matching(prefix, "go", "info");
+                }
+                if (admin && args.length == 2 && args[0].equalsIgnoreCase("prepare")) {
+                    return Arrays.stream(us.rapidskies.horizons.frontier.Modifier.values())
+                            .map(us.rapidskies.horizons.frontier.Modifier::id)
+                            .filter(s -> s.startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
+                }
+                return List.of();
+            }
+
+            @Override
+            public String permission() {
+                return "rapid.command.frontier";
+            }
+        };
+    }
+
+    /** {@code /skyborne}: when and where; {@code go}; admins: {@code start [minutes]}, {@code stop}. */
+    static BasicCommand skyborne(RapidHorizons plugin) {
+        return new BasicCommand() {
+            @Override
+            public void execute(CommandSourceStack stack, String[] args) {
+                var sender = stack.getSender();
+                var skyborne = plugin.skyborne();
+                String sub = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
+                boolean admin = sender.hasPermission(us.rapidskies.horizons.skyborne.SkyborneService.ADMIN);
+                switch (sub) {
+                    case "", "info", "go" -> {
+                        if (!(sender instanceof Player player)) {
+                            reporter(stack, plugin).accept(skyborne.status());
+                            return;
+                        }
+                        if (sub.equals("go")) {
+                            skyborne.go(player);
+                        } else {
+                            skyborne.info(player);
+                        }
+                    }
+                    case "start" -> {
+                        if (!admin) {
+                            plugin.lang().send(sender, "skyborne.usage");
+                            return;
+                        }
+                        int minutes = 1;
+                        if (args.length > 1) {
+                            try {
+                                minutes = Math.max(0, Integer.parseInt(args[1]));
+                            } catch (NumberFormatException e) {
+                                reporter(stack, plugin).accept("Usage: /skyborne start [minutes]");
+                                return;
+                            }
+                        }
+                        skyborne.forceStart(minutes, reporter(stack, plugin));
+                    }
+                    case "stop" -> {
+                        if (!admin) {
+                            plugin.lang().send(sender, "skyborne.usage");
+                            return;
+                        }
+                        skyborne.abort();
+                        reporter(stack, plugin).accept("The Skyborne event was stopped.");
+                    }
+                    default -> plugin.lang().send(sender, "skyborne.usage");
+                }
+            }
+
+            @Override
+            public Collection<String> suggest(CommandSourceStack stack, String[] args) {
+                if (args.length > 1) {
+                    return List.of();
+                }
+                String prefix = args.length == 0 ? "" : args[0];
+                return stack.getSender().hasPermission(us.rapidskies.horizons.skyborne.SkyborneService.ADMIN)
+                        ? matching(prefix, "go", "info", "start", "stop") : matching(prefix, "go", "info");
+            }
+
+            @Override
+            public String permission() {
+                return "rapid.command.skyborne";
+            }
+        };
+    }
+
+    /** {@code /chapter} (aliases {@code /chapters}, {@code /log}): the current Chapter's collection log. */
+    static BasicCommand chapter(RapidHorizons plugin) {
+        return new BasicCommand() {
+            @Override
+            public void execute(CommandSourceStack stack, String[] args) {
+                if (!(stack.getSender() instanceof Player player)) {
+                    plugin.lang().send(stack.getSender(), "errors.players-only");
+                    return;
+                }
+                var chapter = plugin.chapters().current();
+                if (chapter.isEmpty()) {
+                    plugin.lang().send(player, "chapter.none");
+                    return;
+                }
+                if (!plugin.chapters().loaded(player.getUniqueId())) {
+                    plugin.lang().send(player, "chapter.not-loaded");
+                    return;
+                }
+                new us.rapidskies.horizons.chapter.ChapterMenu(plugin, chapter.get()).open(player);
+            }
+
+            @Override
+            public String permission() {
+                return "rapid.command.chapter";
+            }
+        };
+    }
+
     /**
      * {@code /horizons here}: the position you stand at as an NPC location and as a block (for
      * a corner of the portal region), each clickable to copy; {@code /horizons reload}: re-reads

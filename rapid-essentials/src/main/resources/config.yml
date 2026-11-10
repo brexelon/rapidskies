@@ -36,8 +36,9 @@ tpa:
 homes:
   # The same for everyone: extra homes are never sold (PLAN.md §6.1).
   limit: 3
-  # World keys where homes can't be set, e.g. rotating Frontiers that will be deleted:
-  #   blocked-worlds: ["rapidskies:frontier"]
+  # World keys where homes can't be set, e.g. rotating Frontiers that will be deleted. A key
+  # ending in * matches every world whose key starts with the rest:
+  #   blocked-worlds: ["rapidskies:frontier_*"]
   blocked-worlds: []
 
 # /balance, /pay, /baltop, /eco (gamemode servers).

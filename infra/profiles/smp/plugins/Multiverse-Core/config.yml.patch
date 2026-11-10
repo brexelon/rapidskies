@@ -1,0 +1,28 @@
+# Multiverse-Core on Horizons manages the worlds: the Heartland (imported as it is) and every
+# Frontier world, which rapid-horizons creates through it with its own terrain generators
+# (rapid-horizons:<modifier>, recorded in worlds.yml). Everything Multiverse does to players
+# is someone else's job here, so it's switched off; rapid-horizons warns at startup about any
+# of these that are still on. A fresh server runs one start on Multiverse's defaults: start
+# smp-1 once, run `rsdeploy.py apply smp-1`, then restart.
+
+# rapid-core's spawn world (rapidskies:spawn) stays rapid-core's: imported, Multiverse would
+# apply its own pvp (on) and other world settings over rapid-core's game rules.
+world.auto-import-3rd-party-worlds: false
+# The Heartland and its vanilla Nether and End: imported as they are.
+world.auto-import-default-worlds: true
+# Game modes (rapid-core's /build), flight (staff /fly) and access are rapid-* plugins' and
+# LuckPerms' business; Multiverse leaves players' teleports alone.
+world.enforce-gamemode: false
+world.enforce-flight: false
+world.enforce-access: false
+teleport.teleport-intercept: false
+# Joins, first joins and respawns go to the Horizons spawn (rapid-core spawn.on-join and
+# spawn.on-death), or to a bed or anchor; a Frontier that closed sends players home
+# (rapid-horizons).
+spawn.first-spawn-override: false
+spawn.enable-join-destination: false
+spawn.default-respawn-in-overworld: false
+spawn.default-respawn-within-same-world: false
+spawn.enforce-respawn-at-world-spawn: false
+# Chat is formatted by rapid-core.
+messaging.enable-chat-prefix: false

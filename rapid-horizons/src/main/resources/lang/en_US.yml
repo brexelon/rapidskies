@@ -11,6 +11,8 @@ errors:
 
 admin:
   usage: "<prefix><text>Usage: <accent>/horizons here|reload</accent></text>"
+  # Replies to admin commands (/frontier status, prepare, rotate...).
+  result: "<prefix><muted><text></muted>"
   reloaded: "<prefix><success>rapid-horizons config and messages reloaded.</success>"
   reload-failed: "<prefix><error>The new config is invalid; the old one is still running. See the console.</error>"
   # /horizons here. <point> is an NPC location, <block> a corner for rtp.portal.region; click either to copy.
@@ -129,3 +131,180 @@ trades:
     inactive: "<muted>Not active</muted>"
     click-pick: "<accent>Click to take up</accent>"
     click-drop: "<accent>Shift-click to drop</accent>"
+    # The Trade's side-grade perk at its level (<perk> is trades.perk.<trade>).
+    perk: "<text>Perk: <perk></text>"
+    perk-inactive: "<muted>(only while the Trade is active)</muted>"
+  # Side-grade perks (config trades.perks); <value> is the strength in percent at the Trade's level.
+  perk:
+    miner: "<accent>Prospector's Rush</accent> <muted>· <value>% chance of Haste after an ore</muted>"
+    farmer: "<accent>Green Thumb</accent> <muted>· <value>% chance a ripe crop replants itself</muted>"
+    hunter: "<accent>Keen Eye</accent> <muted>· +<value>% experience from mobs</muted>"
+    builder: "<accent>Sure Footing</accent> <muted>· <value>% less fall damage</muted>"
+    enchanter: "<accent>Lapis Saver</accent> <muted>· <value>% chance to keep your lapis</muted>"
+    fisher: "<accent>Quick Bite</accent> <muted>· <value>% shorter waits for a bite</muted>"
+  perk-used:
+    enchanter: "<prefix><success>Lapis Saver!</success> <muted>Your lapis came back.</muted>"
+
+# Rewards from events (the dragon fight, Skyborne) and Chapters.
+rewards:
+  crowns: "<prefix><success>+<accent><amount></accent> Crowns</success>"
+  bolts: "<prefix><success>+<accent><amount> ⚡</accent> Bolts</success>"
+  items: "<prefix><success>Rewards:</success> <text><items></text>"
+
+# The Frontier rotation (PLAN.md §5.2). Messages marked "network" are shown on every server
+# (rapid-essentials prints them as announcements).
+frontier:
+  # How a Frontier is named everywhere; <number> is its id.
+  title: "<primary><bold>FRONTIER</bold></primary> <dark>·</dark> <modifier>"
+  modifier:
+    overgrowth:
+      name: "<success>Overgrowth</success>"
+      about: "<muted>Dense forests and stranger beasts in every shadow.</muted>"
+    drought:
+      name: "<accent>Drought</accent>"
+      about: "<muted>Endless sand under a hard sun, and the seas have shrunk. Water is precious.</muted>"
+    shattered_skies:
+      name: "<#9AD8FF>Shattered Skies</#9AD8FF>"
+      about: "<muted>Islands adrift over a distant sea, their stone veined with rare ores. Mind the drop.</muted>"
+    deep_dark:
+      name: "<#3FB6B2>Deep Dark</#3FB6B2>"
+      about: "<muted>A barren land over vast caverns. The riches lie below, and something listens.</muted>"
+  # /frontier
+  info: "<prefix><frontier> <muted>· resets in <accent><time></accent></muted>\n<about>\n<muted>Wildlands (forced PvP, richer ores) beyond <accent><wildlands></accent> blocks from the centre.</muted>\n<muted>Chapter:</muted> <chapter> <dark>·</dark> <muted>End:</muted> <end>\n<click:run_command:'/frontier go'><hover:show_text:'<muted>Click to travel there</muted>'><primary>[Travel to the Frontier]</primary></hover></click> <click:run_command:'/chapter'><hover:show_text:'<muted>Click to open the collection log</muted>'><accent>[Chapter log]</accent></hover></click>"
+  no-chapter: "<muted>none this month</muted>"
+  end-off: "<muted>closed</muted>"
+  end-open: "<success>open</success>"
+  end-opens: "<muted>opens in <accent><time></accent></muted>"
+  usage: "<prefix><text>Usage: <accent>/frontier</accent> <muted>[go]</muted></text>"
+  closed: "<prefix><error>No Frontier is open right now.</error> <muted>The next one is on its way.</muted>"
+  searching: "<prefix><text>Finding you a spot in the <accent>Frontier</accent>…</text>"
+  arrived: "<prefix><success>Welcome to the</success> <frontier><success>!</success> <muted>You're at <accent><x></accent>, <accent><z></accent>. It resets monthly, so build your home in the Heartland.</muted>"
+  travel-cooldown: "<prefix><error>You can travel again in <accent><time></accent>.</error>"
+  # network: a new Frontier opened.
+  opened: "<frontier> <success>is open!</success> <about> <click:run_command:'/frontier'><hover:show_text:'<muted>Click for details (on Horizons)</muted>'><accent>/frontier</accent></hover></click>"
+  # network, once, when the warning starts.
+  reset-warning: "<text>The Horizons Frontier resets in <accent><time></accent>. Bring home what you want to keep!</text>"
+  # On joining and on entering the Frontier during the warning.
+  reset-reminder: "<prefix><error>Heads up:</error> <frontier> <text>resets in <accent><time></accent>. Anything left there is lost.</text>"
+  closed-here: "<prefix><text>This Frontier has closed, so you're back at the spawn. A new one is open: <accent>/frontier</accent></text>"
+  closed-while-away: "<prefix><text>The Frontier you were in closed while you were away, so you're at the spawn.</text> <muted>See <accent>/frontier</accent> for the new one.</muted>"
+  end:
+    # network, announce-minutes before the End opens.
+    soon: "<text>The Horizons <accent>End</accent> opens in <accent><time></accent>: join the community dragon fight!</text> <muted>Find a stronghold in the Frontier or the Heartland.</muted>"
+    # network, when it opens.
+    open: "<text>The Horizons <accent>End</accent> is open! Everyone who helps slay the dragon shares the reward.</text>"
+    victory-personal: "<prefix><primary><bold>The dragon has fallen!</bold></primary> <text>Thanks for fighting.</text>"
+    # network.
+    victory: "<text>The dragon has fallen! <accent><count></accent> heroes shared the victory.</text>"
+  drought:
+    evaporated: "<prefix><muted>The water boils away in the heat.</muted>"
+    sun: "<prefix><accent>The sun beats down.</accent> <muted>Wear a helmet or find shade to save your hunger.</muted>"
+  deep-dark:
+    # Action bar: an ore below deep-y dropped double.
+    bonus-ore: "<#3FB6B2>Rich vein!</#3FB6B2> <muted>Double drops from the deep.</muted>"
+
+# Portals into the rotating Nether and End.
+dimension:
+  nether-closed: "<prefix><error>The Nether is closed while the Frontier resets.</error>"
+  end-closed: "<prefix><error>The End is closed.</error>"
+  end-not-yet: "<prefix><text>The End opens in <accent><time></accent> with a community dragon fight.</text>"
+
+# The Wildlands: the Frontier's outer ring.
+wildlands:
+  bar: "<error>⚔ WILDLANDS</error> <dark>┃</dark> <text>PvP is on for everyone</text>"
+  title: "<error><bold>WILDLANDS</bold></error>"
+  subtitle: "<text>PvP is forced here. Richer ores and loot.</text>"
+  entered: "<prefix><error>You entered the Wildlands.</error> <text>Anyone can fight you here; ores and loot are richer.</text>"
+  entered-pvp-off: "<prefix><error>You entered the Wildlands.</error> <text>Your PvP is off, but it's forced on here: anyone can fight you.</text> <muted>Turn back to be safe.</muted>"
+  left: "<success>You left the Wildlands.</success> <muted>PvP follows your setting again.</muted>"
+  bonus-ore: "<accent>Wildlands bonus!</accent> <muted>Double drops.</muted>"
+
+# Skyborne events (PLAN.md §5.2).
+skyborne:
+  # network, announce-minutes ahead.
+  announce: "<accent><bold>SKYBORNE</bold></accent> <text>A sky fortress appears over the Horizons Frontier at <accent><x></accent>, <accent><z></accent> in <accent><time></accent>! Fight it together for rewards.</text> <click:run_command:'/skyborne go'><hover:show_text:'<muted>Click to go to the updraft (on Horizons)</muted>'><primary>[Go]</primary></hover></click>"
+  reminder: "<prefix><accent>Skyborne</accent> <text>fortress at <accent><x></accent>, <accent><z></accent> in <accent><time></accent>.</text> <click:run_command:'/skyborne go'><hover:show_text:'<muted>Click to go to the updraft</muted>'><primary>[Go]</primary></hover></click>"
+  # network.
+  arrived: "<accent><bold>SKYBORNE</bold></accent> <text>The fortress has arrived over <accent><x></accent>, <accent><z></accent>! Ride the updraft up; you have <accent><minutes></accent> minutes.</text>"
+  wave: "<prefix><error>Wave <wave>/<waves>!</error>"
+  boss: "<prefix><error><bold>The Sky Warden awakens!</bold></error>"
+  boss-name: "<primary><bold>Sky Warden</bold></primary>"
+  boss-bar: "<primary><bold>Sky Warden</bold></primary>"
+  failed: "<prefix><muted>The Skyborne fortress drifts away, undefeated.</muted>"
+  victory-personal: "<prefix><primary><bold>Fortress conquered!</bold></primary> <text>Here's your share.</text>"
+  # network.
+  victory: "<accent><bold>SKYBORNE</bold></accent> <text>The fortress has fallen to <accent><count></accent> players!</text>"
+  drifting: "<prefix><muted>The fortress is drifting away. Slow Falling will carry you down.</muted>"
+  went: "<prefix><text>Stand in the <accent>updraft</accent> (the cloud column) to rise to the fortress.</text>"
+  none: "<prefix><muted>There's no Skyborne fortress right now.</muted> <accent>/skyborne</accent>"
+  info-next: "<prefix><text>The next Skyborne fortress appears in about <accent><time></accent>.</text>"
+  info-soon: "<prefix><text>A fortress appears at <accent><x></accent>, <accent><z></accent> in <accent><time></accent>.</text> <click:run_command:'/skyborne go'><hover:show_text:'<muted>Click to go to the updraft</muted>'><primary>[Go]</primary></hover></click>"
+  info-active: "<prefix><text>The fortress is over <accent><x></accent>, <accent><z></accent>; <accent><time></accent> left.</text> <click:run_command:'/skyborne go'><hover:show_text:'<muted>Click to go to the updraft</muted>'><primary>[Go]</primary></hover></click>"
+  info-ending: "<prefix><muted>The fortress is drifting away.</muted>"
+  usage: "<prefix><text>Usage: <accent>/skyborne</accent> <muted>[go]</muted></text>"
+
+# Chapters (PLAN.md §5.2). Each chapter has chapter.<id>.name, .lore, .reward and, per entry,
+# .entries.<entry>.name and .hint (config chapters.<id>.entries).
+chapter:
+  none: "<prefix><muted>There's no Chapter this month.</muted>"
+  not-loaded: "<prefix><error>Your collection log is still loading.</error> <muted>Try again in a moment.</muted>"
+  entry-done: "<prefix><primary>Collection log:</primary> <entry> <success>✔</success> <muted>(<chapter>)</muted>"
+  entry-progress: "<primary>Collection log:</primary> <entry> <accent><progress></accent><muted>/<amount></muted>"
+  completed-title: "<primary><bold>CHAPTER COMPLETE</bold></primary>"
+  completed: "<prefix><primary><bold>You finished</bold></primary> <chapter><primary><bold>!</bold></primary> <text>Reward: <reward></text>"
+  completed-broadcast: "<prefix><accent><player></accent> <text>finished</text> <chapter><text>!</text>"
+  menu:
+    title: "<dark>Collection log</dark>"
+    progress: "<text>Entries: <accent><done></accent><muted>/<total></muted></text>"
+    frontier-only: "<muted>Counts in this month's Frontier, its Nether and End.</muted>"
+    reward-name: "<primary>Chapter reward</primary>"
+    reward-bolts: "<text>+ <accent><amount> ⚡</accent> Bolts</text>"
+    reward-earned: "<success>✔ Earned</success>"
+    reward-locked: "<muted>Finish every entry to earn it.</muted>"
+    entry-progress: "<text>Progress: <accent><progress></accent><muted>/<amount></muted></text>"
+    entry-done: "<success>✔ Complete</success>"
+    entry-open: "<muted>Not yet found</muted>"
+  chapter-1:
+    name: "<primary>Chapter I</primary> <dark>·</dark> <text>The First Horizon</text>"
+    lore:
+      - "<muted>Beyond the Heartland the land keeps going,</muted>"
+      - "<muted>wild and new each month. The first</muted>"
+      - "<muted>pathfinders mapped its edges.</muted>"
+    reward: "<text>the <accent>Pathfinder</accent> title</text>"
+    entries:
+      first-steps:
+        name: "<text>First Steps</text>"
+        hint: ["<muted>Set foot in the Frontier.</muted>"]
+      far-horizon:
+        name: "<text>Far Horizon</text>"
+        hint: ["<muted>Travel 2,500 blocks from the</muted>", "<muted>Frontier's centre.</muted>"]
+      wanderer:
+        name: "<text>Wanderer</text>"
+        hint: ["<muted>Visit 6 different biomes in the Frontier.</muted>"]
+      into-the-wild:
+        name: "<text>Into the Wild</text>"
+        hint: ["<muted>Enter the Wildlands, if you dare.</muted>"]
+      deep-veins:
+        name: "<text>Deep Veins</text>"
+        hint: ["<muted>Mine 5 diamond ores.</muted>"]
+      emerald-luck:
+        name: "<text>Emerald Luck</text>"
+        hint: ["<muted>Mine an emerald ore.</muted>"]
+      witch-hunt:
+        name: "<text>Witch Hunt</text>"
+        hint: ["<muted>Defeat 3 witches.</muted>"]
+      odd-catch:
+        name: "<text>An Odd Catch</text>"
+        hint: ["<muted>Fish up a pufferfish.</muted>"]
+      below:
+        name: "<text>Below</text>"
+        hint: ["<muted>Enter this month's Nether.</muted>"]
+      ancient-debris:
+        name: "<text>Ancient Remains</text>"
+        hint: ["<muted>Mine 2 ancient debris.</muted>"]
+      sky-fortress:
+        name: "<text>Storm the Skies</text>"
+        hint: ["<muted>Help conquer a Skyborne fortress.</muted>"]
+      dragonfall:
+        name: "<text>Dragonfall</text>"
+        hint: ["<muted>Help slay this month's dragon.</muted>"]

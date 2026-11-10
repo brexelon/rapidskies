@@ -159,4 +159,103 @@ class HorizonsSettingsTest {
         assertTrue(msg.contains("npcs.Bad Id"), msg);
         assertTrue(msg.contains("npcs.ok.action"), msg);
     }
+
+    @Test
+    void bundledFrontierSkyborneAndChapterOne() {
+        HorizonsSettings s = bundled();
+        HorizonsSettings.Frontier f = s.frontier();
+        assertTrue(f.enabled());
+        assertEquals(30, f.lengthDays());
+        assertEquals(7, f.warningDays());
+        assertEquals(List.of(us.rapidskies.horizons.frontier.Modifier.OVERGROWTH,
+                us.rapidskies.horizons.frontier.Modifier.DROUGHT, us.rapidskies.horizons.frontier.Modifier.SHATTERED_SKIES,
+                us.rapidskies.horizons.frontier.Modifier.DEEP_DARK), f.modifiers(),
+                "all four, the launch two first so a running rotation carries on as it was");
+        assertEquals(48, f.drought().waterLevel(), "only the deep sea basins keep water");
+        assertTrue(f.shatteredSkies().seaLevel() < 84 - 40, "the sea sits well below the lower islands");
+        assertTrue(f.deepDark().cavernTop() - f.deepDark().cavernFloor() >= 16);
+        assertTrue(f.deepDark().cavernFloor() > -55, "above vanilla's lava");
+        assertEquals(List.of("chapter-1"), f.chapters());
+        assertTrue(f.wildlands().innerRadius() < f.borderSize() / 2, "the Wildlands ring fits inside the border");
+        assertTrue(f.nether() && f.end().enabled(), "the Nether and End rotate");
+        assertEquals(new HorizonsSettings.ItemReward("experience_bottle", 16), f.end().rewards().items().getFirst());
+
+        HorizonsSettings.Skyborne sky = s.skyborne();
+        assertTrue(sky.enabled());
+        assertEquals(10, sky.announceMinutes(), "announced 10 minutes ahead (PLAN.md §5.2)");
+        assertTrue(sky.rewards().bolts() >= 10 && sky.rewards().bolts() <= 20, "10-20 Bolts (PLAN.md §6.2)");
+
+        HorizonsSettings.Chapter one = s.chapter("chapter-1").orElseThrow();
+        assertEquals("title:pathfinder", one.cosmetic());
+        assertEquals(100, one.bolts(), "Chapter completion is 100 Bolts (PLAN.md §6.2)");
+        assertEquals(12, one.entries().size());
+        assertTrue(one.entries().stream().anyMatch(e -> e.goal().kind() == us.rapidskies.horizons.chapter.ChapterGoal
+                .Kind.SKYBORNE), "event participation is part of it");
+        assertTrue(one.entries().stream().anyMatch(e -> e.goal().kind() == us.rapidskies.horizons.chapter.ChapterGoal
+                .Kind.MINE), "rare finds are part of it");
+
+        assertEquals(20, s.trades().perks().halfLevel());
+        for (Trade t : Trade.values()) {
+            assertTrue(s.trades().perks().max().get(t) > 0, t + " has a perk");
+        }
+    }
+
+    @Test
+    void emptyConfigFrontierDefaultsMatchTheBundle() {
+        HorizonsSettings empty = HorizonsSettings.from(ConfigView.empty());
+        HorizonsSettings bundled = bundled();
+        HorizonsSettings.Frontier e = empty.frontier();
+        HorizonsSettings.Frontier b = bundled.frontier();
+        assertEquals(b.modifiers(), e.modifiers());
+        assertEquals(b.wildlands(), e.wildlands());
+        assertEquals(b.end().dragonDelayHours(), e.end().dragonDelayHours());
+        assertEquals(b.overgrowth(), e.overgrowth());
+        assertEquals(b.drought(), e.drought());
+        assertEquals(b.shatteredSkies(), e.shatteredSkies());
+        assertEquals(b.deepDark(), e.deepDark());
+        assertEquals(b.borderSize(), e.borderSize());
+        assertEquals(bundled.skyborne().scaling(), empty.skyborne().scaling());
+        assertEquals(bundled.skyborne().waveMobs(), empty.skyborne().waveMobs());
+        assertEquals(bundled.trades().perks(), empty.trades().perks());
+        assertTrue(e.chapters().isEmpty() && empty.chapters().isEmpty(), "no chapters unless configured");
+    }
+
+    @Test
+    void frontierProblemsAreReported() {
+        ConfigView bad = ConfigView.of(Map.of(
+                "frontier", Map.of("modifiers", List.of("overgrowth", "lava-lakes"), "chapters", List.of("chapter-9"),
+                        "border-size", 3000, "wildlands", Map.of("inner-radius", 1600),
+                        "drought", Map.of("water-level", 70),
+                        "shattered-skies", Map.of("island-density", 90),
+                        "deep-dark", Map.of("cavern-floor", -20, "cavern-top", -10)),
+                "skyborne", Map.of("min-height", 20, "rewards", Map.of("items", List.of("diamond lots"))),
+                "trades", Map.of("perks", Map.of("miner", 140)),
+                "chapters", Map.of("chapter-2", Map.of("entries", Map.of(
+                        "a", Map.of("goal", "visit:moon"),
+                        "b", Map.of("goal", "distance:500", "amount", 3),
+                        "c", Map.of("goal", "mine:diamond_ore", "amount", 0))))));
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> HorizonsSettings.from(bad));
+        String msg = e.getMessage();
+        assertTrue(msg.contains("lava-lakes"), msg);
+        assertTrue(msg.contains("shattered-skies, deep-dark"), "lists the modifiers there are: " + msg);
+        assertTrue(msg.contains("frontier.drought.water-level"), msg);
+        assertTrue(msg.contains("frontier.shattered-skies.island-density"), msg);
+        assertTrue(msg.contains("frontier.deep-dark.cavern-top"), msg);
+        assertTrue(msg.contains("no chapter 'chapter-9'"), msg);
+        assertTrue(msg.contains("frontier.wildlands.inner-radius"), msg);
+        assertTrue(msg.contains("skyborne.min-height"), msg);
+        assertTrue(msg.contains("skyborne.rewards.items"), msg);
+        assertTrue(msg.contains("trades.perks.miner"), msg);
+        assertTrue(msg.contains("chapters.chapter-2.entries.a.goal"), msg);
+        assertTrue(msg.contains("chapters.chapter-2.entries.b.amount"), msg);
+        assertTrue(msg.contains("chapters.chapter-2.entries.c.amount"), msg);
+    }
+
+    @Test
+    void itemRewardsParse() {
+        assertEquals(new HorizonsSettings.ItemReward("diamond", 2), HorizonsSettings.ItemReward.parse(" Minecraft:Diamond 2"));
+        assertEquals(new HorizonsSettings.ItemReward("golden_apple", 1), HorizonsSettings.ItemReward.parse("golden_apple"));
+        assertThrows(IllegalArgumentException.class, () -> HorizonsSettings.ItemReward.parse("diamond 65"));
+        assertThrows(IllegalArgumentException.class, () -> HorizonsSettings.ItemReward.parse("diamond 2 extra"));
+    }
 }

@@ -95,4 +95,72 @@ class HorizonsRepositoryIT {
         repo.addDailyPoints(alex, today.minusDays(1), 999);
         assertEquals(150, repo.dailyPoints(alex, today));
     }
+
+    @Test
+    void frontierRotation() throws Exception {
+        FrontierRepository frontiers = new FrontierRepository(db);
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+        var first = frontiers.create(us.rapidskies.horizons.frontier.Modifier.OVERGROWTH, 11L,
+                Optional.of("chapter-1"), now);
+        assertEquals(us.rapidskies.horizons.frontier.FrontierRow.State.PREPARING, first.state());
+        frontiers.rotate(java.util.OptionalInt.empty(), first.id(), now, now.plusSeconds(3600), now.plusSeconds(60));
+        var second = frontiers.create(us.rapidskies.horizons.frontier.Modifier.DROUGHT, 22L, Optional.empty(), now);
+        assertEquals(2, frontiers.live().size(), "the open one and the one being prepared");
+        assertEquals(second.id(), frontiers.latest().orElseThrow().id());
+
+        frontiers.rotate(java.util.OptionalInt.of(first.id()), second.id(), now.plusSeconds(5),
+                now.plusSeconds(7200), null);
+        var live = frontiers.live();
+        assertEquals(1, live.size(), "exactly one Frontier open after a rotation");
+        assertEquals(second.id(), live.getFirst().id());
+        assertEquals(Optional.of(now.plusSeconds(7200)), live.getFirst().closesAt());
+        assertTrue(live.getFirst().endOpensAt().isEmpty());
+
+        // The second Frontier was made with no Chapter; it gets one later, but only once.
+        assertEquals(frontiers.number(first.id()) + 1, frontiers.number(second.id()));
+        assertTrue(frontiers.setChapterIfMissing(second.id(), "chapter-2"));
+        assertEquals(false, frontiers.setChapterIfMissing(second.id(), "chapter-3"), "it already has one");
+        assertEquals(Optional.of("chapter-2"), frontiers.live().stream().filter(r -> r.id() == second.id())
+                .findFirst().orElseThrow().chapter());
+
+        assertTrue(frontiers.markDragonKilled(second.id(), now), "the first kill pays");
+        assertEquals(false, frontiers.markDragonKilled(second.id(), now), "a second kill doesn't");
+
+        frontiers.setArchivePath(first.id(), "/archive/frontier_" + first.id());
+        assertTrue(frontiers.archived().stream().anyMatch(r -> r.id() == first.id()));
+        frontiers.setArchivePath(first.id(), null);
+        assertTrue(frontiers.archived().stream().noneMatch(r -> r.id() == first.id()));
+
+        UUID steve = UUID.randomUUID();
+        assertTrue(frontiers.logoutFrontier(steve).isEmpty());
+        frontiers.setLogoutFrontier(steve, second.id());
+        assertEquals(second.id(), frontiers.logoutFrontier(steve).getAsInt());
+        frontiers.setLogoutFrontier(steve, null);
+        assertTrue(frontiers.logoutFrontier(steve).isEmpty());
+        assertEquals(HorizonsRepository.PlayerRow.DEFAULT, repo.player(steve), "the new column leaves PvP alone");
+    }
+
+    @Test
+    void chapterProgressAndCompletion() throws Exception {
+        ChapterRepository chapters = new ChapterRepository(db);
+        UUID alex = UUID.randomUUID();
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+        chapters.save(alex, "chapter-1", "deep-veins", new ChapterRepository.EntryRow(3, java.util.Set.of(),
+                Optional.empty()));
+        chapters.save(alex, "chapter-1", "wanderer", new ChapterRepository.EntryRow(2,
+                java.util.Set.of("minecraft:forest", "minecraft:jungle"), Optional.empty()));
+        chapters.save(alex, "chapter-1", "deep-veins", new ChapterRepository.EntryRow(2, java.util.Set.of(),
+                Optional.of(now)));
+        var progress = chapters.progress(alex, "chapter-1");
+        assertEquals(3, progress.get("deep-veins").progress(), "progress never goes backwards");
+        assertEquals(Optional.of(now), progress.get("deep-veins").completedAt());
+        assertEquals(java.util.Set.of("minecraft:forest", "minecraft:jungle"), progress.get("wanderer").seen());
+        assertTrue(chapters.progress(alex, "chapter-2").isEmpty());
+
+        assertEquals(false, chapters.completed(alex, "chapter-1"));
+        assertTrue(chapters.complete(alex, "chapter-1", "title:pathfinder", now), "first completion");
+        assertEquals(false, chapters.complete(alex, "chapter-1", "title:pathfinder", now), "rewarded once");
+        assertTrue(chapters.completed(alex, "chapter-1"));
+        assertEquals(1, chapters.completions("chapter-1"));
+    }
 }

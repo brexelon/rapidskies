@@ -112,6 +112,23 @@ trades:
     max: 20
   # Hunter rewards for mobs from spawners, in percent (0: none; grinders pay nothing).
   spawner-mob-percent: 0
+  # Side-grade perks of active Trades (PLAN.md §5.2): small conveniences that grow with the
+  # Trade's level under a soft cap: max × level / (level + half-level), so half of max at
+  # half-level and never all of it. 0 turns one off; half-level 0 turns all off.
+  #   miner      chance (%) of Haste I for 8 s after mining a natural ore
+  #   farmer     chance (%) a fully grown crop replants itself from one of its seeds
+  #   hunter     more vanilla experience from hostile mobs (%; not from spawners)
+  #   builder    less fall damage (%)
+  #   enchanter  chance (%) to get the lapis back after enchanting
+  #   fisher     shorter waits for a bite (%; never under a second)
+  perks:
+    half-level: 20
+    miner: 40
+    farmer: 60
+    hunter: 50
+    builder: 30
+    enchanter: 35
+    fisher: 30
   # Per Trade: crowns-per-xp, and XP per thing (lowercase ids). Deepslate ores pay like their
   # stone variant unless listed. "default" is the fallback for anything unlisted.
   miner:
@@ -175,3 +192,191 @@ trades:
       fish: 3
       treasure: 8
       junk: 1
+
+# The Frontier rotation (PLAN.md §5.2): monthly resource worlds (rapidskies:frontier_<n>) with
+# a modifier, their own Nether and End, and the Wildlands. One Horizons server runs it.
+# /frontier status shows where things stand; /frontier prepare|rotate|extend|openend for admins.
+#
+# With Multiverse-Core installed, the Frontier worlds (and the Heartland, imported as it is)
+# are Multiverse worlds: each Frontier is created with its modifier's terrain generator,
+# rapid-horizons:<modifier>, which Multiverse records in its worlds.yml. They're kept at
+# auto-load: false, since the rotation decides which ones load. Preview a modifier's terrain
+# anywhere with `/mv create <name> normal -g rapid-horizons:shattered_skies` (overgrowth,
+# drought, shattered_skies, deep_dark). A change to the terrain settings below reaches a
+# world the next time it's loaded (a restart), and only chunks generated after that; a
+# pre-generated Frontier keeps what it has.
+frontier:
+  enabled: true
+  # How long each Frontier is open, and how long before the reset players are warned (the
+  # next Frontier is created and pre-generated with Chunky during the warning).
+  length-days: 30
+  warning-days: 7
+  # Square world border, centred on 0, 0. Pre-generated in full with Chunky.
+  border-size: 6000
+  pregenerate: true
+  # Modifiers in rotation order: overgrowth (dense forests, more mob variety), drought
+  # (deserts and badlands, drained seas, water is precious), shattered-skies (floating islands
+  # over a sea, rare ores), deep-dark (barren surface, huge caverns, richer ores below). A
+  # modifier never runs twice in a row.
+  modifiers: [overgrowth, drought, shattered-skies, deep-dark]
+  # Chapter ids from `chapters` below, one per Frontier in order: the first Frontier gets the
+  # first. Add next month's Chapter here before it opens (live-ops, PLAN.md §12).
+  chapters: [chapter-1]
+  # Closed Frontiers' worlds move to this folder (in the server folder) and are deleted after archive-days.
+  archive-folder: "frontier-archive"
+  archive-days: 30
+  # Seconds between /frontier go uses.
+  travel-cooldown-seconds: 60
+  # The Nether rotates with the Frontier: Nether portals in the Heartland and the Frontier lead
+  # to it, and back to where each player came from. Border in Nether blocks (1:8).
+  nether:
+    enabled: true
+    border-size: 1500
+  # The End rotates too. It opens dragon-delay-hours after the Frontier with a community dragon
+  # fight, announced network-wide announce-minutes ahead; everyone who dealt at least
+  # min-damage to the dragon gets the rewards (once per Frontier). Until then End portals refuse.
+  end:
+    enabled: true
+    border-size: 3000
+    dragon-delay-hours: 24
+    announce-minutes: 10
+    min-damage: 10
+    rewards:
+      crowns: 500
+      bolts: 20
+      # Most Bolts a day from dragon fights (0: no cap).
+      bolts-daily-cap: 0
+      items: ["experience_bottle 16"]
+  # The Wildlands: everything at least inner-radius blocks from the centre (along either axis)
+  # out to the border. PvP is forced there; ores (that a Miner is paid for) and hostile mob loot
+  # drop double with these chances, and Trades pay trade-bonus-percent more. 0: no Wildlands.
+  wildlands:
+    inner-radius: 2000
+    ore-bonus-percent: 50
+    loot-bonus-percent: 50
+    trade-bonus-percent: 25
+  # Overgrowth: vanilla terrain under the modifier's forests.
+  overgrowth:
+    # Extra trees per chunk, on top of vanilla's (when the chunk is generated).
+    extra-trees: 3
+    # Percent of the forest floor turned to moss, podzol and rooted dirt, in patches.
+    moss-percent: 20
+    # Ferns, leafy bushes and azaleas added per chunk.
+    ground-cover: 6
+    # Share of natural hostile spawns (in percent) replaced by a mob from mob-pool.
+    mob-variety-percent: 30
+    mob-pool: [husk, stray, witch, cave_spider, zombie_villager]
+  # Drought: vanilla terrain under deserts, badlands and savanna, with the water drained.
+  drought:
+    # Seas, rivers and aquifers are drained down to this height (vanilla's sea level
+    # is 63): only the deep sea basins keep water, ringed by dry seabed. -48 to 62.
+    water-level: 48
+    # Percent of the grass cracked to coarse dirt, in patches.
+    cracked-percent: 35
+    # Water poured from buckets, melting ice and broken ice boil away (cauldrons still work).
+    evaporate-water: true
+    # Extra hunger (exhaustion per second) under the open sky by day without a helmet. 0: off.
+    sun-exhaustion: 0.05
+  # Shattered Skies: floating islands at two heights (around y 84 and y 156) over a calm sea,
+  # so a fall ends in water, not the void. No villages or strongholds; End portals are found
+  # in the Heartland.
+  shattered-skies:
+    # The sea's surface. -40 to 60.
+    sea-level: 24
+    # Roughly how much of each height is island, in percent (5 to 60).
+    island-density: 25
+    # Extra veins per chunk of diamond, emerald, gold, lapis or redstone ore in the islands'
+    # stone (vanilla's own ores for those sit far below them). 0 to 32.
+    ore-veins: 4
+  # Deep Dark: a barren surface over huge caverns where the deep dark spreads.
+  deep-dark:
+    # The caverns are hollowed between these heights, always keeping a 20-block roof under
+    # the ground. cavern-floor -54 to 40 (vanilla's lava sits below -54), cavern-top at least
+    # 16 above it.
+    cavern-floor: -48
+    cavern-top: 8
+    # Percent of that band (away from its floor and roof) that's open cavern. 5 to 70.
+    openness: 35
+    # Percent of the surface grass worn to coarse dirt and gravel, in patches.
+    barren-percent: 50
+    # Natural ores (the ones a Miner is paid for) broken below deep-y drop double with this
+    # chance (not on top of the Wildlands' own bonus).
+    deep-y: 0
+    deep-ore-bonus-percent: 25
+
+# Skyborne events (PLAN.md §5.2): a sky fortress over the open Frontier's safe centre, reached by
+# an updraft (or /skyborne go). Waves of mobs, then the Sky Warden; all scaled to the players
+# fighting. Everyone who dealt min-damage gets the rewards once.
+skyborne:
+  enabled: true
+  # Minutes between fortresses, give or take jitter-minutes. Postponed by 10 minutes while
+  # fewer than min-players are online on this server.
+  interval-minutes: 240
+  jitter-minutes: 30
+  min-players: 3
+  # Network-wide announcement (with coordinates) this long before it appears.
+  announce-minutes: 10
+  # The fortress floats at least this high, and always 12+ blocks above the terrain under it.
+  min-height: 170
+  # Win within this long, or it drifts away.
+  time-limit-minutes: 20
+  waves: 3
+  # Mob ids the waves pick from (undead get a gold helmet so the sun doesn't burn them).
+  wave-mobs: [zombie, skeleton, spider, vindicator, pillager]
+  scaling:
+    # Mobs per wave: wave-base, + wave-per-player for each player after the first, + wave-growth
+    # per later wave; never more than wave-max.
+    wave-base: 6
+    wave-per-player: 2
+    wave-growth: 2
+    wave-max: 40
+    # The Sky Warden's health with one player, + this percent of it per extra player (max 1024).
+    boss-health: 300
+    boss-health-per-player-percent: 35
+  min-damage: 20
+  rewards:
+    crowns: 400
+    bolts: 15
+    # PLAN.md §6.2: event participation earns 10–20 Bolts; at most this many a day from Skyborne.
+    bolts-daily-cap: 20
+    items: ["diamond 2", "golden_apple 2", "experience_bottle 8"]
+
+# Chapters (PLAN.md §5.2): a collection log per Frontier. Progress counts in that Frontier, its
+# Nether and its End while it's open. Finishing every entry earns reward.cosmetic (recorded for
+# the cosmetics engine) and reward.bolts. Names and texts are lang chapter.<id>.*.
+# Goals: visit:frontier|wildlands|nether|end, distance:<blocks>, biomes (amount = how many),
+# mine:<block> (natural blocks; deepslate variants count), kill:<mob>, fish:<item>, skyborne, dragon.
+chapters:
+  chapter-1:
+    reward:
+      cosmetic: "title:pathfinder"
+      bolts: 100
+    entries:
+      first-steps:
+        goal: "visit:frontier"
+      far-horizon:
+        goal: "distance:2500"
+      wanderer:
+        goal: "biomes"
+        amount: 6
+      into-the-wild:
+        goal: "visit:wildlands"
+      deep-veins:
+        goal: "mine:diamond_ore"
+        amount: 5
+      emerald-luck:
+        goal: "mine:emerald_ore"
+      witch-hunt:
+        goal: "kill:witch"
+        amount: 3
+      odd-catch:
+        goal: "fish:pufferfish"
+      below:
+        goal: "visit:nether"
+      ancient-debris:
+        goal: "mine:ancient_debris"
+        amount: 2
+      sky-fortress:
+        goal: "skyborne"
+      dragonfall:
+        goal: "dragon"

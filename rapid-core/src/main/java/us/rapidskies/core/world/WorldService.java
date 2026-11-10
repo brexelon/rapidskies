@@ -54,6 +54,8 @@ public final class WorldService implements Listener {
     private final Set<World> lockedWorlds = new HashSet<>();
     /** Read from the async spawn-location event, so it's swapped, never mutated. */
     private volatile Location spawn;
+    /** Names for worlds other plugins create at runtime (Frontiers), over {@code world-names}. */
+    private final Map<String, String> runtimeNames = new java.util.concurrent.ConcurrentHashMap<>();
 
     public WorldService(JavaPlugin plugin, WorldConfig config) {
         this.plugin = plugin;
@@ -170,7 +172,22 @@ public final class WorldService implements Listener {
 
     /** What players see {@code world} called (config {@code world-names}), e.g. on the sidebar. */
     public String displayName(World world) {
-        return config.displayName(world.getKey().asString());
+        String key = world.getKey().asString();
+        String named = runtimeNames.get(key);
+        return named != null ? named : config.displayName(key);
+    }
+
+    /**
+     * Names a world another plugin creates while the server runs (rapid-horizons' Frontier
+     * worlds change every month, so they can't be listed in {@code world-names}).
+     */
+    public void nameWorld(String worldKey, String name) {
+        runtimeNames.put(worldKey, name);
+    }
+
+    /** Drops a name given with {@link #nameWorld} (the world was unloaded). */
+    public void forgetWorldName(String worldKey) {
+        runtimeNames.remove(worldKey);
     }
 
     private void setGameRule(World world, String worldKey, String name, String value) {

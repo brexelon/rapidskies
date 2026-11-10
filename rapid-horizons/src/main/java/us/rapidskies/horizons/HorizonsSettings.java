@@ -9,14 +9,152 @@ import java.util.Map;
 import java.util.Optional;
 import us.rapidskies.common.config.ConfigView;
 import us.rapidskies.core.world.SpawnPoint;
+import us.rapidskies.horizons.chapter.ChapterGoal;
+import us.rapidskies.horizons.frontier.Modifier;
+import us.rapidskies.horizons.skyborne.SkyborneScaling;
 import us.rapidskies.horizons.trade.Trade;
+import us.rapidskies.horizons.trade.TradePerks;
 import us.rapidskies.horizons.trade.TradeRules;
 
 /**
  * rapid-horizons' config.yml. Parsing collects every problem instead of stopping at the
  * first, and {@link #from} throws them together.
  */
-public record HorizonsSettings(Rtp rtp, Pvp pvp, Trades trades, List<Npc> npcs) {
+public record HorizonsSettings(Rtp rtp, Pvp pvp, Trades trades, List<Npc> npcs, Frontier frontier,
+                               Skyborne skyborne, List<Chapter> chapters) {
+
+    /** The Chapter with this id, if configured. */
+    public Optional<Chapter> chapter(String id) {
+        return chapters.stream().filter(c -> c.id().equals(id)).findFirst();
+    }
+
+    /**
+     * Rewards for taking part in an event (the dragon fight, a Skyborne fortress): Crowns,
+     * Bolts (under the network's anti-farm rules, at most {@code boltsDailyCap} a day from
+     * this source; 0 for no cap) and items.
+     */
+    public record Rewards(long crowns, long bolts, long boltsDailyCap, List<ItemReward> items) {
+    }
+
+    /** {@code "diamond 2"}: a lowercase item id and an amount. */
+    public record ItemReward(String material, int amount) {
+
+        public static ItemReward parse(String text) {
+            String[] p = text.trim().toLowerCase(Locale.ROOT).replace("minecraft:", "").split("\\s+");
+            if (p.length == 0 || p.length > 2 || !p[0].matches("[a-z0-9_]+")) {
+                throw new IllegalArgumentException("expected \"<item> [amount]\", got \"" + text + "\"");
+            }
+            int amount = 1;
+            if (p.length == 2) {
+                try {
+                    amount = Integer.parseInt(p[1]);
+                } catch (NumberFormatException e) {
+                    amount = 0;
+                }
+                if (amount < 1 || amount > 64) {
+                    throw new IllegalArgumentException("amount in \"" + text + "\" must be 1 to 64");
+                }
+            }
+            return new ItemReward(p[0], amount);
+        }
+    }
+
+    /**
+     * The Frontier rotation (PLAN.md §5.2): monthly resource worlds with a modifier, their own
+     * Nether and End, and the Wildlands ring.
+     *
+     * @param lengthDays            how long each Frontier is open
+     * @param warningDays           players are warned (and the next one is generated) this long before
+     * @param borderSize            the Frontier's square world border (centred on 0, 0)
+     * @param nether                the Nether rotates with the Frontier (portals lead there)
+     * @param modifiers             modifiers in rotation order
+     * @param chapters              Chapter ids, one per Frontier in order (the first Frontier gets the first)
+     * @param archiveDays           closed Frontiers' worlds are kept this long in {@code archiveFolder}
+     * @param travelCooldownSeconds between {@code /frontier go} uses
+     */
+    public record Frontier(boolean enabled, int lengthDays, int warningDays, int borderSize, boolean nether,
+                           int netherBorderSize, int endBorderSize, boolean pregenerate, List<Modifier> modifiers,
+                           List<String> chapters, int archiveDays, String archiveFolder, int travelCooldownSeconds,
+                           Wildlands wildlands, End end, Overgrowth overgrowth, Drought drought,
+                           ShatteredSkies shatteredSkies, DeepDark deepDark) {
+    }
+
+    /**
+     * The Wildlands: from {@code innerRadius} out to the border (0: none). PvP is forced; ores
+     * and mob loot drop double with these chances, and Trades pay more.
+     */
+    public record Wildlands(int innerRadius, double oreBonusPercent, double lootBonusPercent,
+                            double tradeBonusPercent) {
+    }
+
+    /**
+     * The End of each Frontier. It opens {@code dragonDelayHours} after the Frontier (announced
+     * network-wide {@code announceMinutes} ahead), with a community dragon fight: everyone who
+     * dealt at least {@code minDamage} gets the rewards once.
+     */
+    public record End(boolean enabled, int dragonDelayHours, int announceMinutes, double minDamage,
+                      Rewards rewards) {
+    }
+
+    /**
+     * Overgrowth: extra trees per chunk, mossy forest floor ({@code mossPercent} of the grass
+     * becomes moss, podzol or rooted dirt in patches), {@code groundCover} ferns, bushes and
+     * azaleas per chunk, and a share of hostile spawns swapped for a mob from {@code mobPool}.
+     */
+    public record Overgrowth(int extraTrees, double mossPercent, int groundCover, double mobVarietyPercent,
+                             List<String> mobPool) {
+    }
+
+    /**
+     * Drought: the seas and rivers are drained down to {@code waterLevel} (only deep water is
+     * left), {@code crackedPercent} of the grass is cracked, coarse earth; water poured from
+     * buckets (and melted ice) boils away, and players under the open sky by day without a
+     * helmet get hungry faster ({@code sunExhaustion} a second).
+     */
+    public record Drought(boolean evaporateWater, double sunExhaustion, int waterLevel, double crackedPercent) {
+    }
+
+    /**
+     * Shattered Skies: islands at two heights over a sea whose surface is {@code seaLevel}
+     * (falls end in water, not the void). {@code islandDensity}: roughly how much of each
+     * height is island, in percent. {@code oreVeins}: extra rare-ore veins (diamond, emerald,
+     * gold, lapis, redstone) per chunk, inside the islands' stone.
+     */
+    public record ShatteredSkies(int seaLevel, double islandDensity, int oreVeins) {
+    }
+
+    /**
+     * Deep Dark: caverns hollowed between {@code cavernFloor} and {@code cavernTop}
+     * ({@code openness} percent of that band is open), a barren surface ({@code barrenPercent}
+     * of the grass becomes coarse dirt or gravel), and natural ores broken below {@code deepY}
+     * drop double with {@code deepOreBonusPercent} chance.
+     */
+    public record DeepDark(int cavernFloor, int cavernTop, double openness, double barrenPercent, int deepY,
+                           double deepOreBonusPercent) {
+    }
+
+    /**
+     * Skyborne events (PLAN.md §5.2): a fortress over the Frontier every {@code intervalMinutes}
+     * (give or take {@code jitterMinutes}) while at least {@code minPlayers} are on, announced
+     * network-wide {@code announceMinutes} ahead; {@code waves} waves from {@code waveMobs}, then
+     * the boss, within {@code timeLimitMinutes}.
+     */
+    public record Skyborne(boolean enabled, int intervalMinutes, int jitterMinutes, int minPlayers,
+                           int announceMinutes, int minHeight, int timeLimitMinutes, int waves,
+                           List<String> waveMobs, SkyborneScaling scaling, double minDamage, Rewards rewards) {
+    }
+
+    /**
+     * A Chapter (PLAN.md §5.2): a collection log for one Frontier. Finishing every entry earns
+     * the cosmetic (recorded for the cosmetics engine) and {@code bolts}. Names and texts are
+     * lang {@code chapter.<id>.*}.
+     */
+    public record Chapter(String id, String cosmetic, long bolts, List<ChapterEntry> entries) {
+    }
+
+    /** One collection-log entry: {@code goal} reached {@code amount} times. */
+    public record ChapterEntry(String id, ChapterGoal goal, int amount) {
+    }
 
     /**
      * {@code /rtp}: a random safe surface spot in {@code world} between {@code minRadius} and
@@ -140,7 +278,7 @@ public record HorizonsSettings(Rtp rtp, Pvp pvp, Trades trades, List<Npc> npcs) 
      * @param sources             per Trade: what earns XP and how many Crowns an XP point is worth
      */
     public record Trades(TradeRules rules, int switchCooldownHours, int payoutSeconds, double spawnerMobPercent,
-                         Map<Trade, Source> sources) {
+                         Map<Trade, Source> sources, TradePerks perks) {
 
         public Source source(Trade trade) {
             return sources.get(trade);
@@ -282,12 +420,210 @@ public record HorizonsSettings(Rtp rtp, Pvp pvp, Trades trades, List<Npc> npcs) 
         }
         Trades trades = new Trades(rules, nonNegative(c, "trades.switch-cooldown-hours", 24, problems),
                 positive(c, "trades.payout-seconds", 60, problems),
-                decimal(c, "trades.spawner-mob-percent", 0, problems), sources);
+                decimal(c, "trades.spawner-mob-percent", 0, problems), sources, perks(c, problems));
+
+        List<Chapter> chapters = chapters(c, problems);
+        Frontier frontier = frontier(c, problems, chapters);
+        Skyborne skyborne = skyborne(c, problems);
 
         if (!problems.isEmpty()) {
             throw new IllegalArgumentException(String.join("; ", problems));
         }
-        return new HorizonsSettings(rtp, pvp, trades, List.copyOf(npcs));
+        return new HorizonsSettings(rtp, pvp, trades, List.copyOf(npcs), frontier, skyborne, chapters);
+    }
+
+    private static TradePerks perks(ConfigView c, List<String> problems) {
+        Map<Trade, Double> max = new EnumMap<>(TradePerks.defaults());
+        for (Trade t : Trade.values()) {
+            max.put(t, percent(c, "trades.perks." + t.id(), max.get(t), problems));
+        }
+        return new TradePerks(nonNegative(c, "trades.perks.half-level", 20, problems), max);
+    }
+
+    private static Frontier frontier(ConfigView c, List<String> problems, List<Chapter> chapters) {
+        List<Modifier> modifiers = new ArrayList<>();
+        List<String> listed = c.contains("frontier.modifiers") ? c.stringList("frontier.modifiers")
+                : java.util.Arrays.stream(Modifier.values()).map(Modifier::configName).toList();
+        for (String m : listed) {
+            Optional<Modifier> parsed = Modifier.parse(m);
+            if (parsed.isEmpty()) {
+                problems.add("frontier.modifiers: unknown modifier '" + m + "' ("
+                        + String.join(", ", java.util.Arrays.stream(Modifier.values()).map(Modifier::configName)
+                        .toList()) + ")");
+            } else if (!modifiers.contains(parsed.get())) {
+                modifiers.add(parsed.get());
+            }
+        }
+        if (modifiers.isEmpty()) {
+            problems.add("frontier.modifiers: list at least one modifier");
+        }
+        List<String> chapterIds = c.stringList("frontier.chapters").stream().map(String::trim)
+                .filter(s -> !s.isEmpty()).toList();
+        for (String id : chapterIds) {
+            if (chapters.stream().noneMatch(ch -> ch.id().equals(id))) {
+                problems.add("frontier.chapters: no chapter '" + id + "' under chapters");
+            }
+        }
+        int border = positive(c, "frontier.border-size", 6000, problems);
+        int inner = nonNegative(c, "frontier.wildlands.inner-radius", 2000, problems);
+        if (inner > 0 && inner >= border / 2) {
+            problems.add("frontier.wildlands.inner-radius must be less than half of frontier.border-size");
+        }
+        if (inner > 0 && inner < 300) {
+            problems.add("frontier.wildlands.inner-radius: at least 300, so the safe centre has room to land");
+        }
+        Wildlands wildlands = new Wildlands(inner, percent(c, "frontier.wildlands.ore-bonus-percent", 50, problems),
+                percent(c, "frontier.wildlands.loot-bonus-percent", 50, problems),
+                decimal(c, "frontier.wildlands.trade-bonus-percent", 25, problems));
+        End end = new End(c.bool("frontier.end.enabled", true),
+                nonNegative(c, "frontier.end.dragon-delay-hours", 24, problems),
+                nonNegative(c, "frontier.end.announce-minutes", 10, problems),
+                decimal(c, "frontier.end.min-damage", 10, problems),
+                rewards(c, "frontier.end.rewards", 500, 20, 0, problems));
+        List<String> pool = c.contains("frontier.overgrowth.mob-pool") ? ids(c, "frontier.overgrowth.mob-pool", problems)
+                : List.of("husk", "stray", "witch", "cave_spider", "zombie_villager");
+        Overgrowth overgrowth = new Overgrowth(nonNegative(c, "frontier.overgrowth.extra-trees", 3, problems),
+                percent(c, "frontier.overgrowth.moss-percent", 20, problems),
+                nonNegative(c, "frontier.overgrowth.ground-cover", 6, problems),
+                percent(c, "frontier.overgrowth.mob-variety-percent", 30, problems), pool);
+        Drought drought = new Drought(c.bool("frontier.drought.evaporate-water", true),
+                decimal(c, "frontier.drought.sun-exhaustion", 0.05, problems),
+                between(c, "frontier.drought.water-level", 48, -48, 62, problems),
+                percent(c, "frontier.drought.cracked-percent", 35, problems));
+        ShatteredSkies skies = new ShatteredSkies(
+                between(c, "frontier.shattered-skies.sea-level", 24, -40, 60, problems),
+                between(c, "frontier.shattered-skies.island-density", 25, 5, 60, problems),
+                between(c, "frontier.shattered-skies.ore-veins", 4, 0, 32, problems));
+        int cavernFloor = between(c, "frontier.deep-dark.cavern-floor", -48, -54, 40, problems);
+        int cavernTop = between(c, "frontier.deep-dark.cavern-top", 8, -38, 40, problems);
+        if (cavernTop - cavernFloor < 16) {
+            problems.add("frontier.deep-dark.cavern-top: at least 16 blocks above cavern-floor");
+        }
+        DeepDark deepDark = new DeepDark(cavernFloor, cavernTop,
+                between(c, "frontier.deep-dark.openness", 35, 5, 70, problems),
+                percent(c, "frontier.deep-dark.barren-percent", 50, problems),
+                integer(c, "frontier.deep-dark.deep-y", 0, problems),
+                percent(c, "frontier.deep-dark.deep-ore-bonus-percent", 25, problems));
+        String archive = c.string("frontier.archive-folder", "frontier-archive").trim();
+        if (archive.isEmpty() || archive.contains("..")) {
+            problems.add("frontier.archive-folder: a folder name inside the server folder");
+        }
+        return new Frontier(c.bool("frontier.enabled", true), positive(c, "frontier.length-days", 30, problems),
+                nonNegative(c, "frontier.warning-days", 7, problems), border, c.bool("frontier.nether.enabled", true),
+                positive(c, "frontier.nether.border-size", 1500, problems),
+                positive(c, "frontier.end.border-size", 3000, problems), c.bool("frontier.pregenerate", true),
+                List.copyOf(modifiers), chapterIds, nonNegative(c, "frontier.archive-days", 30, problems), archive,
+                nonNegative(c, "frontier.travel-cooldown-seconds", 60, problems), wildlands, end, overgrowth, drought,
+                skies, deepDark);
+    }
+
+    private static Skyborne skyborne(ConfigView c, List<String> problems) {
+        List<String> mobs = c.contains("skyborne.wave-mobs") ? ids(c, "skyborne.wave-mobs", problems)
+                : List.of("zombie", "skeleton", "spider", "vindicator", "pillager");
+        if (mobs.isEmpty()) {
+            problems.add("skyborne.wave-mobs: list at least one mob");
+        }
+        SkyborneScaling scaling = new SkyborneScaling(positive(c, "skyborne.scaling.wave-base", 6, problems),
+                nonNegative(c, "skyborne.scaling.wave-per-player", 2, problems),
+                nonNegative(c, "skyborne.scaling.wave-growth", 2, problems),
+                positive(c, "skyborne.scaling.wave-max", 40, problems),
+                decimal(c, "skyborne.scaling.boss-health", 300, problems),
+                decimal(c, "skyborne.scaling.boss-health-per-player-percent", 35, problems));
+        int minHeight = integer(c, "skyborne.min-height", 170, problems);
+        if (minHeight < 100 || minHeight > 280) {
+            problems.add("skyborne.min-height: between 100 and 280");
+        }
+        return new Skyborne(c.bool("skyborne.enabled", true), positive(c, "skyborne.interval-minutes", 240, problems),
+                nonNegative(c, "skyborne.jitter-minutes", 30, problems),
+                nonNegative(c, "skyborne.min-players", 3, problems),
+                positive(c, "skyborne.announce-minutes", 10, problems), minHeight,
+                positive(c, "skyborne.time-limit-minutes", 20, problems), positive(c, "skyborne.waves", 3, problems),
+                mobs, scaling, decimal(c, "skyborne.min-damage", 20, problems),
+                rewards(c, "skyborne.rewards", 400, 15, 20, problems));
+    }
+
+    private static List<Chapter> chapters(ConfigView c, List<String> problems) {
+        List<Chapter> out = new ArrayList<>();
+        ConfigView all = c.section("chapters");
+        for (String id : all.keys()) {
+            String where = "chapters." + id;
+            if (!id.matches("[a-z0-9-]+")) {
+                problems.add(where + ": ids are lowercase letters, digits and - (they name lang keys)");
+                continue;
+            }
+            ConfigView ch = all.section(id);
+            List<ChapterEntry> entries = new ArrayList<>();
+            ConfigView entrySection = ch.section("entries");
+            for (String entry : entrySection.keys()) {
+                String at = where + ".entries." + entry;
+                if (!entry.matches("[a-z0-9-]+")) {
+                    problems.add(at + ": ids are lowercase letters, digits and -");
+                    continue;
+                }
+                ConfigView e = entrySection.section(entry);
+                ChapterGoal goal;
+                try {
+                    goal = ChapterGoal.parse(e.string("goal", ""));
+                } catch (IllegalArgumentException ex) {
+                    problems.add(at + ".goal: " + ex.getMessage());
+                    continue;
+                }
+                int amount = integer(e, "amount", 1, problems);
+                if (amount < 1) {
+                    problems.add(at + ".amount: at least 1");
+                }
+                if ((goal.kind() == ChapterGoal.Kind.VISIT || goal.kind() == ChapterGoal.Kind.DISTANCE) && amount != 1) {
+                    problems.add(at + ".amount: " + goal.kind().id() + " goals are reached once");
+                }
+                entries.add(new ChapterEntry(entry, goal, Math.max(1, amount)));
+            }
+            if (entries.isEmpty()) {
+                problems.add(where + ".entries: a chapter needs at least one entry");
+            }
+            if (entries.size() > 28) {
+                problems.add(where + ".entries: at most 28 (the /chapter menu's room)");
+            }
+            int bolts = integer(ch, "reward.bolts", 100, problems);
+            out.add(new Chapter(id, ch.string("reward.cosmetic", "").trim(), Math.max(0, bolts),
+                    List.copyOf(entries)));
+        }
+        return List.copyOf(out);
+    }
+
+    private static Rewards rewards(ConfigView c, String base, int crowns, int bolts, int cap, List<String> problems) {
+        List<ItemReward> items = new ArrayList<>();
+        for (String item : c.stringList(base + ".items")) {
+            try {
+                items.add(ItemReward.parse(item));
+            } catch (IllegalArgumentException e) {
+                problems.add(base + ".items: " + e.getMessage());
+            }
+        }
+        return new Rewards(nonNegative(c, base + ".crowns", crowns, problems),
+                nonNegative(c, base + ".bolts", bolts, problems),
+                nonNegative(c, base + ".bolts-daily-cap", cap, problems), List.copyOf(items));
+    }
+
+    /** A list of lowercase mob ids. */
+    private static List<String> ids(ConfigView c, String path, List<String> problems) {
+        List<String> out = new ArrayList<>();
+        for (String raw : c.stringList(path)) {
+            String id = raw.trim().toLowerCase(Locale.ROOT).replace("minecraft:", "");
+            if (!id.matches("[a-z0-9_]+")) {
+                problems.add(path + ": '" + raw + "' isn't a mob id");
+            } else {
+                out.add(id);
+            }
+        }
+        return List.copyOf(out);
+    }
+
+    private static double percent(ConfigView c, String path, double def, List<String> problems) {
+        double v = decimal(c, path, def, problems);
+        if (v > 100) {
+            problems.add(path + ": at most 100 (percent)");
+        }
+        return v;
     }
 
     private static List<Npc> npcs(ConfigView c, List<String> problems) {
@@ -333,6 +669,14 @@ public record HorizonsSettings(Rtp rtp, Pvp pvp, Trades trades, List<Npc> npcs) 
             problems.add(e.getMessage());
             return def;
         }
+    }
+
+    private static int between(ConfigView c, String path, int def, int min, int max, List<String> problems) {
+        int v = integer(c, path, def, problems);
+        if (v < min || v > max) {
+            problems.add(path + ": must be " + min + " to " + max);
+        }
+        return v;
     }
 
     private static int nonNegative(ConfigView c, String path, int def, List<String> problems) {

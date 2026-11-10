@@ -49,6 +49,19 @@ class EssentialsSettingsTest {
         assertEquals(bundled.teleport().warmupSeconds(), empty.teleport().warmupSeconds());
     }
 
+    /** Frontier worlds get a new key every month, so a pattern blocks all of them. */
+    @Test
+    void blockedWorldPatterns() {
+        EssentialsSettings s = EssentialsSettings.from(ConfigView.of(Map.of(
+                "homes", Map.of("blocked-worlds", List.of("rapidskies:frontier_*", "Minecraft:The_End")))));
+        assertTrue(s.homes().blocked("rapidskies:frontier_3"));
+        assertTrue(s.homes().blocked("rapidskies:frontier_12_nether"));
+        assertTrue(s.homes().blocked("minecraft:the_end"));
+        assertEquals(false, s.homes().blocked("minecraft:overworld"));
+        assertEquals(false, s.homes().blocked("rapidskies:spawn"));
+        assertEquals(false, s.homes().blocked("minecraft:the_end_2"), "without a * the key must match exactly");
+    }
+
     @Test
     void disabledCommandsAreNormalized() {
         EssentialsSettings s = EssentialsSettings.from(ConfigView.of(Map.of(

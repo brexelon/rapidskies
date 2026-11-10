@@ -12,6 +12,13 @@ spawn.location: "rapidskies:spawn, 0.5, 74.1, 0.5, 180, 0"
 spawn.on-join: "first-join"
 spawn.on-death: true
 worlds:
+  # The Heartland: a 10,000 x 10,000 square (+-5,000 around 0, 0), pre-generated with Chunky
+  # (infra/README.md -> The Heartland). /rtp lands inside it (rapid-horizons rtp.max-radius 5000).
+  "minecraft:overworld":
+    border:
+      center-x: 0
+      center-z: 0
+      size: 10000
   "rapidskies:spawn":
     # A sky island: void all around (the build's own edge has barrier walls).
     create: void

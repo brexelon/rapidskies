@@ -1,8 +1,9 @@
 # Anti-xray, engine mode 2 (fake ores sent to the client), for both survival economies
 # (plan §4). Paper's default hidden-blocks and replacement-blocks lists are already the
-# recommended overworld set, so only the switches are set here. Nether worlds want their
-# own list (ancient debris, nether gold/quartz); add per-world overrides with the
-# Frontier rotation in phase 3b.
+# recommended overworld set, so only the switches are set here. These defaults also cover the
+# Frontier worlds rapid-horizons creates each month. Nether worlds would want their own list
+# (ancient debris, nether gold/quartz), but Paper only takes that from a world's own
+# paper-world.yml and the rotating Nether is a new folder every month, so it isn't set yet.
 anticheat.anti-xray.enabled: true
 anticheat.anti-xray.engine-mode: 2
 anticheat.anti-xray.max-block-height: 64

@@ -177,6 +177,10 @@ plugin_sets:
     # The NPCs around the spawn plaza (rapid-horizons builds them from its config; Citizens
     # never saves them).
     - "Citizens-*.jar"
+    # Manages the Heartland and the Frontier worlds; rapid-horizons registers its Frontier
+    # terrain generators with it (rapid-horizons:<modifier>). Its own spawn, respawn, game
+    # mode and flight handling are off (profiles/smp/plugins/Multiverse-Core).
+    - "multiverse-core-*.jar"
 
   worldgen:
     - "Chunky-Paper-*.jar"

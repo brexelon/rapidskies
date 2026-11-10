@@ -24,3 +24,8 @@ npcs.heartland.location: "rapidskies:spawn, 4.5, 74, -3.5, 45, 0"
 npcs.land.location: "rapidskies:spawn, -3.5, 74, -3.5, -45, 0"
 npcs.trades.location: "rapidskies:spawn, 4.5, 74, 4.5, 135, 0"
 npcs.hub.location: "rapidskies:spawn, -3.5, 74, 4.5, -135, 0"
+
+# All four Frontier modifiers in the rotation, the launch two first so a running rotation
+# carries on where it was (a live config written before Shattered Skies and Deep Dark lists
+# only those two, and new keys don't replace existing ones).
+frontier.modifiers: [overgrowth, drought, shattered-skies, deep-dark]

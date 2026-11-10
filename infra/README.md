@@ -56,6 +56,13 @@ it back. That survives upstream format changes and keeps secrets out of git.
 - `${NAME}` comes from `secrets.env` or the server's `vars`; `${addr:hub-1}` is that server's
   internal address, read from its Pterodactyl allocation. The tool refuses to use a backend
   whose allocation is on a public or wildcard IP.
+- A plugin only writes its config when there's none, so a server keeps the config of the
+  version it first ran. For the rapid-* plugins, `diff`/`apply` also add the keys a newer
+  version's bundled `config.yml` has and the live file lacks, with their comments (read from
+  `build/dist/*.jar`, so run `./gradlew dist` first). Present keys are never changed. A section
+  of id-keyed entries (NPCs, Chapters, worlds, claim projects) is only added when it's missing
+  entirely, so entries deleted on purpose stay deleted. The plugins fill the same keys in
+  memory on load (`ConfigView.withDefaults`), so a missing key never breaks a feature.
 
 ## First-time rollout
 
@@ -210,7 +217,86 @@ smp-1 and staging get the `smp` plugin set on top of `paper-base` and `survival`
   rebuilds the arch and NPCs. Its tables are the `horizons` migration module.
 - The Horizons sidebar shows the player's town, whose land they stand on and the world by name
   (`%rapidclaims_town%`, `%rapidclaims_here%`, rapid-core's `%rapid_world%` from `world-names`
-  in the smp rapid-core profile); town tags show in chat.
+  in the smp rapid-core profile; Frontier worlds are named at runtime, "Frontier · Drought");
+  town tags show in chat.
+
+### The Heartland: 10,000 × 10,000
+
+The Heartland's world border is a 10,000-block square centred on 0, 0 (±5,000), set by
+rapid-core on every start (`worlds."minecraft:overworld".border` in
+`profiles/smp/plugins/rapid-core`); `/rtp` lands up to 5,000 out, inside it. Pre-generate it
+once before opening (about 390,000 chunks, several hours; spark shows the load), from the
+smp-1 console with Chunky (the `worldgen` plugin set):
+
+```
+chunky world heartland
+chunky shape square
+chunky center 0 0
+chunky radius 5000
+chunky start
+```
+
+`chunky pause` / `chunky continue` survive restarts. ChunkyBorder isn't needed: the vanilla
+border is rapid-core's.
+
+### The Frontier rotation
+
+rapid-horizons runs the monthly Frontier on smp-1 (`frontier.enabled`; one instance only):
+
+- Worlds are `rapidskies:frontier_<n>` plus `_nether` and `_end`, stored under
+  `heartland/dimensions/rapidskies/`. The first start with no Frontier opens #1 at once
+  (expect a few seconds' pause while its worlds are created). Each one is open
+  `frontier.length-days` (30); for the last `warning-days` (7) players are warned and the next
+  one is created and **pre-generated with Chunky's API automatically** (6,000 × 6,000 overworld,
+  its Nether and End), so nothing needs doing by hand each month.
+- At closing time everyone inside goes to the spawn, the old worlds are unloaded and moved to
+  `frontier-archive/frontier_<n>/` in the server folder, and deleted after `archive-days` (30).
+  Include `frontier-archive/` in the offsite backup if you want them longer.
+- Nether and End portals anywhere lead to the current Frontier's Nether and End (the
+  Heartland's vanilla ones are never reached). The End opens a day after the Frontier with a
+  community dragon fight, announced network-wide.
+- Skyborne fortresses appear over the Frontier every ~4 hours while 3+ players are on.
+- Modifiers rotate in `frontier.modifiers` order, each with its own terrain: **Overgrowth**
+  (mossy, overgrown forests), **Drought** (deserts and badlands, seas and rivers drained to
+  `drought.water-level`), **Shattered Skies** (floating islands at two heights over a sea,
+  rare ores in their stone, no villages or strongholds) and **Deep Dark** (a barren surface
+  over huge caverns where the deep dark spreads). The terrain knobs are under
+  `frontier.<modifier>` in the config; a change reaches a world on its next load (a restart)
+  and only chunks generated after it, so set them before the next Frontier is prepared.
+- Admin: `/frontier status` (also shows Skyborne and any Trade payouts waiting for the
+  database), `/frontier prepare [modifier]`, `/frontier rotate confirm`, `/frontier extend
+  <days>`, `/frontier openend`, `/skyborne start [minutes]`, `/skyborne stop`
+  (`rapid.horizons.frontier.admin`, `rapid.horizons.skyborne.admin`; op by default).
+- Live-ops: add next month's Chapter to `chapters` and `frontier.chapters` (config) and its
+  texts to the lang file before the rotation, or the new Frontier has no Chapter.
+- If the database is down when Trades pay out, Crowns are held and retried every minute; if
+  it's still down at shutdown they're kept in `plugins/rapid-horizons/pending-trades.json` and
+  paid on the next start. Never delete that file by hand while it exists.
+
+#### Multiverse-Core
+
+smp-1 (and staging) run Multiverse-Core 5 (`smp` plugin set) as the world manager. rapid-horizons
+creates, loads and removes the Frontier worlds through it, and Multiverse records each
+Frontier overworld's generator, `rapid-horizons:<modifier>`, in `plugins/Multiverse-Core/worlds.yml`.
+The Heartland (`heartland`, with its vanilla Nether and End) is imported **as it is**: its
+pre-generated vanilla terrain is never regenerated.
+
+- **First deploy:** Multiverse writes its config on its first start, so start smp-1 once, run
+  `python infra/rsdeploy.py apply smp-1` (it applies `profiles/smp/plugins/Multiverse-Core`) and
+  restart. Until then rapid-horizons logs a warning listing the Multiverse settings that are
+  still on. Those settings (spawn and respawn handling, game mode and flight enforcement,
+  teleport interception, importing other plugins' worlds) would override rapid-core.
+- Frontier worlds are kept at `auto-load: false`: the rotation decides which ones are loaded.
+  Don't `/mv load`, `/mv unload`, `/mv regen` or `/mv delete` a live Frontier; use `/frontier`.
+- `rapidskies:spawn` belongs to rapid-core. If Multiverse ever imported it (the warning says
+  so), `/mv remove rapidskies:spawn` and restart, or its pvp setting overrides the spawn's.
+- **Previewing terrain:** `/mv create <name> normal -g rapid-horizons:<modifier>` (`overgrowth`,
+  `drought`, `shattered_skies`, `deep_dark`; tab-completes) builds a scratch world with that
+  modifier's generator, e.g. on staging before a month that uses it. Remove it with
+  `/mv delete <name>` when done.
+- Frontiers created before Multiverse was installed are imported with their generator the
+  first time they load. Without Multiverse at all, rapid-horizons falls back to creating the
+  worlds through Bukkit.
 
 ## Hub (rapid-hub)
 

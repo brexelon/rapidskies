@@ -81,6 +81,11 @@ public final class TradesMenu extends Menu {
                 Placeholder.parsed("bar", "<accent>" + "|".repeat(filled) + "</accent><dark>"
                         + "|".repeat(BAR_LENGTH - filled) + "</dark>"),
                 Placeholder.unparsed("percent", Integer.toString((int) Math.floor(v.progress() * 100)))));
+        lore.add(lang.get("trades.menu.perk", Placeholder.component("perk", lang.get("trades.perk." + v.trade().id(),
+                Placeholder.unparsed("value", String.format(java.util.Locale.ROOT, "%.1f", v.perkPercent()))))));
+        if (!v.active()) {
+            lore.add(lang.get("trades.menu.perk-inactive"));
+        }
         lore.add(v.active() ? lang.get("trades.menu.active") : lang.get("trades.menu.inactive"));
         lore.add(v.active() ? lang.get("trades.menu.click-drop") : lang.get("trades.menu.click-pick"));
         Material material = Material.matchMaterial(v.trade().icon);

@@ -44,9 +44,23 @@ public record EssentialsSettings(Set<String> disabledCommands, Teleport teleport
 
     /**
      * @param limit         homes per player, the same for everyone (PLAN.md §6.1: never sold)
-     * @param blockedWorlds world keys where homes can't be set (rotating Frontiers)
+     * @param blockedWorlds world keys where homes can't be set (rotating Frontiers); one ending
+     *                      in {@code *} matches every key starting with the rest
+     *                      ({@code rapidskies:frontier_*})
      */
     public record Homes(int limit, Set<String> blockedWorlds) {
+
+        /** Whether homes can't be set in the world with this key. */
+        public boolean blocked(String worldKey) {
+            String key = worldKey.toLowerCase(Locale.ROOT);
+            for (String pattern : blockedWorlds) {
+                if (pattern.endsWith("*") ? key.startsWith(pattern.substring(0, pattern.length() - 1))
+                        : key.equals(pattern)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     /** {@code /baltop} length and the smallest {@code /pay}. */

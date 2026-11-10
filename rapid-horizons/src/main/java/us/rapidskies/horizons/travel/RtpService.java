@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.HeightMap;
@@ -59,8 +60,8 @@ public final class RtpService implements Listener {
     public void start(Player player, boolean fromPortal) {
         HorizonsSettings.Rtp rtp = settings();
         UUID id = player.getUniqueId();
-        if (searching.contains(id)) {
-            plugin.lang().send(player, "travel.already-searching");
+        if (plugin.pvp().inCombat(id)) {
+            plugin.lang().send(player, "pvp.no-teleport");
             return;
         }
         boolean skipCooldown = player.hasPermission(NO_COOLDOWN) || (fromPortal && rtp.portalIgnoresCooldown());
@@ -78,26 +79,56 @@ public final class RtpService implements Listener {
             plugin.lang().send(player, "travel.unavailable");
             return;
         }
-        searching.add(id);
-        plugin.lang().send(player, "travel.searching");
-        attempt(player, world, rtp.attempts());
+        search(player, world, rtp.centerX(), rtp.centerZ(), rtp.minRadius(), rtp.maxRadius(), true, "travel.searching", spot -> {
+            cooldownUntil.put(id, System.currentTimeMillis() + settings().cooldownSeconds() * 1000L);
+            plugin.lang().send(player, "travel.arrived",
+                    Placeholder.unparsed("x", Integer.toString(spot.getBlockX())),
+                    Placeholder.unparsed("z", Integer.toString(spot.getBlockZ())));
+        });
     }
 
-    private void attempt(Player player, World world, int left) {
+    /**
+     * Finds a random safe surface spot in {@code world} between {@code minRadius} and
+     * {@code maxRadius} blocks of the centre (and inside the border), loading one chunk at a
+     * time asynchronously, and sends {@code player} there; {@code arrived} runs once they are.
+     * Also used for the Frontier ({@code /frontier go}). One search per player at a time.
+     *
+     * @param avoidClaims  never land in or next to a claimed chunk
+     * @param searchingKey lang key told while searching
+     */
+    public void search(Player player, World world, int centerX, int centerZ, int minRadius, int maxRadius,
+                       boolean avoidClaims, String searchingKey, Consumer<Location> arrived) {
+        UUID id = player.getUniqueId();
+        if (!searching.add(id)) {
+            plugin.lang().send(player, "travel.already-searching");
+            return;
+        }
+        plugin.lang().send(player, searchingKey);
+        attempt(new Search(player, world, centerX, centerZ, minRadius, maxRadius, avoidClaims, arrived),
+                settings().attempts());
+    }
+
+    private record Search(Player player, World world, int centerX, int centerZ, int minRadius, int maxRadius,
+                          boolean avoidClaims, Consumer<Location> arrived) {
+    }
+
+    private void attempt(Search s, int left) {
+        Player player = s.player();
+        World world = s.world();
         if (!player.isOnline()) {
             searching.remove(player.getUniqueId());
             return;
         }
-        HorizonsSettings.Rtp rtp = settings();
         // Cheap rejections first (border, claims), without loading anything.
         Point found = null;
         int tries = left;
-        int reach = reach(world, rtp);
+        int reach = reach(world, s.maxRadius());
         while (tries > 0 && found == null) {
             tries--;
-            Point candidate = RtpSearch.candidate(random, rtp.centerX(), rtp.centerZ(), rtp.minRadius(), reach);
+            Point candidate = RtpSearch.candidate(random, s.centerX(), s.centerZ(), Math.min(s.minRadius(), reach - 1),
+                    reach);
             if (world.getWorldBorder().isInside(new Location(world, candidate.x() + 0.5, 64, candidate.z() + 0.5))
-                    && !claimedNear(world, candidate)) {
+                    && !(s.avoidClaims() && claimedNear(world, candidate))) {
                 found = candidate;
             }
         }
@@ -111,9 +142,9 @@ public final class RtpService implements Listener {
         world.getChunkAtAsync(target.x() >> 4, target.z() >> 4, true, chunk -> {
             Location spot = surface(world, target);
             if (spot != null) {
-                land(player, spot);
+                land(player, spot, s.arrived());
             } else if (remaining > 0) {
-                attempt(player, world, remaining);
+                attempt(s, remaining);
             } else {
                 fail(player);
             }
@@ -121,9 +152,9 @@ public final class RtpService implements Listener {
     }
 
     /** Never further than the border allows (minus a margin), so tries aren't wasted outside it. */
-    private static int reach(World world, HorizonsSettings.Rtp rtp) {
+    private static int reach(World world, int maxRadius) {
         int half = (int) (world.getWorldBorder().getSize() / 2) - 16;
-        return Math.max(1, Math.min(rtp.maxRadius(), half));
+        return Math.max(1, Math.min(maxRadius, half));
     }
 
     /** The target's chunk, or any chunk touching it, is claimed: land elsewhere, not at someone's door. */
@@ -155,7 +186,7 @@ public final class RtpService implements Listener {
         return new Location(world, p.x() + 0.5, ground.getY() + 1, p.z() + 0.5, yaw, 0);
     }
 
-    private void land(Player player, Location spot) {
+    private void land(Player player, Location spot, Consumer<Location> arrived) {
         UUID id = player.getUniqueId();
         if (!player.isOnline()) {
             searching.remove(id);
@@ -168,10 +199,7 @@ public final class RtpService implements Listener {
                 plugin.lang().send(player, "travel.failed");
                 return;
             }
-            cooldownUntil.put(id, System.currentTimeMillis() + settings().cooldownSeconds() * 1000L);
-            plugin.lang().send(player, "travel.arrived",
-                    Placeholder.unparsed("x", Integer.toString(spot.getBlockX())),
-                    Placeholder.unparsed("z", Integer.toString(spot.getBlockZ())));
+            arrived.accept(spot);
         });
     }
 

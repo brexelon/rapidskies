@@ -16,6 +16,9 @@ Profile layout (infra/profiles/<profile>/...), paths mirror the server root:
                  Later profiles override earlier ones key by key, and a section set by a
                  later profile drops an earlier profile's keys inside it.
   <file>         Any other file is written verbatim.
+rapid-* plugin configs also get the keys their bundled config.yml (in build/dist/*.jar) has
+and the live file lacks, so a server that first ran an older version gets new settings and
+sections (see fill_defaults).
 Both may contain ${NAME} placeholders, resolved from infra/secrets.env, the
 server's `vars` in network.yml, SERVER_NAME, and ${addr:<server>}.
 
@@ -32,6 +35,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import copy
 import difflib
 import fnmatch
 import hashlib
@@ -48,6 +52,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
+import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -56,9 +61,10 @@ from collections.abc import Mapping
 try:
     import tomlkit
     from ruamel.yaml import YAML
-    from ruamel.yaml.comments import CommentedMap
+    from ruamel.yaml.comments import CommentedMap, CommentedSeq
     from ruamel.yaml.constructor import RoundTripConstructor
-    from ruamel.yaml.error import YAMLError
+    from ruamel.yaml.error import CommentMark, YAMLError
+    from ruamel.yaml.tokens import CommentToken
     from tomlkit.exceptions import TOMLKitError
 except ImportError:  # pragma: no cover
     sys.exit("Missing dependencies: pip install -r infra/requirements.txt")
@@ -377,7 +383,8 @@ class _LastKeyWins(RoundTripConstructor):
         return True
 
 
-def patch_yaml(text: str, patch: dict) -> str:
+def _yaml_for(text: str) -> YAML:
+    """A round-trip YAML that writes `text` back in its own indentation style."""
     y = yaml_rt()
     y.Constructor = _LastKeyWins
     indent, nested_lists = _detect_yaml_style(text)
@@ -385,24 +392,55 @@ def patch_yaml(text: str, patch: dict) -> str:
         y.indent(mapping=indent, sequence=indent + 2, offset=indent)
     else:
         y.indent(mapping=indent, sequence=indent, offset=0)
+    return y
+
+
+def patch_yaml(text: str, patch: dict) -> str:
+    y = _yaml_for(text)
     doc = y.load(text) if text.strip() else None
     if not isinstance(doc, dict):
         doc = CommentedMap()
     for path, value in patch.items():
         keys = str(path).split(".")
-        node = doc
-        for k in keys[:-1]:
-            # Anything that isn't a section (a scalar, a list) is in the way: replace it.
-            if not isinstance(node.get(k), dict):
-                node[k] = CommentedMap()
-            node = node[k]
+        node, i = doc, 0
+        while i < len(keys) - 1 and isinstance(node.get(keys[i]), dict):
+            node, i = node[keys[i]], i + 1
+        if i < len(keys) - 1:
+            # A missing section, or a scalar or list where one goes: set it as a whole.
+            for k in reversed(keys[i + 1:]):
+                value = {k: value}
+            _set_key(node, keys[i], value)
+            continue
         # Re-assigning an equal value would drop comments ruamel attached to it.
         if keys[-1] in node and _same(node[keys[-1]], value):
             continue
-        node[keys[-1]] = value
+        _set_key(node, keys[-1], value)
     out = io.StringIO()
     y.dump(doc, out)
     return out.getvalue()
+
+
+def _round_trip(value):
+    """Plain dicts and lists as ruamel's commented types, so comments can be attached to them."""
+    if isinstance(value, Mapping):
+        return CommentedMap((k, _round_trip(v)) for k, v in value.items())
+    if isinstance(value, list):
+        return CommentedSeq(_round_trip(v) for v in value)
+    return value
+
+
+def _set_key(node: CommentedMap, key, value) -> None:
+    """Sets node[key], keeping the comment lines that follow it (ruamel keeps the next key's
+    header there) below the new value. A new key goes last and takes over the lines that
+    followed the previous last key, so they stay above the next section."""
+    value = _round_trip(value)
+    if not len(node):
+        node[key] = value
+        return
+    moved = _take_after(node, key if key in node else next(reversed(node)))
+    node[key] = value
+    if moved:
+        _put_after(node, key, moved)
 
 
 def patch_toml(text: str, patch: dict) -> str:
@@ -431,6 +469,156 @@ def patch_toml(text: str, patch: dict) -> str:
             del node[last]  # a table can't be overwritten in place by a value, or vice versa
         node[last] = item
     return tomlkit.dumps(doc)
+
+
+# --------------------------------------------------------------------------- default config keys
+#
+# A plugin writes its bundled config.yml only when there's none, so a server keeps the config
+# of the version it first ran: settings and sections a later version added are missing from
+# the file (rapid-* plugins fill them in memory, ConfigView.withDefaults, but the file is what
+# admins read and edit). fill_defaults adds them from the bundled config, with its comments.
+
+def _is_collection(section: Mapping) -> bool:
+    """A default section whose values are all sections: entries keyed by id (NPCs, Chapters,
+    worlds). Only added when missing entirely, never filled entry by entry, so deleted entries
+    stay deleted. Same rule as ConfigView.withDefaults in rapid-common."""
+    return all(isinstance(v, Mapping) for v in section.values())
+
+
+def _block(node) -> bool:
+    """A non-empty block-style section or list (its last line is one of its children's)."""
+    return isinstance(node, (CommentedMap, CommentedSeq)) and len(node) > 0 and not node.fa.flow_style()
+
+
+def _end_slot(parent, key) -> tuple[list, int]:
+    """(ca entry, index) of the comment emitted after the last line of parent[key]. ruamel
+    keeps the comment lines that follow a value there, so they're the next key's header."""
+    while _block(parent[key]):
+        parent = parent[key]
+        key = next(reversed(parent)) if isinstance(parent, CommentedMap) else len(parent) - 1
+    entry = parent.ca.items.setdefault(key, [None, None, None, None] if isinstance(parent, CommentedMap)
+                                       else [None, None])
+    return entry, 2 if isinstance(parent, CommentedMap) else 0
+
+
+def _take_after(parent, key) -> str | None:
+    """Removes and returns the comment lines after parent[key], keeping its end-of-line comment.
+    None if they're not a plain comment token (left alone then)."""
+    entry, i = _end_slot(parent, key)
+    tok = entry[i]
+    if tok is None:
+        return ""
+    if not isinstance(tok, CommentToken):
+        return None
+    first, _, rest = tok.value.partition("\n")
+    if first.strip():
+        tok.value = first + "\n"
+    else:
+        entry[i] = None
+        rest = tok.value[1:] if tok.value.startswith("\n") else tok.value
+    return rest
+
+
+def _put_after(parent, key, lines: str) -> None:
+    """Emits `lines` (whole comment or blank lines) right after parent[key]."""
+    if not lines:
+        return
+    entry, i = _end_slot(parent, key)
+    tok = entry[i]
+    if tok is None:
+        entry[i] = CommentToken("\n" + lines, CommentMark(0))
+    elif isinstance(tok, CommentToken):
+        tok.value = (tok.value if tok.value.endswith("\n") else tok.value + "\n") + lines
+
+
+def _header(default_lines: list[str], line: int, col: int) -> str:
+    """The comment block right above a key in the default file (with one blank line before it,
+    if there is one), as text."""
+    out, i = [], line - 1
+    while i >= 0:
+        s = default_lines[i]
+        stripped = s.lstrip(" ")
+        if not stripped.startswith("#") or len(s) - len(stripped) > col:
+            break
+        out.append(s)
+        i -= 1
+    if out and i >= 0 and not default_lines[i].strip():
+        out.append("")
+    return "".join(s + "\n" for s in reversed(out))
+
+
+def _fill(live: CommentedMap, defaults: CommentedMap, default_lines: list[str], path: str,
+          added: list[str]) -> None:
+    default_keys = list(defaults)
+    for n, key in enumerate(default_keys):
+        if key in live:
+            if isinstance(live[key], CommentedMap) and isinstance(defaults[key], CommentedMap) \
+                    and not _is_collection(defaults[key]):
+                _fill(live[key], defaults[key], default_lines, f"{path}{key}.", added)
+            continue
+        before = next((k for k in reversed(default_keys[:n]) if k in live), None)
+        pos = list(live).index(before) + 1 if before is not None else 0
+        value = copy.deepcopy(defaults[key])
+        live.insert(pos, key, value)
+        entry = copy.deepcopy(defaults.ca.items.get(key)) or [None, None, None, None]
+        entry[1] = None  # its header comes from the default text below, wherever ruamel put it
+        live.ca.items[key] = entry
+        # The copy ends with the default file's next header, which belongs to another key.
+        _take_after(live, key)
+        if before is not None:
+            # Whatever followed the previous key (the next key's header) now follows this one.
+            moved = _take_after(live, before)
+            if moved is not None:
+                header = _header(default_lines, *defaults.lc.key(key)) if n > 0 else ""
+                _put_after(live, before, header)
+                _put_after(live, key, moved)
+        added.append(path + str(key))
+
+
+def fill_defaults(text: str, default_text: str) -> tuple[str, list[str]]:
+    """`text` with the keys it lacks added from `default_text` (a plugin's bundled config),
+    and the dotted paths that were added. Keys that are present, even empty, are kept."""
+    live_yaml = _yaml_for(text)
+    live = live_yaml.load(text) if text.strip() else None
+    defaults = yaml_rt().load(default_text)
+    if not isinstance(defaults, CommentedMap):
+        return text, []
+    if not isinstance(live, CommentedMap):
+        return default_text, list(map(str, defaults))
+    added: list[str] = []
+    _fill(live, defaults, default_text.splitlines(), "", added)
+    if not added:
+        return text, []
+    out = io.StringIO()
+    live_yaml.dump(live, out)
+    return out.getvalue(), added
+
+
+def plugin_config_defaults(srv: dict, inv: dict) -> tuple[dict[str, tuple[str, str]], list[str]]:
+    """{"plugins/<folder>/config.yml": (bundled config text, jar name)} for the server's rapid-*
+    plugins (the dist/ entries of its plugin sets), and notes about jars that couldn't be read.
+    Third-party plugins keep their own configs up to date."""
+    out: dict[str, tuple[str, str]] = {}
+    notes: list[str] = []
+    for g in [g for s in srv["plugins"] for g in (inv["plugin_sets"][s] or [])]:
+        if not g.startswith(DIST_PREFIX):
+            continue
+        jars = sorted(DIST.glob(g[len(DIST_PREFIX):]))
+        if len(jars) != 1:
+            notes.append(f"{g} isn't built (./gradlew dist), so its config isn't checked for missing keys")
+            continue
+        with zipfile.ZipFile(jars[0]) as z:
+            names = set(z.namelist())
+            if "config.yml" not in names:
+                continue
+            if "plugin.yml" in names:  # Paper: plugins/<name>/
+                folder = YAML(typ="safe").load(z.read("plugin.yml").decode("utf-8"))["name"]
+            elif "velocity-plugin.json" in names:  # Velocity: plugins/<id>/
+                folder = json.loads(z.read("velocity-plugin.json"))["id"]
+            else:
+                continue
+            out[f"plugins/{folder}/config.yml"] = (z.read("config.yml").decode("utf-8"), jars[0].name)
+    return out, notes
 
 
 def apply_patch(target: str, text: str, patch: dict) -> str:
@@ -768,7 +956,12 @@ def configure_server(name: str, inv: dict, env: dict, backend, write: bool) -> b
     resolver = Resolver(env, {"SERVER_NAME": name, **srv["vars"]}, lambda n: backend.address(n, inv),
                         skip=unset_servers(inv))
     changed = False
-    for target, plan in collect_profile_files(srv["profiles"]).items():
+    plans = collect_profile_files(srv["profiles"])
+    defaults, notes = plugin_config_defaults(srv, inv)
+    for note in notes:
+        print(f"  ! {note}")
+    for target in list(plans) + [t for t in defaults if t not in plans]:
+        plan = plans.get(target) or FilePlan()
         current = backend.read(sid, target)
         if plan.verbatim is not None:
             base = plan.verbatim
@@ -776,11 +969,26 @@ def configure_server(name: str, inv: dict, env: dict, backend, write: bool) -> b
             if text is not None:
                 base = resolver.text(text).encode("utf-8")
         elif current is None:
-            print(f"  ! {target}: not on the server yet. Start {name} once so it generates "
-                  f"its defaults, then run again.")
+            # A plugin that hasn't run yet writes its whole bundled config on first start.
+            if plan.patch:
+                print(f"  ! {target}: not on the server yet. Start {name} once so it generates "
+                      f"its defaults, then run again.")
             continue
         else:
             base = current
+            if target in defaults:
+                text = _as_text(base)
+                if text is None:
+                    raise DeployError(f"{target} is not UTF-8 text, can't add its missing keys")
+                default_text, jar = defaults[target]
+                try:
+                    filled, added = fill_defaults(text, default_text)
+                except YAMLError as e:
+                    raise DeployError(f"{target} on the server doesn't parse, fix or delete it: {e}") from e
+                if added:
+                    print(f"  + {target}: missing from the server, added from {jar}'s defaults: "
+                          f"{', '.join(added)}")
+                    base = filled.encode("utf-8")
         if plan.patch:
             text = _as_text(base)
             if text is None:

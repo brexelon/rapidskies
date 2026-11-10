@@ -1,5 +1,6 @@
-# Horizons SMP. The vanilla level is the Heartland: permanent, claimable, never reset.
-# Frontier worlds are created by rapid-horizons (phase 3b). Pre-generate with Chunky
-# and set a ChunkyBorder before opening (plan §3).
+# Horizons SMP. The vanilla level is the Heartland: permanent, claimable, never reset, a
+# 10,000 x 10,000 border set by rapid-core; pre-generate it once with Chunky (infra/README.md).
+# Frontier worlds (and the Nether and End players reach) are created, pre-generated and
+# rotated by rapid-horizons, which redirects vanilla portal travel there: keep allow-nether on.
 level-name: "heartland"
 generate-structures: "true"

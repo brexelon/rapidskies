@@ -150,7 +150,7 @@ public final class HomeService implements Listener {
             return;
         }
         Location at = player.getLocation();
-        if (settings().blockedWorlds().contains(at.getWorld().getKey().asString())) {
+        if (settings().blocked(at.getWorld().getKey().asString())) {
             plugin.lang().send(player, "homes.blocked-world");
             return;
         }

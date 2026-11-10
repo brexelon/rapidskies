@@ -2,7 +2,7 @@ name: rapid-horizons
 version: '${version}'
 main: us.rapidskies.horizons.RapidHorizons
 api-version: '26.3'
-description: "Horizons SMP: Heartland travel, opt-in PvP, Trades; later Frontiers, Skyborne events, Chapters (PLAN.md §5.2)."
+description: "Horizons SMP: Heartland travel, opt-in PvP, Trades, the Frontier rotation and its terrain generators, Skyborne events and Chapters (PLAN.md §5.2)."
 author: RapidSkies
 website: https://rapidskies.us
 # rapid-essentials: /back, /spawn, /home and /tpa are its own; Horizons refuses them while
@@ -11,7 +11,10 @@ depend: [rapid-core, rapid-essentials]
 # Claims decide PvP inside claims, keep /rtp out of claimed chunks and take extra personal
 # claim chunks from Trade levels. Without it Horizons still runs (no claims at all).
 # Citizens: the NPCs at the spawn. Without it the spawn just has no NPCs.
-softdepend: [rapid-claims, Citizens]
+# Chunky: pre-generates each Frontier before it opens. Without it Frontiers generate as players explore.
+# Multiverse-Core: manages the Heartland and the Frontier worlds, and takes rapid-horizons'
+# terrain generators (rapid-horizons:<modifier>). Without it Frontiers are created through Bukkit.
+softdepend: [rapid-claims, Citizens, Chunky, Multiverse-Core]
 
 permissions:
   rapid.command.rtp:
@@ -35,6 +38,21 @@ permissions:
   rapid.horizons.trades.nocooldown:
     description: Switch Trades without the cooldown.
     default: op
+  rapid.command.frontier:
+    description: See the open Frontier and travel there with /frontier.
+    default: true
+  rapid.horizons.frontier.admin:
+    description: /frontier status, prepare, rotate, extend and openend.
+    default: op
+  rapid.command.skyborne:
+    description: See when and where the next Skyborne fortress appears, and go to it.
+    default: true
+  rapid.horizons.skyborne.admin:
+    description: /skyborne start and stop; break blocks of a fortress.
+    default: op
+  rapid.command.chapter:
+    description: Open the current Chapter's collection log with /chapter.
+    default: true
   rapid.horizons.admin:
     description: /horizons here (print positions for the config) and /horizons reload.
     default: op

@@ -2,5 +2,6 @@
 # hit) for 3 seconds means /home and /spawn aren't instant escapes from mobs or lava either.
 # Combat-tagged players can't use them at all (rapid-horizons' guard, pvp.combat-tag-seconds).
 teleport.warmup-seconds: 3
-# When the Frontier rotation lands (phase 3b), list its worlds in homes.blocked-worlds: they're
-# deleted every month, and a home there would point nowhere.
+# Frontier worlds (rapidskies:frontier_<n>, its _nether and _end) are deleted every month, so a
+# home there would point nowhere.
+homes.blocked-worlds: ["rapidskies:frontier_*"]
