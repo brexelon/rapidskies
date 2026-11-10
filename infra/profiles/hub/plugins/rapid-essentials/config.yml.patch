@@ -16,3 +16,5 @@ disabled-commands:
   - warps
   - setwarp
   - delwarp
+  # Hub flight is rapid-hub's /fly (rapid.hub.fly, with double jump); ours would fight it.
+  - fly

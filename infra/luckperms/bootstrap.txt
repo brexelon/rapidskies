@@ -115,6 +115,7 @@ lpv group developer permission set rapid.staff.freeze.exempt true
 # plugin set in network.yml; it isn't in plugins/ yet.)
 lpv group builder permission set worldedit.* true server=build
 lpv group builder permission set fawe.* true server=build
+# (/gamemode itself is rapid-essentials' now, with its own nodes below; this keeps /minecraft:gamemode.)
 lpv group builder permission set minecraft.command.gamemode true server=build
 lpv group builder permission set minecraft.command.teleport true server=build
 
@@ -179,6 +180,57 @@ lpv group rapidplus permission set rapid.command.hat true server=smp
 lpv group rapidplus permission set rapid.command.hat true server=staging
 lpv group admin permission set rapid.essentials.teleport.nocooldown true server=staging
 lpv group admin permission set rapid.essentials.teleport.nowarmup true server=staging
+
+# Staff tools (rapid-essentials, every backend; plan §6.1: never sold, staff only). Every use
+# that changes something is logged to staff_actions, and none of them work on someone in
+# staff or build mode. /gamemode and /give replace vanilla's. Tiers, each inheriting the last:
+#   Moderator: getting around and staying alive while investigating, on themselves only:
+#              survival/adventure/spectator, /fly, /speed, /heal, /feed, /extinguish.
+#   Sr. Mod:   the same on other players (rescuing a stuck or griefed player), /god, and the
+#              workstation menus, /enderchest and /disposal.
+#   Admin:     what puts items or value into a survival economy: creative, /give, /i, /more,
+#              /repair, /clearinventory (any player), and /god on others.
+# Helpers get none: staff mode already gives them flight and invulnerability. Hub flight
+# stays rapid-hub's /fly (the hub profile switches ours off).
+lpv group moderator permission set rapid.command.gamemode.survival true
+lpv group moderator permission set rapid.command.gamemode.adventure true
+lpv group moderator permission set rapid.command.gamemode.spectator true
+lpv group moderator permission set rapid.command.fly true
+lpv group moderator permission set rapid.command.speed true
+lpv group moderator permission set rapid.command.heal true
+lpv group moderator permission set rapid.command.feed true
+lpv group moderator permission set rapid.command.extinguish true
+lpv group srmod permission set rapid.command.gamemode.others true
+lpv group srmod permission set rapid.command.fly.others true
+lpv group srmod permission set rapid.command.heal.others true
+lpv group srmod permission set rapid.command.feed.others true
+lpv group srmod permission set rapid.command.extinguish.others true
+lpv group srmod permission set rapid.command.god true
+lpv group srmod permission set rapid.essentials.workstations true
+lpv group srmod permission set rapid.command.enderchest true
+lpv group srmod permission set rapid.command.disposal true
+lpv group admin permission set rapid.command.gamemode.creative true
+lpv group admin permission set rapid.command.god.others true
+lpv group admin permission set rapid.command.give true
+lpv group admin permission set rapid.command.more true
+lpv group admin permission set rapid.command.repair true
+lpv group admin permission set rapid.command.repair.all true
+lpv group admin permission set rapid.command.clearinventory true
+lpv group admin permission set rapid.command.clearinventory.others true
+# Builders get the building ones on the build server only (no economy there). Developers
+# already have everything on staging.
+lpv group builder permission set rapid.command.gamemode.survival true server=build
+lpv group builder permission set rapid.command.gamemode.creative true server=build
+lpv group builder permission set rapid.command.gamemode.adventure true server=build
+lpv group builder permission set rapid.command.gamemode.spectator true server=build
+lpv group builder permission set rapid.command.fly true server=build
+lpv group builder permission set rapid.command.speed true server=build
+lpv group builder permission set rapid.command.give true server=build
+lpv group builder permission set rapid.command.more true server=build
+lpv group builder permission set rapid.command.clearinventory true server=build
+lpv group builder permission set rapid.essentials.workstations true server=build
+lpv group builder permission set rapid.command.enderchest true server=build
+lpv group builder permission set rapid.command.disposal true server=build
 
 # Admins manage permissions; the owner has everything.
 lpv group admin permission set luckperms.* true

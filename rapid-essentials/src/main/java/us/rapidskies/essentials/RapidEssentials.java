@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.bukkit.GameMode;
 import org.bukkit.plugin.java.JavaPlugin;
 import us.rapidskies.common.config.ConfigView;
 import us.rapidskies.common.lang.Lang;
@@ -26,6 +27,10 @@ import us.rapidskies.essentials.teleport.BackService;
 import us.rapidskies.essentials.teleport.Teleports;
 import us.rapidskies.essentials.teleport.TpaRequests.Direction;
 import us.rapidskies.essentials.teleport.TpaService;
+import us.rapidskies.essentials.tools.ItemCommands;
+import us.rapidskies.essentials.tools.Powers;
+import us.rapidskies.essentials.tools.StateCommands;
+import us.rapidskies.essentials.tools.Workstations;
 import us.rapidskies.essentials.warp.WarpService;
 
 /**
@@ -41,12 +46,16 @@ import us.rapidskies.essentials.warp.WarpService;
  *       {@code /baltop}, {@code /eco}.</li>
  *   <li>{@code /afk}, {@code /ping}, {@code /list}, {@code /seen}, {@code /hat}, text pages
  *       such as {@code /rules} and {@code /store}, and a network-wide {@code /broadcast}.</li>
+ *   <li>Staff tools ({@code tools}): {@code /gamemode}, {@code /fly}, {@code /god},
+ *       {@code /heal}, {@code /feed}, {@code /speed}, {@code /give}, {@code /more},
+ *       {@code /repair}, {@code /clearinventory}, {@code /craft} and the other workstation
+ *       menus, {@code /enderchest}, {@code /disposal}. Staff only, never sold (§6.1), tiered
+ *       in infra/luckperms/bootstrap.txt, logged to {@code staff_actions}, and refused for
+ *       anyone in staff or build mode, whose inventory and flight are on loan.</li>
  * </ul>
  *
- * <p>Left out on purpose: anything §6.1 rules out as a perk or that would undercut build and
- * staff mode in a survival economy ({@code /gamemode}, {@code /fly}, {@code /god},
- * {@code /heal}, {@code /give}, kits, {@code /repair}, {@code /craft}, {@code /ec}).
- * {@code /msg}, {@code /r} and {@code /hub} are the proxy's.
+ * <p>Left out on purpose: kits (§6.1). {@code /msg}, {@code /r} and {@code /hub} are the
+ * proxy's; the hub's {@code /fly} is rapid-hub's (the hub profile switches ours off).
  *
  * <p>Other plugins hook in through {@link #get()}: {@code teleports().addGuard(...)} to
  * refuse teleports (rapid-horizons while combat-tagged) and
@@ -63,6 +72,7 @@ public final class RapidEssentials extends JavaPlugin {
     private HomeService homes;
     private WarpService warps;
     private Broadcasts broadcasts;
+    private Powers powers;
 
     /** The running instance, for plugins that depend on rapid-essentials. */
     public static RapidEssentials get() {
@@ -95,12 +105,14 @@ public final class RapidEssentials extends JavaPlugin {
         homes = new HomeService(this, repository, !settings.disabled("home"));
         warps = new WarpService(this, repository);
         broadcasts = new Broadcasts(this);
+        powers = new Powers(this);
 
         var pm = getServer().getPluginManager();
         pm.registerEvents(teleports, this);
         pm.registerEvents(back, this);
         pm.registerEvents(tpa, this);
         pm.registerEvents(homes, this);
+        pm.registerEvents(powers, this);
         if (!settings.disabled("warp")) {
             warps.load();
         }
@@ -109,6 +121,9 @@ public final class RapidEssentials extends JavaPlugin {
         TeleportCommands tp = new TeleportCommands(this);
         PlayerCommands player = new PlayerCommands(this);
         AdminCommands admin = new AdminCommands(this);
+        StateCommands state = new StateCommands(this, powers);
+        ItemCommands items = new ItemCommands(this);
+        Workstations stations = new Workstations(this);
         ModeEconomy economy = core().economy();
         MoneyCommands money = economy == null ? null : new MoneyCommands(this, economy, repository);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
@@ -147,6 +162,35 @@ public final class RapidEssentials extends JavaPlugin {
                         money.baltop());
                 r.add("eco", "Give or take " + currency + " (admin)", List.of("economy"), money.eco());
             }
+            // Staff tools. /gamemode and /give replace vanilla's (still there as /minecraft:...).
+            r.add("gamemode", "Change a game mode (staff)", List.of("gm"), state.gamemode());
+            if (!settings.disabled("gamemode")) {
+                r.add("gms", "Survival mode (staff)", List.of(), state.gamemode("gms", GameMode.SURVIVAL));
+                r.add("gmc", "Creative mode (staff)", List.of(), state.gamemode("gmc", GameMode.CREATIVE));
+                r.add("gma", "Adventure mode (staff)", List.of(), state.gamemode("gma", GameMode.ADVENTURE));
+                r.add("gmsp", "Spectator mode (staff)", List.of(), state.gamemode("gmsp", GameMode.SPECTATOR));
+            }
+            r.add("fly", "Flight on or off (staff)", List.of(), state.fly());
+            r.add("god", "God mode on or off (staff)", List.of("godmode"), state.god());
+            r.add("heal", "Full health and food (staff)", List.of(), state.heal());
+            r.add("feed", "Full food (staff)", List.of("eat"), state.feed());
+            r.add("extinguish", "Put out a fire (staff)", List.of("ext"), state.extinguish());
+            r.add("speed", "Walk or fly speed (staff)", List.of(), state.speed());
+            r.add("give", "Give a player an item (staff)", List.of(), items.give());
+            r.add("i", "Give yourself an item (staff)", List.of(), items.item());
+            r.add("more", "Fill the held stack (staff)", List.of(), items.more());
+            r.add("repair", "Repair the held item or everything (staff)", List.of("fix"), items.repair());
+            r.add("clearinventory", "Empty an inventory (staff)", List.of("ci"), items.clearInventory());
+            r.add("craft", "Open a crafting table (staff)", List.of("workbench", "wb"), stations.craft());
+            r.add("anvil", "Open an anvil (staff)", List.of(), stations.anvil());
+            r.add("grindstone", "Open a grindstone (staff)", List.of(), stations.grindstone());
+            r.add("loom", "Open a loom (staff)", List.of(), stations.loom());
+            r.add("smithingtable", "Open a smithing table (staff)", List.of("smithing"), stations.smithingTable());
+            r.add("stonecutter", "Open a stonecutter (staff)", List.of(), stations.stonecutter());
+            r.add("cartographytable", "Open a cartography table (staff)", List.of("cartography"),
+                    stations.cartographyTable());
+            r.add("enderchest", "Open your ender chest (staff)", List.of("ec", "echest"), stations.enderChest());
+            r.add("disposal", "Delete items (staff)", List.of("trash"), stations.disposal());
             r.add("broadcast", "Announce something on every server", List.of("bc", "announce"), admin.broadcast());
             r.add("essentials", "rapid-essentials admin: reload, version", List.of("ess"), admin.essentials());
             if (!r.skipped.isEmpty()) {
@@ -258,5 +302,10 @@ public final class RapidEssentials extends JavaPlugin {
 
     public Broadcasts broadcasts() {
         return broadcasts;
+    }
+
+    /** {@code /fly}, {@code /god} and {@code /speed} state. */
+    public Powers powers() {
+        return powers;
     }
 }

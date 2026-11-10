@@ -11,6 +11,13 @@
 errors:
   players-only: "<prefix><error>Only players can use this.</error>"
   not-here: "<prefix><error><player> isn't on this server.</error>"
+  # Staff tools that take an optional player (/fly, /heal...). <command> is the command's name.
+  usage-target: "<prefix><text>Usage: <accent>/<command></accent> <muted>[player]</muted></text>"
+  console-name: "<prefix><error>From the console, name a player.</error>"
+  no-others: "<prefix><error>You can only use that on yourself.</error>"
+  busy-self: "<prefix><muted>Not while you're in staff or build mode.</muted>"
+  busy-other: "<prefix><error><player> is in staff or build mode.</error>"
+  dead: "<prefix><error><player> is dead.</error>"
 
 # Every teleport command (/spawn, /back, /home, /warp, /tpa). <time> is "8s", "1m 30s".
 teleport:
@@ -161,6 +168,97 @@ info:
     - "<muted>More, and appeals, at</muted> <primary><click:open_url:'https://rapidskies.us'><hover:show_text:'<muted>Open the website in your browser'>rapidskies.us</hover></click></primary>"
   store: "<prefix><text>Ranks and Bolts, cosmetic only:</text> <primary><click:open_url:'https://store.rapidskies.us'><hover:show_text:'<muted>Open the store in your browser'>store.rapidskies.us</hover></click></primary>"
   website: "<prefix><text>News, rules and appeals:</text> <primary><click:open_url:'https://rapidskies.us'><hover:show_text:'<muted>Open the website in your browser'>rapidskies.us</hover></click></primary>"
+
+# ---------------------------------------------------------------- staff tools
+# Used on someone else, the sender gets the "-other" line (with <player>) and the player gets
+# the "by-staff" one, which never names the staff member (they may be vanished).
+
+# /gamemode, /gmc, /gms, /gma, /gmsp. <mode> is the game mode's name in the reader's language.
+gamemode:
+  usage: "<prefix><text>Usage: <accent>/gamemode</accent> <muted>survival|creative|adventure|spectator [player]</muted></text>"
+  unknown: "<prefix><error><input> isn't a game mode.</error> <muted>Try survival, creative, adventure or spectator.</muted>"
+  no-permission: "<prefix><error>You can't switch to <mode>.</error>"
+  set: "<prefix><success>Game mode set to <accent><mode></accent>.</success>"
+  set-other: "<prefix><success>Set <accent><player></accent>'s game mode to <accent><mode></accent>.</success>"
+  changed: "<prefix><text>A staff member set your game mode to <accent><mode></accent>.</text>"
+
+# /fly. Flight given to someone without /fly of their own ends when they leave.
+fly:
+  enabled: "<prefix><success>Flight on.</success> <muted>Double-tap <accent><key:key.jump></accent> to take off.</muted>"
+  disabled: "<prefix><text>Flight off.</text>"
+  enabled-other: "<prefix><success>Flight on for <accent><player></accent>.</success> <muted>It ends when they leave.</muted>"
+  disabled-other: "<prefix><text>Flight off for <accent><player></accent>.</text>"
+  given: "<prefix><success>A staff member let you fly.</success> <muted>Double-tap <accent><key:key.jump></accent> to take off.</muted>"
+  taken: "<prefix><text>A staff member turned your flight off.</text>"
+  innate: "<prefix><muted><player> flies in <mode> anyway.</muted>"
+
+# /god: no damage (except the void and /kill) or hunger, and no hurting other players.
+god:
+  enabled: "<prefix><success>God mode on.</success> <muted>You can't hurt other players while it's on.</muted>"
+  disabled: "<prefix><text>God mode off.</text>"
+  enabled-other: "<prefix><success>God mode on for <accent><player></accent>.</success>"
+  disabled-other: "<prefix><text>God mode off for <accent><player></accent>.</text>"
+  given: "<prefix><success>A staff member made you invulnerable.</success>"
+  taken: "<prefix><text>A staff member turned your god mode off.</text>"
+  # Action bar, when a player in god mode hits another player.
+  no-pvp: "<error>You can't hurt players in god mode.</error> <muted>/god turns it off.</muted>"
+
+heal:
+  self: "<prefix><success>Healed.</success>"
+  other: "<prefix><success>Healed <accent><player></accent>.</success>"
+  by-staff: "<prefix><success>A staff member healed you.</success>"
+
+feed:
+  self: "<prefix><success>You're full.</success>"
+  other: "<prefix><success>Fed <accent><player></accent>.</success>"
+  by-staff: "<prefix><success>A staff member fed you.</success>"
+
+extinguish:
+  self: "<prefix><success>Fire's out.</success>"
+  other: "<prefix><success>Put out <accent><player></accent>.</success>"
+  by-staff: "<prefix><success>A staff member put out your fire.</success>"
+
+# /speed. <speed> is the level, 0 to 10 (1 is normal).
+speed:
+  usage: "<prefix><text>Usage: <accent>/speed</accent> <muted>[walk|fly] <0-10></muted></text> <muted>1 is normal.</muted>"
+  walk: "<prefix><success>Walk speed set to <accent><speed></accent>.</success>"
+  fly: "<prefix><success>Fly speed set to <accent><speed></accent>.</success>"
+
+# /give and /i. <item> is the item's name (hover shows it), <amount> how many were given.
+give:
+  usage: "<prefix><text>Usage: <accent>/give</accent> <muted><player> <item> [amount]</muted></text>"
+  usage-self: "<prefix><text>Usage: <accent>/i</accent> <muted><item> [amount]</muted></text>"
+  unknown: "<prefix><error><input> isn't an item.</error> <muted>Use its id, like <accent>diamond_sword</accent>, with components in [brackets] if needed.</muted>"
+  bad-amount: "<prefix><error>The amount is 1 to <max>.</error>"
+  self: "<prefix><success>Here's <accent><amount></accent> × <item>.</success>"
+  other: "<prefix><success>Gave <accent><player></accent> <accent><amount></accent> × <item>.</success>"
+  by-staff: "<prefix><success>A staff member gave you <accent><amount></accent> × <item>.</success>"
+  partial: "<prefix><error><left> more didn't fit, so they weren't given.</error>"
+  no-room: "<prefix><error><player>'s inventory is full.</error>"
+
+more:
+  done: "<prefix><success>Topped up to <accent><amount></accent>.</success>"
+  empty: "<prefix><muted>Hold the item you want more of.</muted>"
+  full: "<prefix><muted>That stack is already full.</muted>"
+
+repair:
+  usage: "<prefix><text>Usage: <accent>/repair</accent> <muted>[hand|all]</muted></text>"
+  hand: "<prefix><success>Repaired the item in your hand.</success>"
+  all: "<prefix><success>Repaired <accent><count></accent> items.</success>"
+  nothing-hand: "<prefix><muted>That doesn't need repairing.</muted>"
+  nothing-all: "<prefix><muted>Nothing you're carrying needs repairing.</muted>"
+  no-all: "<prefix><error>You can only repair the item in your hand.</error>"
+
+# /clearinventory. <count> is how many stacks were removed.
+clear:
+  self: "<prefix><text>Cleared your inventory</text> <muted>(<count> stacks).</muted>"
+  other: "<prefix><text>Cleared <accent><player></accent>'s inventory</text> <muted>(<count> stacks).</muted>"
+  by-staff: "<prefix><error>A staff member cleared your inventory.</error>"
+  empty: "<prefix><muted>There's nothing to clear.</muted>"
+
+# /disposal: the menu title.
+disposal:
+  title: "<dark>Disposal</dark> <muted>(deleted on close)</muted>"
 
 # /broadcast. <message> is the admin's text (MiniMessage, brand tags work).
 broadcast:

@@ -2,7 +2,7 @@ name: rapid-essentials
 version: '${version}'
 main: us.rapidskies.essentials.RapidEssentials
 api-version: '26.3'
-description: "Everyday commands on every backend: spawn, back, tpa, homes, warps, money, afk, list, seen (EssentialsX-style, on rapid-core)."
+description: "Everyday commands on every backend: spawn, back, tpa, homes, warps, money, afk, list, seen, and staff tools (EssentialsX-style, on rapid-core)."
 author: RapidSkies
 website: https://rapidskies.us
 # Spawn, AFK, vanish, freeze, the per-mode economy and the database all come from rapid-core.
@@ -67,4 +67,112 @@ permissions:
     default: op
   rapid.essentials.admin:
     description: /essentials reload and version.
+    default: op
+  # ---------------------------------------------------------------- staff tools
+  # Staff only and never sold (PLAN.md §6.1); tiers are in infra/luckperms/bootstrap.txt.
+  # Every use that changes something is logged to staff_actions. ".others" nodes allow naming
+  # another player. Ops are off on the backends, so "op" here means the console only.
+  rapid.command.gamemode.survival:
+    description: /gamemode survival and /gms.
+    default: op
+  rapid.command.gamemode.adventure:
+    description: /gamemode adventure and /gma.
+    default: op
+  rapid.command.gamemode.spectator:
+    description: /gamemode spectator and /gmsp.
+    default: op
+  rapid.command.gamemode.creative:
+    description: /gamemode creative and /gmc (can spawn items into the economy).
+    default: op
+  rapid.command.gamemode.others:
+    description: Change another player's game mode (to the modes you have).
+    default: op
+  rapid.command.fly:
+    description: /fly in survival and adventure; kept through relogs while you have it.
+    default: op
+  rapid.command.fly.others:
+    description: /fly <player> (ends when they leave unless they have /fly themselves).
+    default: op
+  rapid.command.god:
+    description: /god (no damage or hunger, can't hurt players).
+    default: op
+  rapid.command.god.others:
+    description: /god <player>.
+    default: op
+  rapid.command.heal:
+    description: /heal (health, food, fire, harmful effects).
+    default: op
+  rapid.command.heal.others:
+    description: /heal <player>.
+    default: op
+  rapid.command.feed:
+    description: /feed.
+    default: op
+  rapid.command.feed.others:
+    description: /feed <player>.
+    default: op
+  rapid.command.extinguish:
+    description: /extinguish.
+    default: op
+  rapid.command.extinguish.others:
+    description: /extinguish <player>.
+    default: op
+  rapid.command.speed:
+    description: /speed [walk|fly] <0-10>.
+    default: op
+  rapid.command.give:
+    description: /give <player> <item> [amount] and /i <item> [amount].
+    default: op
+  rapid.command.more:
+    description: /more (fill the held stack).
+    default: op
+  rapid.command.repair:
+    description: /repair (the held item).
+    default: op
+  rapid.command.repair.all:
+    description: /repair all (everything carried and worn).
+    default: op
+  rapid.command.clearinventory:
+    description: /clearinventory (your own).
+    default: op
+  rapid.command.clearinventory.others:
+    description: /clearinventory <player>.
+    default: op
+  rapid.command.enderchest:
+    description: /enderchest (your own, anywhere; /endersee in rapid-core inspects others').
+    default: op
+  rapid.command.disposal:
+    description: /disposal (a chest that deletes what's put in it).
+    default: op
+  rapid.essentials.workstations:
+    description: Every workstation menu below.
+    default: op
+    children:
+      rapid.command.craft: true
+      rapid.command.anvil: true
+      rapid.command.grindstone: true
+      rapid.command.loom: true
+      rapid.command.smithingtable: true
+      rapid.command.stonecutter: true
+      rapid.command.cartographytable: true
+  rapid.command.craft:
+    description: /craft (a crafting table anywhere).
+    default: op
+  rapid.command.anvil:
+    description: /anvil.
+    default: op
+  rapid.command.grindstone:
+    description: /grindstone.
+    default: op
+  rapid.command.loom:
+    description: /loom.
+    default: op
+  rapid.command.smithingtable:
+    description: /smithingtable.
+    default: op
+  rapid.command.stonecutter:
+    description: /stonecutter.
+    default: op
+  rapid.command.cartographytable:
+    description: /cartographytable.
     default: op

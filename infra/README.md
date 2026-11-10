@@ -174,9 +174,17 @@ built on rapid-core's spawn, AFK tracker, vanish, freeze and Coins/Crowns econom
 - Each profile switches off what its servers don't use with `disabled-commands`
   (`profiles/<role>/plugins/rapid-essentials/config.yml.patch`): the hub keeps `/spawn` and the
   info commands only, SkyRealms leaves homes to SuperiorSkyblock2.
-- Deliberately missing: `/gamemode`, `/fly`, `/god`, `/heal`, `/give`, kits, `/repair`, `/craft`
-  and `/ec` (plan §6.1, and build mode is how staff change protected worlds). `/msg`, `/r` and
-  `/hub` are rapid-proxy's.
+- **Staff tools** (staff only, never sold; tiers in `luckperms/bootstrap.txt`): `/gamemode`
+  (`/gm`, `/gms`, `/gmc`, `/gma`, `/gmsp`; one node per mode), `/fly`, `/god`, `/heal`, `/feed`,
+  `/extinguish`, `/speed`, `/give`, `/i`, `/more`, `/repair [hand|all]`, `/clearinventory`,
+  `/craft` and the other workstation menus, `/enderchest`, `/disposal`. Moderators get
+  survival/adventure/spectator, flight and healing on themselves; Sr. Mods the same on others
+  plus `/god` and the menus; admins creative and everything that makes items. Uses are logged
+  to `staff_actions`, nothing works on someone in staff or build mode, god mode can't hurt
+  players, and flight or god given to someone without the node ends when they leave.
+  `/gamemode` and `/give` replace vanilla's (`/minecraft:give` still exists). The hub keeps
+  rapid-hub's `/fly`.
+- Deliberately missing: kits (plan §6.1). `/msg`, `/r` and `/hub` are rapid-proxy's.
 
 ## Horizons (rapid-claims, rapid-horizons)
 
