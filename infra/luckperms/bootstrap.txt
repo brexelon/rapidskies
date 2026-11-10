@@ -189,6 +189,31 @@ lpv group admin permission set rapid.essentials.teleport.nowarmup true server=st
 # go to staff chat (rapid.staffchat).
 lpv group moderator permission set rapid.market.admin true
 
+# SkyRealms (SuperiorSkyblock2 + rapid-skyrealms, phase 4b; plan §5.1). SuperiorSkyblock2's
+# island commands default to op, so everyone gets them on skyrealms, except its biome picker:
+# island biomes are Realm Tier unlocks (/realm biome). /realm, /shop, /sell, /expedition,
+# /route and /season are open to everyone (plugin defaults). No rank gets anything here:
+# island size, members and the rest are Coin upgrades for everyone (plan §6.1).
+lpv group default permission set superior.island.* true server=skyrealms
+lpv group default permission set superior.island.biome false server=skyrealms
+lpv group default permission set superior.island.* true server=staging
+lpv group default permission set superior.island.biome false server=staging
+# Moderators can see into islands for reports (SuperiorSkyblock2's admin tools: /is admin
+# show, spy, bypass) and start or stop Expeditions; admins get all of /is admin, /realm set,
+# /route admin, /skyrealms reload and /season end.
+lpv group moderator permission set superior.admin true server=skyrealms
+lpv group moderator permission set superior.admin.show true server=skyrealms
+lpv group moderator permission set superior.admin.spy true server=skyrealms
+lpv group moderator permission set superior.admin.bypass true server=skyrealms
+lpv group moderator permission set rapid.skyrealms.expedition.admin true server=skyrealms
+lpv group admin permission set superior.admin.* true server=skyrealms
+lpv group admin permission set rapid.skyrealms.admin true server=skyrealms
+lpv group admin permission set rapid.skyrealms.season.admin true server=skyrealms
+lpv group admin permission set superior.admin.* true server=staging
+lpv group admin permission set rapid.skyrealms.admin true server=staging
+lpv group admin permission set rapid.skyrealms.expedition.admin true server=staging
+lpv group admin permission set rapid.skyrealms.season.admin true server=staging
+
 # Staff tools (rapid-essentials, every backend; plan §6.1: never sold, staff only). Every use
 # that changes something is logged to staff_actions, and none of them work on someone in
 # staff or build mode. /gamemode and /give replace vanilla's. Tiers, each inheriting the last:

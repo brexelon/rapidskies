@@ -1,0 +1,71 @@
+# The island creation menu: rapid-skyrealms' three starter layouts (rapid-skyrealms config
+# islands.layouts; built in code, registered as schematics of the same name). All three give
+# the same start; only the tree and the look differ. Plain item icons, so 1.20 clients see
+# them exactly (no head textures).
+title: '&6&lStart your island'
+pattern:
+  - '~ ~ ~ ~ ~ ~ ~ ~ ~'
+  - '~ # @ # ^ # $ # ~'
+  - '~ ~ ~ ~ ~ ~ ~ ~ ~'
+items:
+  '@':
+    schematic: 'meadow'
+    biome: PLAINS
+    access:
+      type: OAK_SAPLING
+      name: '&6&lMeadow'
+      lore:
+        - '&7The classic: a round grass island'
+        - '&7with an oak tree and a sand patch.'
+        - '&7'
+        - '&eClick to start here.'
+    no-access:
+      type: OAK_SAPLING
+      name: '&6&lMeadow &c(Unavailable)'
+  '^':
+    schematic: 'cherry'
+    biome: PLAINS
+    access:
+      type: CHERRY_SAPLING
+      name: '&d&lCherry Grove'
+      lore:
+        - '&7A grass island under a wide'
+        - '&7cherry tree, petals underfoot.'
+        - '&7'
+        - '&eClick to start here.'
+    no-access:
+      type: CHERRY_SAPLING
+      name: '&d&lCherry Grove &c(Unavailable)'
+  '$':
+    schematic: 'atoll'
+    biome: PLAINS
+    access:
+      type: JUNGLE_SAPLING
+      name: '&e&lAtoll'
+      lore:
+        - '&7A sand rim round a grass middle,'
+        - '&7with a tall jungle tree.'
+        - '&7'
+        - '&eClick to start here.'
+    no-access:
+      type: JUNGLE_SAPLING
+      name: '&e&lAtoll &c(Unavailable)'
+  '~':
+    type: BLACK_STAINED_GLASS_PANE
+    name: '&f'
+sounds:
+  '@':
+    access:
+      type: PORTAL_TRIGGER
+      volume: 1
+      pitch: 0.2
+  '^':
+    access:
+      type: PORTAL_TRIGGER
+      volume: 1
+      pitch: 0.2
+  '$':
+    access:
+      type: PORTAL_TRIGGER
+      volume: 1
+      pitch: 0.2

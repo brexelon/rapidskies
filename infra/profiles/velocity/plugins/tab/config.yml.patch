@@ -87,9 +87,12 @@ scoreboard:
         - ""
         - "&#FFD800&lSkyRealms"
         - "&7Coins: &#FFAA00%rapid_balance_status%"
-        # Phase 4b, with SuperiorSkyblock2 on the server (survival plugin set):
-        #   - "&7Island level: &f%superior_island_level%"
-        #   - "&7Island worth: &f%superior_island_worth%"
+        # Island level and worth are SuperiorSkyblock2's placeholders; the realm, season place
+        # and next Expedition are rapid-skyrealms' (all through TAB-Bridge).
+        - "&7Island level: &f%superior_island_level%"
+        - "&7Realm: %rapidskyrealms_tier%"
+        - "&7Season: &f%rapidskyrealms_season_rank%"
+        - "&7Expedition: %rapidskyrealms_expedition%"
         - "&7Players here: &f%serveronline%"
         - ""
         - "&#FFD800rapidskies.us"
@@ -136,6 +139,10 @@ placeholder-refresh-intervals:
   "%rapid_tailwind_status%": 5000
   "%rapid_balance_status%": 1000
   "%rapid_world%": 1000
+  "%superior_island_level%": 2000
+  "%rapidskyrealms_tier%": 5000
+  "%rapidskyrealms_season_rank%": 10000
+  "%rapidskyrealms_expedition%": 5000
   "%rapidhub_status_skyrealms%": 2000
   "%rapidhub_status_smp%": 2000
   "%rapidclaims_town%": 5000

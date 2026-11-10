@@ -1,0 +1,178 @@
+# SuperiorSkyblock2 island upgrades on SkyRealms, bought with Coins (rapid-core's Vault
+# economy). Generated together with menus/upgrades.yml.patch; keep the two in step.
+# The generator-rates upgrade is gone on purpose: Realm Tiers own each island's generator
+# (rapid-skyrealms /realm), so buying odds would be overwritten anyway (PLAN.md §5.1).
+# Prices are starting points to tune in beta against the Coins supply.
+upgrades:
+  border-size:
+    '1':
+      price: 1500.0
+      price-type: "Money"
+      border-size: 50
+      commands:
+        - 'island admin setupgrade %player% border-size 2'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Island Size raised: Border: 75x75 blocks!'
+    '2':
+      price: 6000.0
+      price-type: "Money"
+      border-size: 75
+      commands:
+        - 'island admin setupgrade %player% border-size 3'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Island Size raised: Border: 100x100 blocks!'
+    '3':
+      price: 20000.0
+      price-type: "Money"
+      border-size: 100
+      commands:
+        - 'island admin setupgrade %player% border-size 4'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Island Size raised: Border: 150x150 blocks!'
+    '4':
+      price: 0.0
+      price-type: "Money"
+      border-size: 150
+      commands:
+        - 'island admin msg %player% &6&lUpgrades &8» &7Island Size is at its highest level.'
+  members-limit:
+    '1':
+      price: 2000.0
+      price-type: "Money"
+      team-limit: 4
+      commands:
+        - 'island admin setupgrade %player% members-limit 2'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Team Size raised: Members: 6!'
+    '2':
+      price: 8000.0
+      price-type: "Money"
+      team-limit: 6
+      commands:
+        - 'island admin setupgrade %player% members-limit 3'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Team Size raised: Members: 8!'
+    '3':
+      price: 20000.0
+      price-type: "Money"
+      team-limit: 8
+      commands:
+        - 'island admin setupgrade %player% members-limit 4'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Team Size raised: Members: 10!'
+    '4':
+      price: 0.0
+      price-type: "Money"
+      team-limit: 10
+      commands:
+        - 'island admin msg %player% &6&lUpgrades &8» &7Team Size is at its highest level.'
+  hoppers-limit:
+    '1':
+      price: 5000.0
+      price-type: "Money"
+      block-limits:
+        HOPPER: 8
+      commands:
+        - 'island admin setupgrade %player% hoppers-limit 2'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Hopper Limit raised: Hoppers: 16!'
+    '2':
+      price: 15000.0
+      price-type: "Money"
+      block-limits:
+        HOPPER: 16
+      commands:
+        - 'island admin setupgrade %player% hoppers-limit 3'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Hopper Limit raised: Hoppers: 32!'
+    '3':
+      price: 40000.0
+      price-type: "Money"
+      block-limits:
+        HOPPER: 32
+      commands:
+        - 'island admin setupgrade %player% hoppers-limit 4'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Hopper Limit raised: Hoppers: 64!'
+    '4':
+      price: 0.0
+      price-type: "Money"
+      block-limits:
+        HOPPER: 64
+      commands:
+        - 'island admin msg %player% &6&lUpgrades &8» &7Hopper Limit is at its highest level.'
+  crop-growth:
+    '1':
+      price: 2500.0
+      price-type: "Money"
+      crop-growth: 1
+      commands:
+        - 'island admin setupgrade %player% crop-growth 2'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Crop Growth raised: Crops grow x1.5!'
+    '2':
+      price: 10000.0
+      price-type: "Money"
+      crop-growth: 1.5
+      commands:
+        - 'island admin setupgrade %player% crop-growth 3'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Crop Growth raised: Crops grow x2!'
+    '3':
+      price: 25000.0
+      price-type: "Money"
+      crop-growth: 2
+      commands:
+        - 'island admin setupgrade %player% crop-growth 4'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Crop Growth raised: Crops grow x2.5!'
+    '4':
+      price: 0.0
+      price-type: "Money"
+      crop-growth: 2.5
+      commands:
+        - 'island admin msg %player% &6&lUpgrades &8» &7Crop Growth is at its highest level.'
+  spawner-rates:
+    '1':
+      price: 10000.0
+      price-type: "Money"
+      spawner-rates: 1
+      commands:
+        - 'island admin setupgrade %player% spawner-rates 2'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Spawner Rates raised: Spawners run x1.5!'
+    '2':
+      price: 25000.0
+      price-type: "Money"
+      spawner-rates: 1.5
+      commands:
+        - 'island admin setupgrade %player% spawner-rates 3'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Spawner Rates raised: Spawners run x2!'
+    '3':
+      price: 60000.0
+      price-type: "Money"
+      spawner-rates: 2
+      commands:
+        - 'island admin setupgrade %player% spawner-rates 4'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Spawner Rates raised: Spawners run x2.5!'
+    '4':
+      price: 0.0
+      price-type: "Money"
+      spawner-rates: 2.5
+      commands:
+        - 'island admin msg %player% &6&lUpgrades &8» &7Spawner Rates is at its highest level.'
+  mob-drops:
+    '1':
+      price: 10000.0
+      price-type: "Money"
+      mob-drops: 1
+      commands:
+        - 'island admin setupgrade %player% mob-drops 2'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Mob Drops raised: Mob drops x1.25!'
+    '2':
+      price: 30000.0
+      price-type: "Money"
+      mob-drops: 1.25
+      commands:
+        - 'island admin setupgrade %player% mob-drops 3'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Mob Drops raised: Mob drops x1.5!'
+    '3':
+      price: 75000.0
+      price-type: "Money"
+      mob-drops: 1.5
+      commands:
+        - 'island admin setupgrade %player% mob-drops 4'
+        - 'island admin msgall %player% &6&lUpgrades &8» &7Mob Drops raised: Mob drops x2!'
+    '4':
+      price: 0.0
+      price-type: "Money"
+      mob-drops: 2
+      commands:
+        - 'island admin msg %player% &6&lUpgrades &8» &7Mob Drops is at its highest level.'

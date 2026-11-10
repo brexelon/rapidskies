@@ -46,7 +46,7 @@ servers:
   skyrealms-1:
     ptero_id: "59776d6d"
     profiles: [paper-base, survival, skyrealms]
-    plugins: [paper-base, survival]
+    plugins: [paper-base, survival, skyrealms]
     schedules: [hourly-backup]
     vars: { LP_SERVER: skyrealms }
     worlds: { skyrealms_spawn: trading-post }
@@ -69,7 +69,8 @@ servers:
 
   staging:
     # Mirror of a game server for testing updates. Defaults to mirroring smp;
-    # swap `smp` for `skyrealms` (and the plugin sets) when testing SkyRealms.
+    # swap `smp` for `skyrealms` (profiles and plugin sets: [paper-base, survival, skyrealms])
+    # and the world (`skyrealms_spawn: trading-post`) when testing SkyRealms.
     ptero_id: ""
     profiles: [paper-base, survival, smp, staging]
     plugins: [paper-base, survival, smp, worldgen]
@@ -167,7 +168,13 @@ plugin_sets:
     # The auction house (plan §4.2), on both gamemodes: each server trades in its own
     # currency (rapid-core's server.gamemode), and listings never cross modes.
     - "dist/rapid-market.jar"
-    # skyrealms only, phase 4b: "SuperiorSkyblock2-*.jar"
+
+  # SkyRealms (plan §5.1): the island engine and the gamemode on top of it (starter islands,
+  # Realm Tiers, the shop, Expeditions, Trade Routes, seasons). rapid-skyrealms registers its
+  # island layouts with SuperiorSkyblock2 while loading, so both must be on every SkyRealms server.
+  skyrealms:
+    - "SuperiorSkyblock2-*.jar"
+    - "dist/rapid-skyrealms.jar"
 
   # Horizons (plan §4.1, §5.2): claims and towns, the gamemode itself, and chest shops.
   # rapid-claims must be on every Horizons server: without it the Heartland is unprotected.

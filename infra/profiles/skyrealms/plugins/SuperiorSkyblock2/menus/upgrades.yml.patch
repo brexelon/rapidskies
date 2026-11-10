@@ -1,0 +1,733 @@
+# The upgrades menu, matching modules/upgrades/config.yml.patch (generated together).
+# Plain item icons and & colors (SuperiorSkyblock2's menus), the brand's gold and yellow.
+title: '&6&lIsland Upgrades'
+pattern:
+  - '$ $ $ $ $ $ $ $ $'
+  - '$ # @ # % # ^ # $'
+  - '$ # ! # + # & # $'
+  - '$ $ $ $ $ $ $ $ $'
+items:
+  '$':
+    type: BLACK_STAINED_GLASS_PANE
+    name: '&f'
+upgrades:
+  border-size:
+    item: '@'
+    '1':
+      has-next-level:
+        type: GRASS_BLOCK
+        name: '&6&lIsland Size &a(Level 2)'
+        lore:
+          - '&7'
+          - '&7Now: &fBorder: 50x50 blocks'
+          - '&7Next: &eBorder: 75x75 blocks'
+          - '&7'
+          - '&7Price: &61,500 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: GRASS_BLOCK
+        name: '&6&lIsland Size &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fBorder: 50x50 blocks'
+          - '&7Next: &eBorder: 75x75 blocks'
+          - '&7'
+          - '&7Price: &61,500 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '2':
+      has-next-level:
+        type: GRASS_BLOCK
+        name: '&6&lIsland Size &a(Level 3)'
+        lore:
+          - '&7'
+          - '&7Now: &fBorder: 75x75 blocks'
+          - '&7Next: &eBorder: 100x100 blocks'
+          - '&7'
+          - '&7Price: &66,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: GRASS_BLOCK
+        name: '&6&lIsland Size &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fBorder: 75x75 blocks'
+          - '&7Next: &eBorder: 100x100 blocks'
+          - '&7'
+          - '&7Price: &66,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '3':
+      has-next-level:
+        type: GRASS_BLOCK
+        name: '&6&lIsland Size &a(Level 4)'
+        lore:
+          - '&7'
+          - '&7Now: &fBorder: 100x100 blocks'
+          - '&7Next: &eBorder: 150x150 blocks'
+          - '&7'
+          - '&7Price: &620,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: GRASS_BLOCK
+        name: '&6&lIsland Size &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fBorder: 100x100 blocks'
+          - '&7Next: &eBorder: 150x150 blocks'
+          - '&7'
+          - '&7Price: &620,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '4':
+      has-next-level:
+        type: GRASS_BLOCK
+        name: '&6&lIsland Size &a(Maxed)'
+        lore:
+          - '&7'
+          - '&7Now: &fBorder: 150x150 blocks'
+          - '&7'
+          - '&7This upgrade is at its highest level.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: GRASS_BLOCK
+        name: '&6&lIsland Size &a(Maxed)'
+        lore:
+          - '&7'
+          - '&7Now: &fBorder: 150x150 blocks'
+          - '&7'
+          - '&7This upgrade is at its highest level.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+  members-limit:
+    item: '%'
+    '1':
+      has-next-level:
+        type: PLAYER_HEAD
+        name: '&6&lTeam Size &a(Level 2)'
+        lore:
+          - '&7'
+          - '&7Now: &fMembers: 4'
+          - '&7Next: &eMembers: 6'
+          - '&7'
+          - '&7Price: &62,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: PLAYER_HEAD
+        name: '&6&lTeam Size &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fMembers: 4'
+          - '&7Next: &eMembers: 6'
+          - '&7'
+          - '&7Price: &62,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '2':
+      has-next-level:
+        type: PLAYER_HEAD
+        name: '&6&lTeam Size &a(Level 3)'
+        lore:
+          - '&7'
+          - '&7Now: &fMembers: 6'
+          - '&7Next: &eMembers: 8'
+          - '&7'
+          - '&7Price: &68,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: PLAYER_HEAD
+        name: '&6&lTeam Size &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fMembers: 6'
+          - '&7Next: &eMembers: 8'
+          - '&7'
+          - '&7Price: &68,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '3':
+      has-next-level:
+        type: PLAYER_HEAD
+        name: '&6&lTeam Size &a(Level 4)'
+        lore:
+          - '&7'
+          - '&7Now: &fMembers: 8'
+          - '&7Next: &eMembers: 10'
+          - '&7'
+          - '&7Price: &620,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: PLAYER_HEAD
+        name: '&6&lTeam Size &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fMembers: 8'
+          - '&7Next: &eMembers: 10'
+          - '&7'
+          - '&7Price: &620,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '4':
+      has-next-level:
+        type: PLAYER_HEAD
+        name: '&6&lTeam Size &a(Maxed)'
+        lore:
+          - '&7'
+          - '&7Now: &fMembers: 10'
+          - '&7'
+          - '&7This upgrade is at its highest level.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: PLAYER_HEAD
+        name: '&6&lTeam Size &a(Maxed)'
+        lore:
+          - '&7'
+          - '&7Now: &fMembers: 10'
+          - '&7'
+          - '&7This upgrade is at its highest level.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+  hoppers-limit:
+    item: '^'
+    '1':
+      has-next-level:
+        type: HOPPER
+        name: '&6&lHopper Limit &a(Level 2)'
+        lore:
+          - '&7'
+          - '&7Now: &fHoppers: 8'
+          - '&7Next: &eHoppers: 16'
+          - '&7'
+          - '&7Price: &65,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: HOPPER
+        name: '&6&lHopper Limit &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fHoppers: 8'
+          - '&7Next: &eHoppers: 16'
+          - '&7'
+          - '&7Price: &65,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '2':
+      has-next-level:
+        type: HOPPER
+        name: '&6&lHopper Limit &a(Level 3)'
+        lore:
+          - '&7'
+          - '&7Now: &fHoppers: 16'
+          - '&7Next: &eHoppers: 32'
+          - '&7'
+          - '&7Price: &615,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: HOPPER
+        name: '&6&lHopper Limit &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fHoppers: 16'
+          - '&7Next: &eHoppers: 32'
+          - '&7'
+          - '&7Price: &615,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '3':
+      has-next-level:
+        type: HOPPER
+        name: '&6&lHopper Limit &a(Level 4)'
+        lore:
+          - '&7'
+          - '&7Now: &fHoppers: 32'
+          - '&7Next: &eHoppers: 64'
+          - '&7'
+          - '&7Price: &640,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: HOPPER
+        name: '&6&lHopper Limit &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fHoppers: 32'
+          - '&7Next: &eHoppers: 64'
+          - '&7'
+          - '&7Price: &640,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '4':
+      has-next-level:
+        type: HOPPER
+        name: '&6&lHopper Limit &a(Maxed)'
+        lore:
+          - '&7'
+          - '&7Now: &fHoppers: 64'
+          - '&7'
+          - '&7This upgrade is at its highest level.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: HOPPER
+        name: '&6&lHopper Limit &a(Maxed)'
+        lore:
+          - '&7'
+          - '&7Now: &fHoppers: 64'
+          - '&7'
+          - '&7This upgrade is at its highest level.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+  crop-growth:
+    item: '!'
+    '1':
+      has-next-level:
+        type: WHEAT
+        name: '&6&lCrop Growth &a(Level 2)'
+        lore:
+          - '&7'
+          - '&7Now: &fCrops grow x1'
+          - '&7Next: &eCrops grow x1.5'
+          - '&7'
+          - '&7Price: &62,500 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: WHEAT
+        name: '&6&lCrop Growth &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fCrops grow x1'
+          - '&7Next: &eCrops grow x1.5'
+          - '&7'
+          - '&7Price: &62,500 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '2':
+      has-next-level:
+        type: WHEAT
+        name: '&6&lCrop Growth &a(Level 3)'
+        lore:
+          - '&7'
+          - '&7Now: &fCrops grow x1.5'
+          - '&7Next: &eCrops grow x2'
+          - '&7'
+          - '&7Price: &610,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: WHEAT
+        name: '&6&lCrop Growth &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fCrops grow x1.5'
+          - '&7Next: &eCrops grow x2'
+          - '&7'
+          - '&7Price: &610,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '3':
+      has-next-level:
+        type: WHEAT
+        name: '&6&lCrop Growth &a(Level 4)'
+        lore:
+          - '&7'
+          - '&7Now: &fCrops grow x2'
+          - '&7Next: &eCrops grow x2.5'
+          - '&7'
+          - '&7Price: &625,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: WHEAT
+        name: '&6&lCrop Growth &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fCrops grow x2'
+          - '&7Next: &eCrops grow x2.5'
+          - '&7'
+          - '&7Price: &625,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '4':
+      has-next-level:
+        type: WHEAT
+        name: '&6&lCrop Growth &a(Maxed)'
+        lore:
+          - '&7'
+          - '&7Now: &fCrops grow x2.5'
+          - '&7'
+          - '&7This upgrade is at its highest level.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: WHEAT
+        name: '&6&lCrop Growth &a(Maxed)'
+        lore:
+          - '&7'
+          - '&7Now: &fCrops grow x2.5'
+          - '&7'
+          - '&7This upgrade is at its highest level.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+  spawner-rates:
+    item: '+'
+    '1':
+      has-next-level:
+        type: SPAWNER
+        name: '&6&lSpawner Rates &a(Level 2)'
+        lore:
+          - '&7'
+          - '&7Now: &fSpawners run x1'
+          - '&7Next: &eSpawners run x1.5'
+          - '&7'
+          - '&7Price: &610,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: SPAWNER
+        name: '&6&lSpawner Rates &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fSpawners run x1'
+          - '&7Next: &eSpawners run x1.5'
+          - '&7'
+          - '&7Price: &610,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '2':
+      has-next-level:
+        type: SPAWNER
+        name: '&6&lSpawner Rates &a(Level 3)'
+        lore:
+          - '&7'
+          - '&7Now: &fSpawners run x1.5'
+          - '&7Next: &eSpawners run x2'
+          - '&7'
+          - '&7Price: &625,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: SPAWNER
+        name: '&6&lSpawner Rates &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fSpawners run x1.5'
+          - '&7Next: &eSpawners run x2'
+          - '&7'
+          - '&7Price: &625,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '3':
+      has-next-level:
+        type: SPAWNER
+        name: '&6&lSpawner Rates &a(Level 4)'
+        lore:
+          - '&7'
+          - '&7Now: &fSpawners run x2'
+          - '&7Next: &eSpawners run x2.5'
+          - '&7'
+          - '&7Price: &660,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: SPAWNER
+        name: '&6&lSpawner Rates &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fSpawners run x2'
+          - '&7Next: &eSpawners run x2.5'
+          - '&7'
+          - '&7Price: &660,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '4':
+      has-next-level:
+        type: SPAWNER
+        name: '&6&lSpawner Rates &a(Maxed)'
+        lore:
+          - '&7'
+          - '&7Now: &fSpawners run x2.5'
+          - '&7'
+          - '&7This upgrade is at its highest level.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: SPAWNER
+        name: '&6&lSpawner Rates &a(Maxed)'
+        lore:
+          - '&7'
+          - '&7Now: &fSpawners run x2.5'
+          - '&7'
+          - '&7This upgrade is at its highest level.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+  mob-drops:
+    item: '&'
+    '1':
+      has-next-level:
+        type: ROTTEN_FLESH
+        name: '&6&lMob Drops &a(Level 2)'
+        lore:
+          - '&7'
+          - '&7Now: &fMob drops x1'
+          - '&7Next: &eMob drops x1.25'
+          - '&7'
+          - '&7Price: &610,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: ROTTEN_FLESH
+        name: '&6&lMob Drops &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fMob drops x1'
+          - '&7Next: &eMob drops x1.25'
+          - '&7'
+          - '&7Price: &610,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '2':
+      has-next-level:
+        type: ROTTEN_FLESH
+        name: '&6&lMob Drops &a(Level 3)'
+        lore:
+          - '&7'
+          - '&7Now: &fMob drops x1.25'
+          - '&7Next: &eMob drops x1.5'
+          - '&7'
+          - '&7Price: &630,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: ROTTEN_FLESH
+        name: '&6&lMob Drops &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fMob drops x1.25'
+          - '&7Next: &eMob drops x1.5'
+          - '&7'
+          - '&7Price: &630,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '3':
+      has-next-level:
+        type: ROTTEN_FLESH
+        name: '&6&lMob Drops &a(Level 4)'
+        lore:
+          - '&7'
+          - '&7Now: &fMob drops x1.5'
+          - '&7Next: &eMob drops x2'
+          - '&7'
+          - '&7Price: &675,000 Coins'
+          - '&7'
+          - '&eClick to upgrade.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: ROTTEN_FLESH
+        name: '&6&lMob Drops &c(Unavailable)'
+        lore:
+          - '&7'
+          - '&7Now: &fMob drops x1.5'
+          - '&7Next: &eMob drops x2'
+          - '&7'
+          - '&7Price: &675,000 Coins'
+          - '&7'
+          - '&cNot available right now.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2
+    '4':
+      has-next-level:
+        type: ROTTEN_FLESH
+        name: '&6&lMob Drops &a(Maxed)'
+        lore:
+          - '&7'
+          - '&7Now: &fMob drops x2'
+          - '&7'
+          - '&7This upgrade is at its highest level.'
+        sound:
+          type: ORB_PICKUP
+          volume: 0.2
+          pitch: 0.2
+      no-next-level:
+        type: ROTTEN_FLESH
+        name: '&6&lMob Drops &a(Maxed)'
+        lore:
+          - '&7'
+          - '&7Now: &fMob drops x2'
+          - '&7'
+          - '&7This upgrade is at its highest level.'
+        sound:
+          type: ANVIL_LAND
+          volume: 0.2
+          pitch: 0.2

@@ -3,12 +3,13 @@ server.gamemode: "skyrealms"
 
 # Spawn: centre of the Trading Post's compass rose (the mud block at 28 149 -30, as in the
 # map's README; block -30 spans z -30..-29, so its centre is -29.5), under the ring of oak
-# pillars, facing west across the rose to the pavilion. When SuperiorSkyblock2 joins
-# (phase 4b), set its spawn.location to the same point:
-#   skyrealms_spawn, 28.5, 150, -29.5, 90, 0
+# pillars, facing west across the rose to the pavilion. SuperiorSkyblock2's spawn.location is
+# the same point (profiles/skyrealms/plugins/SuperiorSkyblock2).
 spawn.location: "minecraft:overworld, 28.5, 150, -29.5, 90, 0"
 spawn.on-join: "first-join"
-spawn.on-death: true
+# Deaths respawn on the player's island: SuperiorSkyblock2's player-respawn does that (and
+# sends islandless players here), so rapid-core leaves respawns alone.
+spawn.on-death: false
 worlds:
   "minecraft:overworld":
     protect: true
@@ -30,3 +31,32 @@ worlds:
       # Keeps leaves, grass and the build exactly as delivered (the builders shipped it with 0).
       random_tick_speed: 0
       fire_spread_radius_around_player: 0
+  # The shared Expedition world (rapid-skyrealms, PLAN.md §5.1): void, where a themed resource
+  # island drifts in every few hours. rapid-skyrealms protects it itself (only the island's
+  # resource blocks break, nothing can be placed), so rapid-core's protection is off.
+  "rapidskies:expeditions":
+    create: void
+    protect: false
+    # Below every Expedition island (built at y 120); rapid-skyrealms catches falls before this.
+    void-y: 40
+    time: 6000
+    clear-weather: true
+    game-rules:
+      advance_time: false
+      advance_weather: false
+      spawn_mobs: false
+      spawn_monsters: false
+      spawn_phantoms: false
+      spawn_patrols: false
+      spawn_wandering_traders: false
+      pvp: false
+      fall_damage: false
+      mob_griefing: false
+      random_tick_speed: 0
+      fire_spread_radius_around_player: 0
+
+# The sidebar's World line (%rapid_world%) instead of the folder names.
+world-names:
+  "minecraft:overworld": "Trading Post"
+  "minecraft:skyrealms_islands": "Islands"
+  "rapidskies:expeditions": "Expedition"

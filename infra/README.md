@@ -298,6 +298,41 @@ pre-generated vanilla terrain is never regenerated.
   first time they load. Without Multiverse at all, rapid-horizons falls back to creating the
   worlds through Bukkit.
 
+## SkyRealms (SuperiorSkyblock2, rapid-skyrealms)
+
+skyrealms-1 gets the `skyrealms` plugin set on top of `paper-base` and `survival`:
+SuperiorSkyblock2 and `rapid-skyrealms`.
+
+Before the first start, create SuperiorSkyblock2's schema like the others and add its
+credentials to `secrets.env` (`SS2_DB_NAME`, `SS2_DB_USER`, `SS2_DB_PASSWORD`; see
+`secrets.env.example`). Its port is written in `profiles/skyrealms/plugins/SuperiorSkyblock2/
+config.yml.patch` (SuperiorSkyblock2 reads it as a number), so keep that equal to `DB_PORT`.
+Then run the SkyRealms block of `luckperms/bootstrap.txt`: SuperiorSkyblock2's island commands
+default to op, so everyone gets `superior.island.*` on skyrealms (minus its biome picker).
+
+- **SuperiorSkyblock2** owns islands, members, coops, warps, the island bank, upgrades and island
+  value, in its own world `skyrealms_islands`; its spawn is the Trading Post (same point as
+  rapid-core's). The skyrealms profile patches its `config.yml`, the island creation menu, the
+  upgrades (`modules/upgrades/config.yml` and `menus/upgrades.yml`, re-priced in Coins and
+  without the generator upgrade) and turns its missions off. Disbanding clears inventories, so
+  nobody farms fresh starter chests.
+- **rapid-skyrealms** registers the starter islands (`meadow`, `cherry`, `atoll`) with
+  SuperiorSkyblock2 while loading: they're built in code, and it writes a small marker file per
+  layout into `plugins/SuperiorSkyblock2/schematics/` that only its own parser reads. A file
+  with one of those names that isn't a marker (a schematic saved in game) wins, with a warning.
+  It also runs Realm Tiers (`/realm`: goals, ascending, each island's generator odds and
+  biome), the shop (`/shop`, `/sell`), Expeditions (`/expedition`) in the void world
+  `rapidskies:expeditions` that rapid-core creates (skyrealms rapid-core profile), Trade Routes
+  (`/route`) and seasons (`/season`). Its tables are the `skyrealms` migration module.
+  `/skyrealms reload` re-reads its config and messages (layouts change on a restart).
+- Deaths respawn on the player's island (SuperiorSkyblock2's `player-respawn`); rapid-core's
+  `spawn.on-death` is off on skyrealms.
+- An Expedition is journalled in `plugins/rapid-skyrealms/expedition-journal.txt` while it's
+  up, so a crash never leaves one floating: the next start removes it.
+- The SkyRealms sidebar shows the island level (`%superior_island_level%`), the realm, the
+  season place and the next Expedition (`%rapidskyrealms_tier%`, `_season_rank%`,
+  `_expedition%`).
+
 ## Hub (rapid-hub)
 
 The hub servers get the `hub` plugin set on top of `paper-base`: Citizens and `rapid-hub`. Its

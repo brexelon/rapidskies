@@ -1,0 +1,4 @@
+# SuperiorSkyblock2's missions are off on SkyRealms: Realm Tiers are the island's quest chain
+# (rapid-skyrealms /realm, PLAN.md §5.1), and network quests come with phase 5. Its default
+# missions also pay rewards on a scale that has nothing to do with the Coins economy.
+enabled: false

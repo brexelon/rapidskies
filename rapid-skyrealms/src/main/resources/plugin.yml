@@ -2,7 +2,41 @@ name: rapid-skyrealms
 version: '${version}'
 main: us.rapidskies.skyrealms.RapidSkyRealms
 api-version: '26.3'
-description: "SkyRealms: Expeditions, Realm Tiers, Trade Routes, seasons (PLAN.md §5.1)."
+description: "SkyRealms: starter islands, Realm Tiers, the server shop, Expeditions, Trade Routes and seasons, on SuperiorSkyblock2 (PLAN.md §5.1)."
 author: RapidSkies
 website: https://rapidskies.us
-depend: [rapid-core]
+# SuperiorSkyblock2 is the island engine; rapid-skyrealms registers its starter islands with it
+# while loading, before SuperiorSkyblock2 reads its schematics.
+depend: [rapid-core, SuperiorSkyblock2]
+# rapid-market: island level adds auction house listings. PlaceholderAPI: the sidebar's tier,
+# Expedition and season lines.
+softdepend: [rapid-market, PlaceholderAPI]
+
+permissions:
+  rapid.command.realm:
+    description: Open the Realm Tier menu and ascend with /realm.
+    default: true
+  rapid.command.shop:
+    description: Buy and sell at the server shop with /shop.
+    default: true
+  rapid.command.sell:
+    description: Sell to the shop with /sell [hand|all].
+    default: true
+  rapid.command.expedition:
+    description: See when the next Expedition arrives and go to it.
+    default: true
+  rapid.command.route:
+    description: Offer, accept and manage Trade Routes; collect from the depot.
+    default: true
+  rapid.command.season:
+    description: See this season's island leaderboard.
+    default: true
+  rapid.skyrealms.admin:
+    description: /skyrealms reload, /realm set and /route admin end.
+    default: op
+  rapid.skyrealms.expedition.admin:
+    description: /expedition start and stop; build in the Expedition world while in creative.
+    default: op
+  rapid.skyrealms.season.admin:
+    description: /season end (ends the season now and hands out its awards).
+    default: op

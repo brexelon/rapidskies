@@ -1,0 +1,75 @@
+# SuperiorSkyblock2 on SkyRealms (plan §4: the island engine; §5.1; phase 4b). It owns islands,
+# members, coops, warps, upgrades and island value; rapid-skyrealms builds the starter islands
+# (registered as the schematics meadow, cherry and atoll), Realm Tiers (which own each island's
+# generator), the shop, Expeditions, Trade Routes and seasons on top.
+
+# Its own schema in the shared MariaDB (plan §10). Create it once, like the other schemas:
+#   CREATE DATABASE superiorskyblock CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+#   GRANT ALL ON superiorskyblock.* TO 'superiorskyblock'@'<container subnet>' IDENTIFIED BY '...';
+# The port is a number SuperiorSkyblock2 reads as one, so it's written here, not from secrets:
+# keep it equal to DB_PORT.
+database.type: "MariaDB"
+database.backup: false
+database.address: "${DB_HOST}"
+database.port: 3306
+database.db-name: "${SS2_DB_NAME}"
+database.user-name: "${SS2_DB_USER}"
+database.password: "${SS2_DB_PASSWORD}"
+database.useSSL: false
+
+island-command: "island,is,islands"
+
+# New islands: a 50 x 50 border (the first border-size upgrade; up to 150 with upgrades),
+# 4 members, the Meadow generator until rapid-skyrealms applies the island's Realm Tier.
+default-values.island-size: 50
+default-values.team-limit: 4
+default-values.warps-limit: 2
+default-values.coop-limit: 4
+default-values.generator:
+  normal:
+    COBBLESTONE: 84
+    COAL_ORE: 10
+    COPPER_ORE: 6
+
+# The island world. Only the overworld: the Nether Rift and Sky Citadel tiers come later (§5.1).
+worlds.world-name: "skyrealms_islands"
+worlds.difficulty: NORMAL
+worlds.dimensions.nether.enabled: false
+worlds.dimensions.the_end.enabled: false
+
+# The Trading Post spawn (rapid-core's spawn.location in profiles/skyrealms/plugins/rapid-core:
+# world, x, y, z, yaw, pitch). rapid-core protects it and handles /build; SuperiorSkyblock2's own
+# spawn protection would block staff in build mode, so it's off.
+spawn.location: "skyrealms_spawn, 28.5, 150, -29.5, 90, 0"
+spawn.protection: false
+spawn.world-border: false
+spawn.players-damage: false
+
+# Names are optional (one-click onboarding: "Steve's Island" until it's named) and plain.
+island-names.required-for-creation: false
+island-names.color-support: false
+island-names.max-length: 20
+island-names.prevent-player-names: false
+
+# Creating goes through the menu (menus/island-creation.yml: the three layouts); no previews
+# (spectator mode at a fixed spot), and no picking a schematic by name.
+schematic-name-argument: false
+island-previews.locations: []
+
+# Disbanding clears the inventory and ender chest (SuperiorSkyblock2's default): no farming
+# fresh starter chests. Three disbands per player.
+default-disband-count: 3
+
+# Island biomes are Realm Tier unlocks (/realm biome); SuperiorSkyblock2's own picker is off
+# (LuckPerms also negates superior.island.biome on skyrealms).
+disabled-commands:
+  - biome
+
+# Deaths respawn on the island, else at the spawn (rapid-core's on-death is off on skyrealms).
+player-respawn:
+  - ISLAND_TELEPORT
+  - SPAWN_TELEPORT
+
+# Whole numbers on the sidebar (%superior_island_level%).
+rounded-island-level: true
+island-level-rounding-mode: DOWN

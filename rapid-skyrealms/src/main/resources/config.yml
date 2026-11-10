@@ -1,0 +1,336 @@
+# rapid-skyrealms: the SkyRealms gamemode on top of SuperiorSkyblock2 (PLAN.md §5.1).
+# Messages are in lang/en_US.yml. `/skyrealms reload` re-reads both; the island layouts are
+# registered with SuperiorSkyblock2 at startup, so a change to `islands` needs a restart.
+#
+# Items are material keys (`wheat`, `minecraft:oak_sapling`), with an optional amount
+# (`bread x8`). Progression-critical items all exist in Minecraft 1.20 (PLAN.md §3).
+
+# Starter islands: one per layout, built by rapid-skyrealms' code (island/IslandLayouts) and
+# registered with SuperiorSkyblock2 as schematics of the same name. The creation menu
+# (profiles/skyrealms/plugins/SuperiorSkyblock2/menus/island-creation.yml) lists them. All three
+# give the same start; only the tree and the look differ.
+islands:
+  # Ids of the layouts to register: meadow (oak), cherry (cherry grove), atoll (sand rim, jungle tree).
+  layouts: [meadow, cherry, atoll]
+  # What the starter chest holds on every layout (each also adds two saplings of its own tree).
+  starter-chest:
+    - "lava_bucket"
+    - "ice x2"
+    - "wheat_seeds x4"
+    - "sugar_cane x2"
+    - "cactus"
+    - "melon_slice x2"
+    - "pumpkin_seeds x2"
+    - "bone_meal x8"
+    - "bread x8"
+    - "torch x8"
+
+# Realm Tiers (PLAN.md §5.1): Meadow → Desert → Frost at launch (Nether Rift and Sky Citadel
+# later). An island works toward the next tier's `requires` goals; when they're all done, the
+# island leader (or a role with `manage-role-weight`) ascends it for `cost` Coins (`icon` is
+# its menu item). Each tier
+# sets the island's cobblestone generator (`generator`: weights per block, any scale), unlocks
+# its biome for /realm biome and its shop categories, and hands out `rewards` items once.
+#
+# Goals (progress is shared by every island member, counted on the island):
+#   level <n>            island level of at least n (SuperiorSkyblock2's)
+#   mine <block> <n>     blocks from the island's generator broken (placed blocks never count)
+#   harvest <crop> <n>   grown crops, cactus, sugar cane, melons or pumpkins harvested (not placed ones)
+#   sell <coins>         Coins earned selling to /shop
+#   fish <n>             fish caught from the island
+#   expedition <n>       Expeditions a member contributed to
+#   route <n>            Trade Route deliveries made as the seller
+tiers:
+  meadow:
+    icon: grass_block
+    biome: plains
+    cost: 0
+    generator:
+      cobblestone: 84
+      coal_ore: 10
+      copper_ore: 6
+    rewards: []
+  desert:
+    icon: sand
+    biome: desert
+    cost: 5000
+    requires:
+      - "level 10"
+      - "mine cobblestone 1000"
+      - "harvest wheat 256"
+      - "sell 2500"
+      - "expedition 1"
+    generator:
+      cobblestone: 70
+      coal_ore: 11
+      copper_ore: 8
+      iron_ore: 8
+      gold_ore: 3
+    rewards:
+      - "sand x32"
+      - "cactus x2"
+      - "dead_bush x2"
+  frost:
+    icon: snow_block
+    biome: snowy_plains
+    cost: 25000
+    requires:
+      - "level 50"
+      - "mine iron_ore 500"
+      - "harvest cactus 512"
+      - "sell 25000"
+      - "fish 64"
+      - "expedition 3"
+      - "route 2"
+    generator:
+      cobblestone: 56
+      coal_ore: 11
+      copper_ore: 8
+      iron_ore: 11
+      gold_ore: 6
+      lapis_ore: 3
+      redstone_ore: 3
+      diamond_ore: 1
+      emerald_ore: 1
+    rewards:
+      - "ice x16"
+      - "snow_block x16"
+      - "spruce_sapling x2"
+
+# Who may ascend tiers and sign Trade Routes for an island besides its leader: SuperiorSkyblock2
+# role weight (0 Member, 1 Moderator, 2 Admin, 3 Leader in its default ladder).
+manage-role-weight: 2
+
+# The server shop (/shop, /sell). Each item is "<material> <buy> <sell>": Coins per item (decimals
+# allowed; a sale's total is rounded down), 0 to not buy or not sell it. Selling never pays more
+# than buying costs. A category opens at its `tier` (the island's Realm Tier; players without an
+# island count as on the first tier). Only plain items sell: nothing named, enchanted or damaged.
+shop:
+  # Coins a player earns from sales per UTC day at full price; past that, sales pay
+  # `reduced-percent`, and past twice that, `floor-percent` (PLAN.md §5.3 soft caps). Tailwind's
+  # bonus applies on top.
+  daily-full-rate: 20000
+  reduced-percent: 50
+  floor-percent: 25
+  categories:
+    farming:
+      icon: wheat
+      tier: meadow
+      items:
+        - "wheat 0 2"
+        - "wheat_seeds 2 0.25"
+        - "carrot 4 1.5"
+        - "potato 4 1.5"
+        - "beetroot 0 1.5"
+        - "beetroot_seeds 2 0"
+        - "melon_slice 0 0.5"
+        - "pumpkin 0 4"
+        - "sugar_cane 6 2"
+        - "bamboo 2 0.5"
+        - "cocoa_beans 6 1"
+        - "sweet_berries 4 1"
+        - "nether_wart 20 3"
+        - "brown_mushroom 6 1.5"
+        - "red_mushroom 6 1.5"
+        - "egg 0 1"
+        - "honeycomb 0 6"
+    blocks:
+      icon: grass_block
+      tier: meadow
+      items:
+        - "dirt 4 0"
+        - "grass_block 12 0"
+        - "gravel 6 0.5"
+        - "clay_ball 4 0.5"
+        - "cobblestone 0 0.5"
+        - "stone 0 0.75"
+        - "obsidian 120 10"
+        - "glass 6 0"
+        - "oak_log 8 1.5"
+        - "spruce_log 8 1.5"
+        - "birch_log 8 1.5"
+        - "jungle_log 8 1.5"
+        - "cherry_log 8 1.5"
+    ores:
+      icon: iron_ingot
+      tier: meadow
+      items:
+        - "coal 0 3"
+        - "raw_copper 0 2"
+        - "copper_ingot 0 3"
+        - "raw_iron 0 8"
+        - "iron_ingot 0 10"
+        - "raw_gold 0 14"
+        - "gold_ingot 0 16"
+        - "lapis_lazuli 0 4"
+        - "redstone 0 3"
+        - "diamond 0 80"
+        - "emerald 0 60"
+        - "amethyst_shard 0 6"
+        - "quartz 0 6"
+    mob-drops:
+      icon: bone
+      tier: meadow
+      items:
+        - "rotten_flesh 0 0.5"
+        - "bone 0 1"
+        - "string 0 1"
+        - "spider_eye 0 1.5"
+        - "gunpowder 0 3"
+        - "arrow 2 0"
+        - "ender_pearl 0 12"
+        - "slime_ball 0 4"
+        - "leather 0 3"
+        - "feather 0 1"
+        - "ink_sac 0 2"
+        - "beef 0 2"
+        - "porkchop 0 2"
+        - "chicken 0 1.5"
+        - "mutton 0 1.5"
+        - "cod 0 2"
+        - "salmon 0 3"
+        - "tropical_fish 0 5"
+        - "pufferfish 0 5"
+    saplings:
+      icon: oak_sapling
+      tier: meadow
+      items:
+        - "oak_sapling 40 0"
+        - "birch_sapling 40 0"
+        - "spruce_sapling 60 0"
+        - "jungle_sapling 60 0"
+        - "cherry_sapling 80 0"
+        - "acacia_sapling 80 0"
+        - "dark_oak_sapling 80 0"
+        - "bone_meal 3 0.5"
+    desert:
+      icon: cactus
+      tier: desert
+      items:
+        - "sand 8 0.5"
+        - "red_sand 12 0.5"
+        - "cactus 0 2"
+        - "dead_bush 10 0"
+        - "sandstone 0 1.5"
+        - "terracotta 16 1"
+        - "rabbit_hide 0 3"
+        - "rabbit_foot 0 20"
+        - "glass_bottle 4 0"
+    frost:
+      icon: ice
+      tier: frost
+      items:
+        - "ice 0 2"
+        - "packed_ice 30 10"
+        - "blue_ice 300 60"
+        - "snowball 0 0.25"
+        - "snow_block 8 1"
+        - "powder_snow_bucket 60 0"
+        - "spruce_sapling 40 0"
+        - "sweet_berries 4 1.5"
+
+# Expeditions (PLAN.md §5.1): every few hours a resource island drifts into the shared
+# Expedition world. Its resource blocks drop straight into the miner's inventory (no ground
+# loot to steal) and earn contribution points; its heart takes many hits from everyone, and
+# when it breaks its loot is split by each player's share of the hits, never last-hit. When
+# it drifts away, every contributor is paid Coins for their points, plus Bolts.
+# Heart loot is per player: someone who struck it as often as the average gets the listed
+# amounts, more or less in proportion to their hits (up to double).
+expeditions:
+  # rapid-core creates this void world (profiles/skyrealms/plugins/rapid-core: worlds).
+  world: "rapidskies:expeditions"
+  # Islands are built at y `height`, each one `spacing` blocks east of the last (cycling every
+  # 8), so a crash never leaves one under the next.
+  height: 120
+  spacing: 512
+  # Average time between Expeditions, plus or minus `jitter-minutes`.
+  interval-minutes: 180
+  jitter-minutes: 20
+  # The network hears about it this long before it arrives (PLAN.md: a scheduled social moment).
+  warning-minutes: 5
+  # How long it stays before it drifts away.
+  duration-minutes: 15
+  # Players online on this server needed for a scheduled one (/expedition start ignores it).
+  min-players: 2
+  # Themes in rotation order (crystal-caverns, sunken-ship, overgrown-ruins).
+  themes: [crystal-caverns, sunken-ship, overgrown-ruins]
+  # Heart: hits needed = per-player × players in the Expedition world when it arrives (at least min-hits).
+  heart:
+    hits-per-player: 12
+    min-hits: 24
+  # Pay at the end: Coins per contribution point (Tailwind applies), and Bolts for everyone
+  # with at least `min-points` (rapid-core's anti-farm rules, capped per day).
+  coins-per-point: 6
+  min-points: 5
+  bolts: 10
+  bolts-daily-cap: 30
+  # Resource blocks per theme: points and what each break gives ("<item> x<min>-<max>" or "x<n>").
+  themes-config:
+    crystal-caverns:
+      nodes:
+        iron_ore: { points: 2, loot: ["raw_iron x1-2"] }
+        gold_ore: { points: 3, loot: ["raw_gold x1-2"] }
+        lapis_ore: { points: 2, loot: ["lapis_lazuli x3-6"] }
+        redstone_ore: { points: 2, loot: ["redstone x3-5"] }
+        diamond_ore: { points: 8, loot: ["diamond x1"] }
+        emerald_ore: { points: 6, loot: ["emerald x1"] }
+        amethyst_block: { points: 1, loot: ["amethyst_shard x2-4"] }
+      heart: ["diamond x6", "emerald x4", "amethyst_shard x24", "budding_amethyst x1"]
+    sunken-ship:
+      nodes:
+        barrel: { points: 4, loot: ["gold_ingot x1-3", "emerald x0-1", "iron_ingot x1-3"] }
+        prismarine: { points: 1, loot: ["prismarine_shard x2-4"] }
+        sea_lantern: { points: 2, loot: ["prismarine_crystals x2-4"] }
+        wet_sponge: { points: 3, loot: ["sponge x1"] }
+        dried_kelp_block: { points: 1, loot: ["kelp x2-5"] }
+      heart: ["heart_of_the_sea x1", "nautilus_shell x4", "gold_block x2", "prismarine_crystals x16"]
+    overgrown-ruins:
+      nodes:
+        mossy_cobblestone: { points: 1, loot: ["moss_block x1", "cobblestone x1-2"] }
+        cracked_stone_bricks: { points: 2, loot: ["iron_nugget x3-9", "gold_nugget x2-6"] }
+        melon: { points: 1, loot: ["melon_slice x3-6"] }
+        pumpkin: { points: 1, loot: ["pumpkin x1", "pumpkin_seeds x1"] }
+        bee_nest: { points: 4, loot: ["honeycomb x2-4", "honey_bottle x1"] }
+        moss_block: { points: 1, loot: ["moss_block x1", "azalea x0-1"] }
+      heart: ["golden_apple x2", "bone_meal x48", "emerald x3", "flowering_azalea x2"]
+
+# Trade Routes (PLAN.md §5.1): recurring contracts between islands. The seller's goods come
+# out of a contract chest on their island (hoppers can feed it), go to the buyer's depot
+# (/route depot), and the buyer island's leader pays the seller island's leader at each delivery.
+routes:
+  # Active and offered routes per island (as seller or buyer): base, plus `per-tier` for each
+  # Realm Tier past the first.
+  max-per-island: 2
+  per-tier: 1
+  # Kept from each payment (an economy sink).
+  tax-percent: 3
+  # Delivery intervals on offer, by name, in hours.
+  intervals: { daily: 24, weekly: 168 }
+  min-quantity: 16
+  max-quantity: 1728
+  min-price: 10
+  max-price: 1000000
+  # An offer nobody answers is withdrawn after this many hours.
+  offer-hours: 72
+  # Missed deliveries in a row (goods not in the chest, or the buyer couldn't pay) that end a route.
+  max-missed: 3
+  # How often due routes are checked.
+  check-seconds: 60
+
+# Seasons (PLAN.md §5.1): every `length-days` the island-value leaderboard (/season) starts over.
+# Islands keep everything; the ranking is the worth gained during the season. When it ends,
+# every member of the top islands gets the award of the best rank they reached: a cosmetic for
+# the cosmetics engine (<n> is the season number) and Bolts, once.
+seasons:
+  enabled: true
+  length-days: 90
+  awards:
+    - { top: 1, cosmetic: "title:season-<n>-champion", bolts: 500 }
+    - { top: 3, cosmetic: "title:season-<n>-podium", bolts: 250 }
+    - { top: 10, cosmetic: "badge:season-<n>-top10", bolts: 100 }
+
+# The auction house (rapid-market): one more listing per `levels-per-listing` island levels,
+# up to `max-extra` (PLAN.md §4.2: it rises with island level, never with rank).
+market:
+  levels-per-listing: 100
+  max-extra: 10
