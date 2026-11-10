@@ -142,12 +142,67 @@ python infra/rsdeploy.py worlds hub-1 --replace         # server must be stopped
   Never use `--replace` on a world players have built in.
 - **Spawn behaviour** (rapid-core, `spawn.*` and `worlds.*` in each profile): the hub puts
   players at the spawn on every join; SkyRealms and Horizons only on a player's first join, and
-  after deaths without a bed or respawn anchor. All three worlds are `protect`ed: only
-  `rapid.world.build` (ops by default) can change blocks, containers, item frames or armor
-  stands, and fire, explosions, leaf decay and fading are off. Falling below `void-y` (all
+  after deaths without a bed or respawn anchor. All three worlds are `protect`ed: nobody, staff
+  included, can change blocks, containers, item frames, armor stands or vehicles outside
+  **build mode**, and fire, explosions, leaf decay and fading are off. `/build` (aliases
+  `/buildmode`, `/bm`; `rapid.world.build`, which builders, developers and admins have) turns
+  it on: creative, with the real inventory set aside like staff mode, and a boss bar while it
+  lasts. Creative items can't be dropped or carried out: build mode ends on its own, giving
+  the inventory back, when the player leaves the protected worlds or the server. Falling below `void-y` (all
   three are sky islands) sends players back to the spawn. `/spawn` works everywhere;
   `/setspawn` (op) moves the spawn until the next restart and prints the line to put in the
-  profile, which is where the spawn really lives.
+  profile, which is where the spawn really lives. (Both commands are rapid-essentials'; the
+  spawn itself is rapid-core's.)
+
+## Everyday commands (rapid-essentials)
+
+Every Paper backend gets `rapid-essentials` in the `paper-base` set: EssentialsX-style commands
+built on rapid-core's spawn, AFK tracker, vanish, freeze and Coins/Crowns economy.
+
+- **Teleports**: `/spawn`, `/back` (last teleport or death), `/tpa`, `/tpahere`, `/tpaccept`,
+  `/tpdeny`, `/tpacancel`, `/tptoggle`, homes (`/home`, `/sethome`, `/delhome`, `/homes`; the
+  same limit for everyone, per server group) and server warps (`/warp`, `/warps`; admins
+  `/setwarp`, `/delwarp`). All go through one path with per-kind cooldowns, an optional warmup
+  (3 s on Horizons), a safe-landing check, and guards from other plugins: rapid-horizons
+  refuses every one of them while a player is combat-tagged. Homes and warps are the
+  `essentials` migration module.
+- **Money** (SkyRealms and Horizons only): `/balance`, `/pay` (one ledger transaction, both rows
+  linked by a `pay:` transaction id), `/baltop` (players only; town banks are left out) and
+  `/eco give|take` for admins.
+- **Other**: `/afk`, `/ping`, `/list`, `/seen` (staff), `/hat` (Horizons Rapid+), `/rules`,
+  `/store` (`/buy`), `/website`, and `/broadcast` (admins; shown on every server over Redis).
+- Each profile switches off what its servers don't use with `disabled-commands`
+  (`profiles/<role>/plugins/rapid-essentials/config.yml.patch`): the hub keeps `/spawn` and the
+  info commands only, SkyRealms leaves homes to SuperiorSkyblock2.
+- Deliberately missing: `/gamemode`, `/fly`, `/god`, `/heal`, `/give`, kits, `/repair`, `/craft`
+  and `/ec` (plan §6.1, and build mode is how staff change protected worlds). `/msg`, `/r` and
+  `/hub` are rapid-proxy's.
+
+## Horizons (rapid-claims, rapid-horizons)
+
+smp-1 and staging get the `smp` plugin set on top of `paper-base` and `survival`:
+`rapid-claims`, `rapid-horizons`, QuickShop-Hikari and Citizens.
+
+- **rapid-claims** protects the Heartland (`minecraft:overworld`) and runs towns. If it can't
+  load the claims at startup it shuts the server down rather than run an unprotected SMP, so
+  keep it in the set. Its tables are the `claims` migration module; town banks are rows in
+  `mode_balance` (mode `horizons`) under each town's uuid, so the Crowns ledger sees every
+  deposit, upkeep charge and payout. Staff tools are `/claimadmin` (moderators, logged to
+  `staff_actions`); prices, upkeep and the Town Projects catalog are in its `config.yml`.
+- **QuickShop-Hikari** only allows shops inside claims where the creator is at least a Member
+  (rapid-claims' hook); its own fake-break check is off (`profiles/smp/plugins/QuickShop-Hikari`).
+- **rapid-horizons** is the way from the spawn to the Heartland: `/rtp`, and a portal arch on
+  the path south of the spawn plaza (`rtp.portal.region` in
+  `profiles/smp/plugins/rapid-horizons`), which it builds from its config on every start, with
+  nether portal blocks that never lead to the Nether, and a hologram in front of it
+  (`rtp.portal.hologram`). Also opt-in `/pvp` (combat-tagged players can't use any
+  rapid-essentials teleport, and `/back` after the portal returns to the spawn), Trades (`/trades`), and four Citizens NPCs on the plaza's pedestals (Heartland
+  Guide, Land Surveyor, Trade Master, Lobby; rebuilt from the config each start, never saved by
+  Citizens). `/horizons here` prints positions to paste into the profile and `/horizons reload`
+  rebuilds the arch and NPCs. Its tables are the `horizons` migration module.
+- The Horizons sidebar shows the player's town, whose land they stand on and the world by name
+  (`%rapidclaims_town%`, `%rapidclaims_here%`, rapid-core's `%rapid_world%` from `world-names`
+  in the smp rapid-core profile); town tags show in chat.
 
 ## Hub (rapid-hub)
 
@@ -249,5 +304,5 @@ and rapid-hub placeholders through TAB-Bridge (`tab/config.yml.patch` lists them
 **VaultUnlocked** (the `survival` set) carries the Vault API on the gamemode servers. rapid-core
 registers the Coins (skyrealms) or Crowns (smp, staging) economy through it, picked by
 `server.gamemode` in the `smp`/`skyrealms` profiles. It implements the classic Vault interface,
-which SuperiorSkyblock2 uses; when QuickShop-Hikari joins the smp set (phase 3b), set its economy
-to the classic Vault provider, not VaultUnlocked's newer one.
+which SuperiorSkyblock2 and QuickShop-Hikari use (`economy-type: 0` in the smp profile's
+QuickShop patch). **CoreProtect** (also `survival`) logs blocks for grief investigations.

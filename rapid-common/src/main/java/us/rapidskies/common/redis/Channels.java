@@ -37,6 +37,18 @@ public final class Channels {
      */
     public static final String MODE_BALANCE = "mode-balance";
 
+    /**
+     * Claims, trust or towns changed on one Horizons server (rapid-claims): other instances
+     * reload what changed from the database. Unused while Horizons runs on one server.
+     */
+    public static final String CLAIMS = "claims";
+
+    /**
+     * An admin's {@code /broadcast} (rapid-essentials): every backend shows it to everyone
+     * on it, including the server it came from.
+     */
+    public static final String BROADCAST = "broadcast";
+
     /** Redis key holding "true" while maintenance mode is on. */
     public static final String MAINTENANCE_KEY = "maintenance";
 
@@ -92,6 +104,19 @@ public final class Channels {
         public UUID player() {
             return UUID.fromString(uuid);
         }
+    }
+
+    /**
+     * What to reload after a claims change. {@code kind} is {@code chunk} (key
+     * {@code world;x;z}), {@code owner} (key {@code PLAYER:<uuid>} or {@code TOWN:<uuid>}:
+     * its trust, denials and allowance) or {@code town} (key: the town's uuid; its members,
+     * plots, projects and state).
+     */
+    public record ClaimsChanged(String kind, String key, String origin) {
+    }
+
+    /** {@code message} is MiniMessage (brand tags allowed); {@code by} the sender's name, for the log. */
+    public record Broadcast(String message, String by) {
     }
 
     /** {@code target} is a server group ({@code smp}) or a server id ({@code smp-1}). */

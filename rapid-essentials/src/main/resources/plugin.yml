@@ -1,0 +1,70 @@
+name: rapid-essentials
+version: '${version}'
+main: us.rapidskies.essentials.RapidEssentials
+api-version: '26.3'
+description: "Everyday commands on every backend: spawn, back, tpa, homes, warps, money, afk, list, seen (EssentialsX-style, on rapid-core)."
+author: RapidSkies
+website: https://rapidskies.us
+# Spawn, AFK, vanish, freeze, the per-mode economy and the database all come from rapid-core.
+depend: [rapid-core]
+
+# Commands a server doesn't offer (config disabled-commands) aren't registered at all, so
+# their permissions do nothing there. Staff and admin lines are in infra/luckperms/bootstrap.txt.
+permissions:
+  # ---------------------------------------------------------------- teleports
+  rapid.command.spawn:
+    description: Use /spawn.
+    default: true
+  rapid.command.setspawn:
+    description: Move this server's spawn with /setspawn (until restart; prints the profile line).
+    default: op
+  rapid.command.back:
+    description: Use /back (where you were before your last teleport, or where you died).
+    default: true
+  rapid.command.tpa:
+    description: Use /tpa, /tpahere, /tpaccept, /tpdeny, /tpacancel and /tptoggle.
+    default: true
+  rapid.command.home:
+    description: Use /home, /sethome, /delhome and /homes (the same home limit for everyone).
+    default: true
+  rapid.command.warp:
+    description: Use /warp and /warps.
+    default: true
+  rapid.command.setwarp:
+    description: Create, move and delete warps (/setwarp, /delwarp).
+    default: op
+  rapid.essentials.teleport.nowarmup:
+    description: Teleport commands happen at once, without standing still first.
+    default: op
+  rapid.essentials.teleport.nocooldown:
+    description: Teleport commands without waiting for their cooldowns.
+    default: op
+  # ---------------------------------------------------------------- money (gamemode servers)
+  rapid.command.balance:
+    description: See your Coins or Crowns with /balance.
+    default: true
+  rapid.command.balance.others:
+    description: See another player's balance with /balance <player>.
+    default: false
+  rapid.command.pay:
+    description: Pay another player Coins or Crowns with /pay.
+    default: true
+  rapid.command.baltop:
+    description: See the richest players with /baltop.
+    default: true
+  rapid.command.eco:
+    description: Give or take Coins or Crowns with /eco (logged to the ledger and staff_actions).
+    default: op
+  # ---------------------------------------------------------------- other
+  rapid.command.seen:
+    description: See when and where a player was last on with /seen.
+    default: false
+  rapid.command.hat:
+    description: Wear the held item with /hat (a Horizons Rapid+ perk, PLAN.md §6.1).
+    default: false
+  rapid.command.broadcast:
+    description: Announce something on every server with /broadcast.
+    default: op
+  rapid.essentials.admin:
+    description: /essentials reload and version.
+    default: op

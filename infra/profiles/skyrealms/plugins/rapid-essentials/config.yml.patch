@@ -1,0 +1,7 @@
+# rapid-essentials on SkyRealms. Island homes are SuperiorSkyblock2's (/is home, phase 4b),
+# so plain homes are off: they'd outlive an island's members or visitor settings.
+disabled-commands:
+  - home
+  - sethome
+  - delhome
+  - homes

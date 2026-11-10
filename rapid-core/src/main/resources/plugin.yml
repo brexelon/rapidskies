@@ -34,13 +34,7 @@ permissions:
   rapid.staff.inspect:
     description: Inspect inventories and ender chests (/invsee, /endersee, staff mode book).
     default: false
-  # Spawn and spawn worlds (WorldService, WorldProtection).
-  rapid.command.spawn:
-    description: Use /spawn.
-    default: true
-  rapid.command.setspawn:
-    description: Move this server's spawn with /setspawn (until restart; prints the profile line).
-    default: op
+  # Spawn worlds (WorldService, WorldProtection). /spawn and /setspawn are rapid-essentials'.
   rapid.world.build:
-    description: Change protected spawn worlds (the hub, the Trading Post, the Horizons spawn).
+    description: Use /build (build mode) to change protected spawn worlds (the hub, the Trading Post, the Horizons spawn).
     default: op

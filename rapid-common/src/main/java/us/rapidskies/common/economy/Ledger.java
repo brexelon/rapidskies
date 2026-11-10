@@ -81,6 +81,21 @@ public final class Ledger {
                         Instant createdAt) {
     }
 
+    /** The outcome of {@link #transfer}. */
+    public sealed interface Transfer {
+        /** Both sides changed; the balances afterwards. */
+        record Applied(long fromBalance, long toBalance) implements Transfer {
+        }
+
+        /** {@code txnId} was already used; nothing changed. */
+        record Duplicate() implements Transfer {
+        }
+
+        /** The payer's balance doesn't cover it; nothing changed. */
+        record Insufficient(long fromBalance) implements Transfer {
+        }
+    }
+
     public long balance(UUID player) throws SQLException {
         return db.withConnection(c -> balance(c, player));
     }
@@ -127,6 +142,85 @@ public final class Ledger {
     public Result debit(UUID player, long amount, String reason, String source, String txnId) throws SQLException {
         requirePositive(amount);
         return change(player, -amount, reason, source, txnId);
+    }
+
+    /**
+     * Moves {@code amount} (must be positive) from one account to another in one transaction:
+     * either both ledger rows and both balances change, or nothing does. Accounts are any
+     * UUID, so a town bank (rapid-claims) is an account like a player's. The debit row
+     * carries {@code txnId}; the credit row carries {@code txnId + "/in"}.
+     */
+    public Transfer transfer(UUID from, UUID to, long amount, String reason, String source, String txnId)
+            throws SQLException {
+        requirePositive(amount);
+        Objects.requireNonNull(from, "from");
+        Objects.requireNonNull(to, "to");
+        Objects.requireNonNull(reason, "reason");
+        Objects.requireNonNull(source, "source");
+        if (from.equals(to)) {
+            throw new IllegalArgumentException("can't transfer to the same account");
+        }
+        // Two transfers in opposite directions between the same accounts would each lock one
+        // balance row and wait for the other: a deadlock. So both rows are made to exist first
+        // (a locking read of a missing row takes a gap lock, which deadlocks the same way) and
+        // then locked in uuid order, so every transfer queues on the same row first.
+        db.withConnection(c -> {
+            ensureBalanceRow(c, from);
+            ensureBalanceRow(c, to);
+            return null;
+        });
+        UUID first = from.toString().compareTo(to.toString()) < 0 ? from : to;
+        UUID second = first.equals(from) ? to : from;
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return db.transaction(c -> {
+                    lockBalance(c, first);
+                    lockBalance(c, second);
+                    if (txnId != null && txnExists(c, txnId)) {
+                        return new Transfer.Duplicate();
+                    }
+                    if (!debitGuarded(c, from, amount)) {
+                        return new Transfer.Insufficient(balance(c, from));
+                    }
+                    creditUpsert(c, to, amount);
+                    insertEntry(c, from, -amount, reason, source, txnId);
+                    insertEntry(c, to, amount, reason, source, txnId == null ? null : txnId + "/in");
+                    return new Transfer.Applied(balance(c, from), balance(c, to));
+                });
+            } catch (SQLException e) {
+                if (txnId != null && isUniqueViolation(e)) {
+                    return new Transfer.Duplicate();
+                }
+                // Ordered locking rules out the opposite-transfer deadlock; anything else
+                // InnoDB rolls back in full, so a retry is safe.
+                if (attempt >= 3 || !"40001".equals(e.getSQLState())) {
+                    throw e;
+                }
+            }
+        }
+    }
+
+    private void ensureBalanceRow(Connection c, UUID account) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("INSERT IGNORE INTO " + balanceTable + " ("
+                + scopeInsertColumns() + "uuid, balance) VALUES (" + scopeInsertValues() + "?, 0)")) {
+            int i = bindScope(ps, 1);
+            ps.setString(i, account.toString());
+            ps.executeUpdate();
+        }
+    }
+
+    private void lockBalance(Connection c, UUID account) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT balance FROM " + balanceTable + " WHERE " + scopeWhere() + "uuid = ? FOR UPDATE")) {
+            int i = bindScope(ps, 1);
+            ps.setString(i, account.toString());
+            ps.executeQuery().close();
+        }
+    }
+
+    public CompletableFuture<Transfer> transferAsync(UUID from, UUID to, long amount, String reason, String source,
+                                                     String txnId) {
+        return db.async(() -> transfer(from, to, amount, reason, source, txnId));
     }
 
     public CompletableFuture<Result> creditAsync(UUID player, long amount, String reason, String source, String txnId) {
@@ -202,37 +296,11 @@ public final class Ledger {
                     return new Result.Duplicate(balance(c, player));
                 }
                 if (delta > 0) {
-                    try (PreparedStatement ps = c.prepareStatement("INSERT INTO " + balanceTable + " ("
-                            + scopeInsertColumns() + "uuid, balance) VALUES (" + scopeInsertValues() + "?, ?)"
-                            + " ON DUPLICATE KEY UPDATE balance = balance + VALUES(balance)")) {
-                        int i = bindScope(ps, 1);
-                        ps.setString(i++, player.toString());
-                        ps.setLong(i, delta);
-                        ps.executeUpdate();
-                    }
-                } else {
-                    try (PreparedStatement ps = c.prepareStatement("UPDATE " + balanceTable
-                            + " SET balance = balance - ? WHERE " + scopeWhere() + "uuid = ? AND balance >= ?")) {
-                        ps.setLong(1, -delta);
-                        int i = bindScope(ps, 2);
-                        ps.setString(i++, player.toString());
-                        ps.setLong(i, -delta);
-                        if (ps.executeUpdate() != 1) {
-                            return new Result.Insufficient(balance(c, player));
-                        }
-                    }
+                    creditUpsert(c, player, delta);
+                } else if (!debitGuarded(c, player, -delta)) {
+                    return new Result.Insufficient(balance(c, player));
                 }
-                try (PreparedStatement ps = c.prepareStatement("INSERT INTO " + ledgerTable + " ("
-                        + scopeInsertColumns() + "uuid, delta, reason, source, txn_id) VALUES ("
-                        + scopeInsertValues() + "?, ?, ?, ?, ?)")) {
-                    int i = bindScope(ps, 1);
-                    ps.setString(i++, player.toString());
-                    ps.setLong(i++, delta);
-                    ps.setString(i++, truncate(reason, 64));
-                    ps.setString(i++, truncate(source, 64));
-                    ps.setString(i, txnId);
-                    ps.executeUpdate();
-                }
+                insertEntry(c, player, delta, reason, source, txnId);
                 return new Result.Applied(balance(c, player));
             });
         } catch (SQLException e) {
@@ -241,6 +309,44 @@ public final class Ledger {
                 return new Result.Duplicate(balance(player));
             }
             throw e;
+        }
+    }
+
+    private void creditUpsert(Connection c, UUID player, long amount) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("INSERT INTO " + balanceTable + " ("
+                + scopeInsertColumns() + "uuid, balance) VALUES (" + scopeInsertValues() + "?, ?)"
+                + " ON DUPLICATE KEY UPDATE balance = balance + VALUES(balance)")) {
+            int i = bindScope(ps, 1);
+            ps.setString(i++, player.toString());
+            ps.setLong(i, amount);
+            ps.executeUpdate();
+        }
+    }
+
+    /** The guarded debit: false (nothing changed) if the balance doesn't cover {@code amount}. */
+    private boolean debitGuarded(Connection c, UUID player, long amount) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("UPDATE " + balanceTable
+                + " SET balance = balance - ? WHERE " + scopeWhere() + "uuid = ? AND balance >= ?")) {
+            ps.setLong(1, amount);
+            int i = bindScope(ps, 2);
+            ps.setString(i++, player.toString());
+            ps.setLong(i, amount);
+            return ps.executeUpdate() == 1;
+        }
+    }
+
+    private void insertEntry(Connection c, UUID player, long delta, String reason, String source, String txnId)
+            throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("INSERT INTO " + ledgerTable + " ("
+                + scopeInsertColumns() + "uuid, delta, reason, source, txn_id) VALUES ("
+                + scopeInsertValues() + "?, ?, ?, ?, ?)")) {
+            int i = bindScope(ps, 1);
+            ps.setString(i++, player.toString());
+            ps.setLong(i++, delta);
+            ps.setString(i++, truncate(reason, 64));
+            ps.setString(i++, truncate(source, 64));
+            ps.setString(i, txnId);
+            ps.executeUpdate();
         }
     }
 

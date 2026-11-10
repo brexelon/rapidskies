@@ -1,6 +1,5 @@
 package us.rapidskies.core.world;
 
-import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.event.player.AsyncPlayerSpawnLocationEvent;
 import io.papermc.paper.math.Position;
 import java.util.HashMap;
@@ -9,10 +8,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.Location;
@@ -30,7 +25,6 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.slf4j.Logger;
-import us.rapidskies.common.lang.Lang;
 import us.rapidskies.core.world.WorldConfig.JoinSpawn;
 import us.rapidskies.core.world.WorldConfig.WorldSettings;
 
@@ -45,16 +39,13 @@ import us.rapidskies.core.world.WorldConfig.WorldSettings;
  * falling off a sky island before the void does.
  *
  * <p>The pre-built worlds themselves are shipped by {@code rsdeploy.py worlds}
- * (infra/README.md → Worlds).
+ * (infra/README.md → Worlds). {@code /spawn} and {@code /setspawn} are rapid-essentials'
+ * commands, on {@link #spawn()} and {@link #setSpawn}.
  */
 public final class WorldService implements Listener {
 
-    public static final String SPAWN_PERMISSION = "rapid.command.spawn";
-    public static final String SET_SPAWN_PERMISSION = "rapid.command.setspawn";
-
     private final JavaPlugin plugin;
     private final WorldConfig config;
-    private final Lang lang;
     private final Logger log;
     /** Void heights by world, for the move check. */
     private final Map<World, Integer> voidY = new HashMap<>();
@@ -62,10 +53,9 @@ public final class WorldService implements Listener {
     /** Read from the async spawn-location event, so it's swapped, never mutated. */
     private volatile Location spawn;
 
-    public WorldService(JavaPlugin plugin, WorldConfig config, Lang lang) {
+    public WorldService(JavaPlugin plugin, WorldConfig config) {
         this.plugin = plugin;
         this.config = config;
-        this.lang = lang;
         this.log = plugin.getSLF4JLogger();
     }
 
@@ -160,9 +150,14 @@ public final class WorldService implements Listener {
         }
     }
 
-    /** Whether only builders may change {@code world} ({@link WorldProtection}). */
+    /** Whether only players in build mode may change {@code world} ({@link WorldProtection}). */
     public boolean isProtected(World world) {
         return protectedWorlds.contains(world);
+    }
+
+    /** What players see {@code world} called (config {@code world-names}), e.g. on the sidebar. */
+    public String displayName(World world) {
+        return config.displayName(world.getKey().asString());
     }
 
     private void setGameRule(World world, String worldKey, String name, String value) {
@@ -245,61 +240,5 @@ public final class WorldService implements Listener {
             player.setFallDistance(0);
             player.teleportAsync(target, PlayerTeleportEvent.TeleportCause.PLUGIN);
         }
-    }
-
-    // ------------------------------------------------------------------ commands
-
-    /** {@code /spawn}. */
-    public BasicCommand spawnCommand() {
-        return new BasicCommand() {
-            @Override
-            public void execute(io.papermc.paper.command.brigadier.CommandSourceStack stack, String[] args) {
-                if (!(stack.getSender() instanceof Player player)) {
-                    lang.send(stack.getSender(), "errors.players-only");
-                    return;
-                }
-                teleport(player);
-                lang.send(player, "spawn.teleported");
-            }
-
-            @Override
-            public String permission() {
-                return SPAWN_PERMISSION;
-            }
-        };
-    }
-
-    /**
-     * {@code /setspawn}: moves the spawn to where you stand until the next restart, and prints
-     * the line for the server's profile in infra/, which is where the spawn really lives
-     * (rsdeploy would put the old value back otherwise).
-     */
-    public BasicCommand setSpawnCommand() {
-        return new BasicCommand() {
-            @Override
-            public void execute(io.papermc.paper.command.brigadier.CommandSourceStack stack, String[] args) {
-                if (!(stack.getSender() instanceof Player player)) {
-                    lang.send(stack.getSender(), "errors.players-only");
-                    return;
-                }
-                Location at = player.getLocation();
-                SpawnPoint point = new SpawnPoint(at.getWorld().getKey().asString(), at.getX(), at.getY(), at.getZ(),
-                        at.getYaw(), at.getPitch());
-                // Round like the printed line, so what's live matches what goes into the profile.
-                SpawnPoint rounded = SpawnPoint.parse(point.format());
-                setSpawn(new Location(at.getWorld(), rounded.x(), rounded.y(), rounded.z(), rounded.yaw(),
-                        rounded.pitch()));
-                String value = rounded.format();
-                Component line = Component.text("spawn.location: \"" + value + "\"")
-                        .clickEvent(ClickEvent.copyToClipboard(value))
-                        .hoverEvent(HoverEvent.showText(lang.get("spawn.copy-hint")));
-                lang.send(player, "spawn.set", Placeholder.component("line", line));
-            }
-
-            @Override
-            public String permission() {
-                return SET_SPAWN_PERMISSION;
-            }
-        };
     }
 }

@@ -1,0 +1,7 @@
+# QuickShop-Hikari on Horizons (plan §4: chest shops). rapid-claims decides where shops may
+# be created: inside claimed land where the creator is at least a Member. QuickShop's own
+# check simulates breaking the block, which would demand Builder access, so it's off.
+shop.protection-checking: false
+# Prices in Crowns through the Vault API rapid-core registers (server.gamemode horizons);
+# QuickShop 6.3's one Vault setting covers both the classic and VaultUnlocked interfaces.
+economy-type: 0

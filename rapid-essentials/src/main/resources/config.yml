@@ -1,0 +1,54 @@
+# rapid-essentials (every Paper backend). The profiles in infra/ switch commands off per
+# server (profiles/<role>/plugins/rapid-essentials/config.yml.patch). /essentials reload
+# re-reads this file, except disabled-commands and info-commands, which take a restart.
+
+# Commands this server doesn't register at all, by name (aliases go with them). For example
+# the hub has no homes or /tpa, and SkyRealms uses SuperiorSkyblock2's island homes:
+#   disabled-commands: [home, sethome, delhome, homes]
+# /balance, /pay, /baltop and /eco only exist where rapid-core serves a gamemode currency
+# (server.gamemode), so there's no need to list them on the hub.
+disabled-commands: []
+
+# Every teleport command (/spawn, /back, /home, /warp, /tpa) follows these. Other plugins can
+# refuse a teleport too: rapid-horizons does while a player is combat-tagged.
+teleport:
+  # Stand still this long first; moving to another block or taking damage calls it off.
+  # 0: at once. rapid.essentials.teleport.nowarmup skips it.
+  warmup-seconds: 0
+  # After a teleport of a kind, wait this long before the next one of that kind.
+  # rapid.essentials.teleport.nocooldown skips it.
+  cooldown-seconds:
+    back: 10
+    home: 0
+    warp: 0
+    spawn: 0
+    tpa: 0
+
+# /back: before the last teleport by command or plugin, or (on-death) where you died.
+back:
+  on-death: true
+
+# /tpa and /tpahere requests close after this long.
+tpa:
+  expire-seconds: 60
+
+# Homes belong to this server group (Horizons homes are only offered on Horizons).
+homes:
+  # The same for everyone: extra homes are never sold (PLAN.md §6.1).
+  limit: 3
+  # World keys where homes can't be set, e.g. rotating Frontiers that will be deleted:
+  #   blocked-worlds: ["rapidskies:frontier"]
+  blocked-worlds: []
+
+# /balance, /pay, /baltop, /eco (gamemode servers).
+economy:
+  baltop-size: 10
+  # The smallest /pay, to keep spam payments out of the ledger.
+  pay-minimum: 1
+
+# Text pages: the command name, then its aliases. Each shows lang info.<name>; add a lang line
+# for any new one.
+info-commands:
+  rules: []
+  store: [buy]
+  website: [site]

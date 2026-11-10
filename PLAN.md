@@ -2,7 +2,7 @@
 
 > Velocity proxy + Paper 26.3 backends · Java clients 1.20 → 26.3 · Hosted on Pterodactyl (VPS/dedicated)
 > Server address: **rapidskies.us** · Store: **store.rapidskies.us**
-> Status: Phase 1 complete; Phase 2 code complete (spawns, `rapid-hub`), in-game checks pending (see §11) · Last updated 2026-11-09
+> Status: Phases 1–2 complete; Phase 3a (`rapid-claims`) code complete and Phase 3b (`rapid-horizons`) started, in-game checks pending (see §11) · Last updated 2026-11-09
 
 ---
 
@@ -155,7 +155,8 @@ The **Panel runs on its own server**, separate from the **game node** (one dedic
 |---|---|---|
 | `rapid-common` | — | Shared models, Redis pub/sub, HikariCP DB layer + versioned SQL migrations, MiniMessage lang loader, config |
 | `rapid-proxy` | Velocity | Server registry and load balancing, **parties**, **friends**, join queue, cross-server `/msg`, staff chat, MOTD/branding, maintenance mode, version gate |
-| `rapid-core` | All Paper | Player profiles, **Bolts economy API**, rank display (including **plus color**, §6.1), per-mode Vault economy provider, chat formatting, **cosmetics engine**, network XP/levels, quests and achievements, **Tailwind** rested bonus (§5.3), **staff mode**, GUI framework, combat-timing module, AFK and anti-farm detection |
+| `rapid-core` | All Paper | Player profiles, **Bolts economy API**, rank display (including **plus color**, §6.1), per-mode Vault economy provider, chat formatting, **cosmetics engine**, network XP/levels, quests and achievements, **Tailwind** rested bonus (§5.3), **staff mode**, **build mode** for the protected spawn worlds, GUI framework, combat-timing module, AFK and anti-farm detection |
+| `rapid-essentials` | All Paper | Everyday commands (EssentialsX-style, built on rapid-core's spawn, AFK, vanish, freeze and economy): `/spawn`, `/back`, `/tpa`, homes, warps, `/balance` `/pay` `/baltop` `/eco`, `/afk`, `/list`, `/seen`, `/hat`, info pages, network-wide `/broadcast`. One teleport path (cooldowns, warmup, safe landing, guards other plugins add) |
 | `rapid-hub` | Hub | Spawn, mode selector, double-jump, visibility toggle, parkour, leaderboards, cosmetics and Bolt shop menus |
 | `rapid-skyrealms` | skyrealms | Expeditions, Realm Tiers, Trade Routes, seasons, server shop, mode quests (on the SuperiorSkyblock2 API) |
 | `rapid-horizons` | smp | Frontier rotation and modifiers, Skyborne events, Trades, PvP toggle and Wildlands, Chapters |
@@ -446,13 +447,14 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 - `mode_economy_ledger` (mode, uuid, delta, reason, created_at) for Coins and Crowns, kept separate per mode
 - `cosmetics_owned` (uuid, cosmetic_id, source, acquired_at); `cosmetics_equipped` (uuid, slot, cosmetic_id)
 - `quests_progress`, `achievements`, `season_progress`, `chapter_progress`
-- `horizons_trades` (uuid, trade, level, xp)
-- **Claims:** `claims` (world, chunk_x, chunk_z, owner_type [player/town], owner_id, flags, claimed_at; PK world+chunk), `claim_trust` (owner_type, owner_id, uuid, role), `claim_allowance` (uuid, earned, purchased)
-- **Towns:** `towns` (id, name, tag, tag_color, mayor, bank, level, center_chunk, upkeep_paid_until, state [active/ruins]), `town_members` (town_id, uuid, role, joined_at), `town_plots` (world, chunk_x, chunk_z, town_id, resident_uuid), `town_projects` (town_id, project_id, contributions, state)
+- `horizons_trades` (uuid, trade, level, xp, active), `horizons_players` (uuid, pvp, pvp_changed_at, trades_changed_at), `horizons_trade_daily` (uuid, day, points: the Trade soft cap). Migration module `horizons`.
+- **Claims** (migration module `claims`): `claims` (world, chunk_x, chunk_z, owner_type [PLAYER/TOWN], owner_id, flags bit set, claimed_by, claimed_at; PK world+chunk), `claim_trust` (owner_type, owner_id, uuid, role; the all-zero uuid is "everyone"), `claim_denied` (owner_type, owner_id, uuid), `claim_players` (uuid, purchased, bonus, ruins_since). Starter and playtime chunks aren't stored: they're computed from the config and the player's playtime on the server.
+- **Towns:** `towns` (uuid, name, tag, tag_color, mayor, world, center_x, center_z, warp, upkeep_paid_until, state [ACTIVE/RUINS], ruins_since), `town_members` (uuid, town, role, joined_at), `town_roles` (town, role, permissions, land_role), `town_plots` (world, chunk_x, chunk_z, town, resident), `town_projects` (town, project, state, started_at, completed_at), `town_project_contributions` (town, project, uuid, resource, amount), `town_vaults` (town, contents). The **bank** is the town's row in `mode_balance` (mode `horizons`, keyed by the town's uuid), so deposits, upkeep and payouts are ordinary Crowns ledger entries; the **level** is the number of completed Projects.
 - **Market:** `market_listings` (id, mode, seller, item_blob, item_name, category, price, created_at, expires_at, status [ACTIVE/SOLD/EXPIRED/CANCELLED/REMOVED], buyer, sold_at), `market_collection` (id, mode, uuid, item_blob, reason), `market_price_history` (mode, item_key, day, avg_price, volume)
 - `skyrealms_trade_routes` (id, seller_island, buyer_island, item, qty, price, interval, state)
 - `frontier_history` (id, modifier, opened_at, closed_at, archive_path)
 - `friends` (two rows per friendship), `friend_requests`. Parties and the join queue are ephemeral and live in the proxy's memory: there is one proxy and a restart drops every player anyway. Move them to Redis (`party:<id>`, `queue:<target>`) if a second proxy is ever added.
+- `essentials_homes` (scope, uuid, name, world, x, y, z, yaw, pitch; PK scope+uuid+name) and `essentials_warps` (scope, name, position, created_by): `scope` is the server group, so a Horizons home is only offered on Horizons; `world` is the world key. Migration module `essentials`
 - `reports`, `staff_actions` (staff, action, target, server, detail: freezes, inspections, vanish and staff-mode toggles), `chat_log`
 - `grants` (uuid, kind [rank/permission], value, granted_by, reason, txn_id UNIQUE, created_at, starts_at, expires_at, revoked_at/by/reason): the record behind `/grant`; LuckPerms holds the effective nodes
 - `parkour_times` (course, period, uuid, time_ms, achieved_at; PK course+period+uuid): each player's best per hub parkour course, all time (`period` = `all`) and per ISO week (`2026-W46`, UTC), for the hub leaderboards and `/parkour top`
@@ -460,7 +462,7 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 
 SuperiorSkyblock2 keeps its own tables in the same MariaDB instance, under its own schema.
 
-Redis (every key and channel is prefixed `rapid:`, since LuckPerms shares the instance): `server:<id>` heartbeat and state, `maintenance`, the sets `vanished` and `frozen` (staff state that survives relogs and server switches), `shared-ip` (written by the proxy: accounts sharing an IP with one that joined earlier, which earn no activity Bolts), and `playtime:<day>:<uuid>` active-second counters; plus pub/sub channels for profile and plus-color updates, Bolts changes, maintenance, connect requests from backends to the proxy (`connect`), `vanish`, `freeze`, `mode-balance` (a Coins/Crowns balance changed on another server), and cache invalidation. Private messages, party chat and staff chat run on the single proxy and need no channel; `presence:<uuid>` and per-party keys join them only with a second proxy.
+Redis (every key and channel is prefixed `rapid:`, since LuckPerms shares the instance): `server:<id>` heartbeat and state, `maintenance`, the sets `vanished` and `frozen` (staff state that survives relogs and server switches), `shared-ip` (written by the proxy: accounts sharing an IP with one that joined earlier, which earn no activity Bolts), and `playtime:<day>:<uuid>` active-second counters; plus pub/sub channels for profile and plus-color updates, Bolts changes, maintenance, connect requests from backends to the proxy (`connect`), `vanish`, `freeze`, `mode-balance` (a Coins/Crowns balance changed on another server), `broadcast` (an admin's `/broadcast`, shown by every backend), and `claims` (a claim, trust list or town changed: other Horizons instances reload it). Private messages, party chat and staff chat run on the single proxy and need no channel; `presence:<uuid>` and per-party keys join them only with a second proxy.
 
 **Migrations:** each module keeps `V<n>__<name>.sql` scripts plus an `index` file under `db/migration/<module>/`, applied once under a MariaDB named lock and checksum-verified on every start (`rapid-common` `Migrator`). This replaced Flyway: it's one small class with no classloader or relocation quirks inside shaded plugin jars. Shipped scripts are never edited; fixes go in a new version.
 
@@ -518,7 +520,8 @@ Next:
 - [x] `rapid-core` spawn and world management: spawn point per server (hub on every join, gamemodes on first join and bedless deaths), void rescue under the sky islands, per-world game rules / time / weather / border from the profiles, protected spawn builds (`rapid.world.build`), `/spawn`, `/setspawn`. A test checks every game rule named in the profiles exists in Paper 26.3
 - [x] First boot of each world: walk the builds for blocks the upgrade got wrong (the hub's chunks are from 1.8), and check the spawn facing on 1.20.1 and 26.3
 - [x] Spawns re-checked against in-game screenshots and the world data. Hub: moved from the courtyard (which faced away from the gate) to the stone-slab marker on the south terrace, `-5.5 87.5 9.5` facing north over the courtyard to the stage and gate hall. SkyRealms: the compass rose's true centre is `28.5 150 -29.5` (block -30 spans -30..-29; the old `-30.5` was a block off), now facing west to the pavilion. Horizons: unchanged, `0.5 74.1 0.5` facing north up the path to the fountain
-- [ ] A way from the Horizons spawn to the Heartland (portal or `/rtp`, rapid-horizons, phase 3b); SuperiorSkyblock2's `spawn.location` set to the Trading Post spawn (phase 4b)
+- [x] A way from the Horizons spawn to the Heartland: `/rtp` (aliases `/wild`, `/heartland`) and an optional exit region at the spawn (rapid-horizons, phase 3b; set `rtp.portal.region` once the arch is picked in-game)
+- [ ] SuperiorSkyblock2's `spawn.location` set to the Trading Post spawn (phase 4b)
 - [x] `rapid-hub`: game menu (hotbar compass and `/games`) with live player counts per mode from the server heartbeats; Citizens NPCs for SkyRealms and Horizons on the stage's inner slab pedestals (centre pedestal kept for gamemode 3), in an in-memory registry so Citizens never saves them, with text-display labels showing the live count; clicking either joins through the proxy queue (`RapidCore#connect`). Hotbar items are locked in place and never touch staff mode's tools
 - [x] Double jump for everyone (re-armed on landing), a particle trail for `rapid.hub.trail` (Rapid+) and `/fly` for `rapid.hub.fly` (Rapid++); player visibility toggle (per viewer, remembered, independent of vanish)
 - [x] Parkour engine: courses from config (start, ordered checkpoints, finish, `fail-y`), runs end on flying, teleports, gamemode or world changes; action-bar timer, back-to-checkpoint / restart / leave hotbar, `/parkour [leave|checkpoint|restart|top [weekly]]`. Bests all time and per week in `parkour_times` (core V5); a new #1 is announced to the hub
@@ -526,10 +529,99 @@ Next:
 - [x] Parkour is generated instead of built: each run gets its own random course (`CourseGenerator`: single-block jumps any 1.20+ player can make, a gold checkpoint platform every `checkpoint-every` blocks, a finish platform at `length`) in a lane of the `rapidskies:parkour` void world (rapid-core creates it on the hub). The clock starts when the player jumps off the start platform; falls go back to the last checkpoint; blocks are removed when the run ends, and lanes in use are written to `parkour-lanes.txt` so a crash never leaves a course behind. Started from the hotbar feather, `/parkour start [course]` or an optional entrance block in the hub. Course `main`: 150 blocks, checkpoints at 50 and 100
 - [x] Sidebars per server (TAB on the proxy, `velocity/plugins/tab/config.yml.patch`): hub (rank, Bolts, players per gamemode, network count), SkyRealms (rank, Bolts, Tailwind, Coins, players), Horizons (rank, Bolts, Tailwind, Crowns, world, players), and a plain one for build/staging; `/sb` toggles it. New placeholders: `%rapid_rank_name%`, `%rapid_bolts%` (rapid-core's `BoltsCache`, re-read once a minute), `%rapid_tailwind_status%`, `%rapid_balance_status%`, and rapid-hub's `%rapidhub_players_<group>%`
 - [x] Rank and team prefixes without brackets (`RAPID++`, `MOD`), in chat, tab, nametags and `/grants`
+- [x] Build mode (`rapid-core`, every backend): the protected hub and spawn worlds can't be changed by anyone, staff included, unless they switch on `/build` (`rapid.world.build`: builders, developers, admins). It puts them in creative with their inventory, game mode and flight set aside in persistent data (shared with staff mode, so a crash loses nothing), shows a boss bar, and blocks drops, pickups and death drops so creative items never reach a survival economy; it ends on its own on leaving the protected worlds or the server. Staff with the permission get an action-bar hint when they try to build without it. Vehicles in the builds are protected too
+- [x] Sidebar World line uses display names (`%rapid_world%`, rapid-core `world-names`: Spawn, Heartland, The Nether, The End; unlisted worlds get a readable form of their key) instead of TAB's `%world%` folder name
 - [ ] SkyRealms sidebar: island level and worth (`%superior_island_level%`, `%superior_island_worth%`) once SuperiorSkyblock2 is on the server (phase 4b)
 - [ ] Optional: an entrance pressure plate for the parkour in the courtyard (`parkour.courses.main.entrance`, from `/rapidhub here`)
 - [x] Check on 1.20.1 and 26.3: NPC skins and that their nameplates stay hidden alongside TAB's nametags, label and leaderboard readability from the spawn, game menu counts and joining, hotbar items can't be moved or dropped, double jump and `/fly`, visibility toggle with a vanished staff member online, a full parkour run including a new record (jumps feel fair on 1.20.1 too, blocks are gone afterwards), and every sidebar (lines fit, values fill in, 1.20.1's red numbers don't clash)
 - [x] Pick NPC skins (`modes.<id>.skin-texture` / `skin-signature` from mineskin.org, so they never change)
+
+### Phase 3 progress
+
+**3a. Claims & towns (`rapid-claims`)**: code complete, with 187 tests. 178 are unit tests (the protection matrix row by row, role resolution, plots, borders, contiguity, upkeep and ruins, settings, lang); 9 run every repository statement against MariaDB:
+
+- [x] Chunk claims in the Heartland only, held in memory (`LandIndex`, O(1) lookups by chunk) and written through to MariaDB. The server shuts down if the claims can't be loaded, rather than run unprotected
+- [x] Allowance: 9 starter chunks, one per 2 h played on the server (up to 40), chunks from other plugins (`ClaimService.registerAllowance`: Trade levels), and chunks bought with Crowns at a rising price (`/claim buy`, 500 + 250 × n). Never money or Bolts
+- [x] Trust roles (Visitor → Trusted → Member → Builder → Co-owner) per owner, with `*` for everyone. Co-owners manage trust and flags but can't make Co-owners. Entry denial per player covers walking, pearls, chorus fruit and teleports
+- [x] Flags per chunk (PvP, monster spawning, fire spread, leaf decay; explosions are always blocked), set for one chunk or all the owner's land from `/claim flags`
+- [x] Protection suite:
+  - blocks, buckets and trampling
+  - containers, doors, redstone settings, item frames, armor stands, lecterns, beds and signs (shop signs stay clickable)
+  - animals, villagers, displays and vehicles
+  - explosions of every kind
+  - fluids, pistons, dispensers and hoppers across borders
+  - fire spread and burning; trees, mushrooms, sculk and bone meal growing across borders; sponges
+  - portals; projectiles (buttons, pots, TNT, candles); splash and lingering potions; mob griefing
+  - PvP in claims with the flag off
+- [x] `/claim map`: a 6-row chest map (9×5 chunks, north up). Click to claim, right-click to unclaim; buttons pan the map, switch between personal and town claiming, and open borders and flags. `/claim show` draws borders with particles plus a client-side ground outline (gold yours, diamond your town, iron trusted, redstone others). Crossing into other land shows "Entering …" on the action bar
+- [x] Towns:
+  - founding costs 5,000 Crowns (first day of upkeep included), on wilderness or your own chunk
+  - roles Mayor → Assistant → Resident → Recruit, with per-role permissions and land access (`/town perms`); invites, kicks, ranks, mayor hand-over
+  - contiguous town land from the center chunk, capped at 16 + 8 × members + Project chunks
+  - plots handed to residents: their own trust list applies, and the mayor only gets doors
+  - town trust and denials; a tag and color (no reds) in chat; `/tc` town chat
+  - rename (paid from the bank); disband (bank paid to the mayor)
+- [x] Town bank in the Crowns ledger: deposits and withdrawals are one-transaction transfers (`Ledger.transfer`, new in rapid-common). Daily upkeep (50 + 10 × chunks) is charged with a per-day transaction id so it's never taken twice, on one worker thread and under a MariaDB lock
+- [x] Ruins: towns 14 days behind on upkeep, and the personal land of players away 90 days, become ruins. Ruins stay protected 7 more days, then are released (builds stay). Paying (towns) or logging in (players) restores them
+- [x] Town Projects from a config catalog, 5 to start: Lighthouse → warp, Storehouse → vault, Town Walls → +16 chunks, Market Square → market stall, Banner Hall → banner and title. One runs at a time; members donate items and Crowns from a chest menu, and completion raises the town level and applies the unlocks (`/town warp`, the shared `/town vault`)
+- [x] `/claimadmin` (bypass, info, unclaim, unclaimall, transfer, restore, allowance, deletetown), every change logged to `staff_actions`
+- [x] Integrations:
+  - the `ClaimService` API (ServicesManager) for other plugins
+  - PlaceholderAPI `%rapidclaims_town%`, `_town_tag%`, `_here%` and `_chunks%` for the Horizons sidebar
+  - town tags in chat through rapid-core's new `ChatTags`
+  - QuickShop-Hikari shops only inside claims where the creator is a Member
+  - the Redis `claims` channel, so a second Horizons instance stays in step
+- [x] Deploy: the `smp` plugin set (rapid-claims, rapid-horizons, QuickShop-Hikari), CoreProtect in `survival`, the QuickShop patch, the Horizons sidebar lines, and LuckPerms lines for `/claimadmin` and entry exemption
+
+**3b. Horizons SMP (`rapid-horizons`)**: started, with 28 tests (2 against MariaDB):
+
+- [x] `/rtp` into the Heartland: a random safe surface spot inside the border, never in or next to a claimed chunk, with async chunk loading and a cooldown; plus an optional exit region at the spawn
+- [x] The Heartland portal at the spawn: an arch across the path south of the plaza (opening `-2 72 12`..`2 76 12`, facing the spawn), built by rapid-horizons from its config on every start (mossy stone brick columns, spruce lintel, flowering azalea and lanterns, nether portal fill). Physics can't break the frameless portal blocks, and vanilla portal travel from them is cancelled (plus `allow_entering_nether_using_portals: false` in the spawn world). A "The Heartland" text-display hologram floats in front of it (`rtp.portal.hologram`, lang `travel.portal-hologram`), respawned on start and `/horizons reload`
+- [x] Restart kicks name the gamemode ("Horizons SMP is restarting", "SkyRealms is restarting"): `settings.shutdown-message` in the smp and skyrealms profiles' `bukkit.yml.patch`, over paper-base's "RapidSkies is restarting"
+- [x] `/back`: the spot before the last command or plugin teleport, or the death spot (`back.on-death`); never a void fall, lands on the nearest safe footing in the same column or refuses, not while combat-tagged, 10 s cooldown
+- [x] Citizens NPCs on the plaza's four pedestals, rebuilt from the config each start with text-display labels (`npcs.<id>`: `rtp`, `trades`, `server:<group>` or `command:<command>`): Heartland Guide, Land Surveyor (`/claim help`), Trade Master, Lobby. `/horizons here` prints positions; `/horizons reload` rebuilds the NPCs and the arch. `Labels` moved from rapid-hub to rapid-core so both use it
+- [x] Opt-in PvP (`/pvp`): off by default, with a 5-minute toggle cooldown and a 30 s combat tag; claims' PvP flag decides inside claims. Covers melee, projectiles, potions, clouds, pets, TNT, crystals, fire and fishing rods, with a hook for Wildlands
+- [x] Trades: Miner, Farmer, Hunter, Builder, Enchanter and Fisher, up to 2 at once with a switching cooldown
+  - XP and Crowns per action, with anti-abuse: placed ores and crops don't pay, spawner mobs pay less, nothing while AFK
+  - a daily soft cap with diminishing returns, and Tailwind
+  - Crowns paid in batches off the main thread
+  - the `/trades` menu, and claim chunks from Trade levels
+
+Next:
+
+- [x] Check on 1.20.1 and 26.3:
+  - `/claim map` (pane names and lore, clicks) and borders (particles and outline)
+  - every protection row by hand on a test claim
+  - a town from founding to a finished Project, and the vault with two members
+  - upkeep and ruins, with short test values on staging
+  - town tags in chat, and the sidebar's Town and Land lines
+  - a QuickShop shop inside and outside a claim
+  - `/rtp` and `/pvp`
+- [x] Check in-game on 1.20.1 and 26.3: the portal arch (looks right in the path, the portal blocks stay, walking in lands in the Heartland and never the Nether), the four NPCs (labels readable from the spawn, skins, clicks), `/back` after `/rtp`, `/spawn` and a death, and `/build` on the hub and the Horizons spawn (creative, boss bar, can't drop, ends on `/rtp`)
+- [ ] NPC skins for the four spawn NPCs (`npcs.<id>.skin-texture` / `skin-signature` from mineskin.org)
+- [ ] Pick the Heartland's pre-generated radius (Chunky, world border)
+- [ ] Rest of phase 3b: Frontier rotation and 2 launch modifiers, Wildlands, Skyborne events (1 fortress), Chapter 1, Trade side-grade perks, Nether/End rotation
+- [ ] Later, once there's a second Horizons instance: town chat across instances (Redis) and locking the town vault to one server. Also the town tag before names in the tab list on Horizons only (TAB per-server group settings)
+- [ ] Known gap: a database failure during a Trade payout drops that batch's Crowns (it never pays twice)
+
+### Everyday commands (`rapid-essentials`)
+
+A plugin on every Paper backend (`paper-base` set) for the commands players expect from EssentialsX, built on rapid-core so each thing has one source of truth. 23 tests (3 against MariaDB):
+
+- [x] One teleport path for `/spawn`, `/back`, `/home`, `/warp` and `/tpa`: per-kind cooldowns, an optional warmup that moving or damage cancels (3 s on Horizons), chunk loaded first, safe landing for remembered spots, and guards from other plugins. rapid-horizons refuses all of them while combat-tagged, so `/spawn` and `/home` are no escape from a fight any more (before, only `/back` was blocked); frozen players never move
+- [x] Merged in: `/spawn`, `/setspawn` and `/afk` from rapid-core (the spawn, `WorldService` and the AFK tracker stay there as API), `/back` from rapid-horizons (now on every server but the hub; Horizons keeps "back from the portal = the spawn" through an origin filter), and the unsafe-block rules from Horizons' `/rtp` (`SafeBlocks`, shared)
+- [x] `/tpa`, `/tpahere`, `/tpaccept`, `/tpdeny`, `/tpacancel`, `/tptoggle` on the same server, with clickable buttons; vanished staff can't be asked
+- [x] Homes (`essentials_homes`): the same limit for everyone (3; §6.1), per server group, cached from pre-login, the limit checked in one locked transaction; `homes.blocked-worlds` for Frontiers. Warps (`essentials_warps`) set by admins
+- [x] Coins/Crowns: `/balance`, `/pay` (one ledger transfer, both rows linked by a `pay:` transaction id), `/baltop` (town banks left out), `/eco give|take` (ledger reason `admin:<name>`, logged to `staff_actions`)
+- [x] `/ping`, `/list` (rank prefixes; vanished staff only for those who can see them), `/seen` (staff), `/hat` (Horizons Rapid+ perk), `/rules`, `/store` (`/buy`, §6.3), `/website`, `/broadcast` over Redis
+- [x] Per-server `disabled-commands` in the profiles: the hub keeps `/spawn` and the info pages; SkyRealms leaves homes to SuperiorSkyblock2
+- [x] Left out on purpose: `/gamemode`, `/fly`, `/god`, `/heal`, `/give`, kits, `/repair`, `/craft`, `/ec` (§6.1; build and staff mode cover staff needs). `/msg`, `/r`, `/hub` stay on the proxy
+
+Next:
+
+- [ ] Check on 1.20.1 and 26.3: the `/tpa` buttons and hovers, `/homes` and `/warps` click lists, the warmup cancelling on a step and a hit, `/spawn` refused while combat-tagged on Horizons, `/back` after the portal, `/pay` between two players and `/baltop`, `/broadcast` reaching both gamemodes, `/list` with a vanished staff member
+- [ ] Set the first warps on Horizons (`/setwarp`), and add the Frontier worlds to `homes.blocked-worlds` once the rotation exists
+- [ ] Later: `/tpa` across servers (through the proxy, once Horizons has a second instance), `/ignore` with `/msg` on the proxy, and `/nick` for Rapid+++ (§6.1, staff-audited)
 
 **Recommended launch strategy:** launch both modes together. With only two modes, launching one at a time would feel thin. Run Horizons as the first closed beta, though, since it relies more on premade plugins and will stress-test the core platform early. Don't wipe beta progress on SkyRealms or Horizons at launch.
 

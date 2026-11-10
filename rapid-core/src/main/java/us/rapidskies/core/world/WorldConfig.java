@@ -11,12 +11,15 @@ import java.util.OptionalLong;
 import us.rapidskies.common.config.ConfigView;
 
 /**
- * The {@code spawn} and {@code worlds} sections of rapid-core's config: where players appear
- * on this server, and how rapid-core looks after its spawn worlds (the hub, the SkyRealms
- * Trading Post, the Horizons spawn). The profiles in infra/ fill these in per server.
+ * The {@code spawn}, {@code worlds} and {@code world-names} sections of rapid-core's config:
+ * where players appear on this server, how rapid-core looks after its spawn worlds (the hub,
+ * the SkyRealms Trading Post, the Horizons spawn), and what worlds are called on sidebars.
+ * The profiles in infra/ fill these in per server.
+ *
+ * @param worldNames display names by world key ({@code rapidskies:spawn} → {@code Spawn})
  */
 public record WorldConfig(Optional<SpawnPoint> spawn, JoinSpawn onJoin, boolean respawnAtSpawn,
-                          List<WorldSettings> worlds) {
+                          List<WorldSettings> worlds, Map<String, String> worldNames) {
 
     /** When a joining player is put at the spawn. */
     public enum JoinSpawn {
@@ -76,7 +79,7 @@ public record WorldConfig(Optional<SpawnPoint> spawn, JoinSpawn onJoin, boolean 
      * @param key        world key, e.g. {@code minecraft:overworld} (the main world) or {@code rapidskies:spawn}
      * @param create     load the world at startup (creating it if it's missing) with this generator;
      *                   empty for worlds the server loads by itself (the main world)
-     * @param protect    only players with {@code rapid.world.build} may change anything
+     * @param protect    nobody may change anything outside build mode ({@code /build}, {@code rapid.world.build})
      * @param voidY      players below this height are sent back to the spawn instead of falling into the void
      * @param time       fixed time of day in ticks, set at startup (pair with {@code advance_time: false})
      * @param gameRules  game rule key (26.x names, e.g. {@code advance_time}) to value
@@ -118,7 +121,51 @@ public record WorldConfig(Optional<SpawnPoint> spawn, JoinSpawn onJoin, boolean 
                     w.bool("protect", false), voidY, border, time, w.bool("clear-weather", false),
                     Map.copyOf(rules)));
         }
-        return new WorldConfig(spawn, onJoin, onDeath, List.copyOf(worlds));
+        Map<String, String> names = new LinkedHashMap<>();
+        // Whole map entries, like `worlds`: keys contain a colon and paths would split on dots.
+        c.section("world-names").asMap().forEach((k, v) -> {
+            String name = v == null ? "" : String.valueOf(v).trim();
+            if (!name.isEmpty()) {
+                names.put(k.trim(), name);
+            }
+        });
+        return new WorldConfig(spawn, onJoin, onDeath, List.copyOf(worlds), Map.copyOf(names));
+    }
+
+    /**
+     * What players see a world called: its {@code world-names} entry, else a readable form of
+     * its key ({@code minecraft:the_nether} → {@code The Nether}, {@code rapidskies:frontier_overgrowth}
+     * → {@code Frontier Overgrowth}).
+     */
+    public String displayName(String worldKey) {
+        String name = worldNames.get(worldKey);
+        if (name != null) {
+            return name;
+        }
+        return switch (worldKey) {
+            case "minecraft:overworld" -> "Overworld";
+            case "minecraft:the_nether" -> "The Nether";
+            case "minecraft:the_end" -> "The End";
+            default -> titleCase(worldKey.substring(worldKey.indexOf(':') + 1));
+        };
+    }
+
+    /** {@code frontier_overgrowth} → {@code Frontier Overgrowth}. */
+    static String titleCase(String s) {
+        StringBuilder out = new StringBuilder(s.length());
+        boolean start = true;
+        for (char ch : s.toCharArray()) {
+            if (ch == '_' || ch == '-' || ch == '/' || ch == ' ') {
+                if (!start) {
+                    out.append(' ');
+                }
+                start = true;
+            } else {
+                out.append(start ? Character.toUpperCase(ch) : ch);
+                start = false;
+            }
+        }
+        return out.toString().strip();
     }
 
     /** Settings for {@code key}, if rapid-core looks after that world. */

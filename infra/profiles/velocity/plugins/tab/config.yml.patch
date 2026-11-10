@@ -46,8 +46,10 @@ bossbar:
 # reads the same as 26.3. At most 15 lines.
 # Placeholders: TAB's own (%server%, %player%, %online% = network, %serveronline%, %world%,
 # %ping%) and, through TAB-Bridge, rapid-core's %rapid_rank_name%, %rapid_bolts%,
-# %rapid_tailwind_status%, %rapid_balance_status% (Coins/Crowns) and rapid-hub's
-# %rapidhub_players_<group>%.
+# %rapid_tailwind_status%, %rapid_balance_status% (Coins/Crowns), %rapid_world% (the world's
+# display name from rapid-core's world-names: "Spawn", not TAB's %world% "rapidskies_spawn"), rapid-hub's
+# %rapidhub_status_<group>% ("12 playing" or a red "Offline") and, on Horizons, rapid-claims' %rapidclaims_town% and
+# %rapidclaims_here% (whose land you stand on; a dash outside the Heartland).
 scoreboard:
   enabled: true
   toggle-command: /sb
@@ -66,8 +68,8 @@ scoreboard:
         - "&7Bolts: &#FFAA00%rapid_bolts% ⚡"
         - ""
         - "&#FFD800&lGames"
-        - "&7SkyRealms: &f%rapidhub_players_skyrealms% playing"
-        - "&7Horizons SMP: &f%rapidhub_players_smp% playing"
+        - "&7SkyRealms: %rapidhub_status_skyrealms%"
+        - "&7Horizons SMP: %rapidhub_status_smp%"
         - ""
         - "&7Network: &f%online% online"
         - ""
@@ -104,7 +106,9 @@ scoreboard:
         - ""
         - "&#FFD800&lHorizons SMP"
         - "&7Crowns: &#FFAA00%rapid_balance_status%"
-        - "&7World: &f%world%"
+        - "&7Town: %rapidclaims_town%"
+        - "&7Land: %rapidclaims_here%"
+        - "&7World: &f%rapid_world%"
         - "&7Players here: &f%serveronline%"
         - ""
         - "&#FFD800rapidskies.us"
@@ -131,8 +135,11 @@ placeholder-refresh-intervals:
   "%rapid_bolts%": 2000
   "%rapid_tailwind_status%": 5000
   "%rapid_balance_status%": 1000
-  "%rapidhub_players_skyrealms%": 2000
-  "%rapidhub_players_smp%": 2000
+  "%rapid_world%": 1000
+  "%rapidhub_status_skyrealms%": 2000
+  "%rapidhub_status_smp%": 2000
+  "%rapidclaims_town%": 5000
+  "%rapidclaims_here%": 1000
   "%ping%": 2000
 layout:
   enabled: false

@@ -1,6 +1,6 @@
 // `./gradlew dist` collects every deployable plugin jar into build/dist/.
 val pluginModules = listOf(
-    "rapid-proxy", "rapid-core", "rapid-hub", "rapid-skyrealms",
+    "rapid-proxy", "rapid-core", "rapid-essentials", "rapid-hub", "rapid-skyrealms",
     "rapid-horizons", "rapid-claims", "rapid-market",
 )
 

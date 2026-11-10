@@ -82,6 +82,38 @@ public final class ModeEconomy implements Listener {
         return applied(player, ledger.debit(player, amount, reason, serverId, null));
     }
 
+    /**
+     * Moves {@code amount} between two accounts in one transaction (a player paying into a
+     * town bank, a bank paying a mayor out). Accounts needn't be players. Blocks: call off
+     * the main thread. Returns the payer's balance afterwards.
+     */
+    public Change transfer(UUID from, UUID to, long amount, String reason, String txnId) throws SQLException {
+        return switch (ledger.transfer(from, to, amount, reason, serverId, txnId)) {
+            case Ledger.Transfer.Applied a -> {
+                cached.computeIfPresent(from, (k, old) -> a.fromBalance());
+                cached.computeIfPresent(to, (k, old) -> a.toBalance());
+                announce(from, a.fromBalance());
+                announce(to, a.toBalance());
+                yield new Change(true, a.fromBalance());
+            }
+            case Ledger.Transfer.Insufficient i -> {
+                cached.computeIfPresent(from, (k, old) -> i.fromBalance());
+                yield new Change(false, i.fromBalance());
+            }
+            case Ledger.Transfer.Duplicate d -> new Change(false, balance(from));
+        };
+    }
+
+    /** Like {@link #withdraw}, with a {@code txnId} so a retried charge (daily upkeep) is applied once. */
+    public Change withdraw(UUID player, long amount, String reason, String txnId) throws SQLException {
+        return applied(player, ledger.debit(player, amount, reason, serverId, txnId));
+    }
+
+    /** Like {@link #deposit}, with a {@code txnId} so a retried payment is applied once. */
+    public Change deposit(UUID player, long amount, String reason, String txnId) throws SQLException {
+        return applied(player, ledger.credit(player, amount, reason, serverId, txnId));
+    }
+
     private Change applied(UUID player, Ledger.Result result) {
         return switch (result) {
             case Ledger.Result.Applied a -> {

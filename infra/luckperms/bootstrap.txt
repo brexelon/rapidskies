@@ -122,10 +122,14 @@ lpv group builder permission set minecraft.command.teleport true server=build
 lpv group developer permission set spark true
 lpv group developer permission set * true server=staging
 
-# Spawn worlds (rapid-core): /spawn is for everyone (plugin default). Admins can move the
-# spawn and change the protected hub and spawn builds; give builders rapid.world.build too
-# (with a server= context) when they need to fix a build in place.
+# Spawn worlds (rapid-core; /spawn and /setspawn are rapid-essentials'): /spawn is for
+# everyone (plugin default). Admins can move the spawn. The protected hub and spawn builds can't be changed by anyone, staff included,
+# outside build mode: /build (aliases /buildmode, /bm) puts builders, developers and admins
+# (and the owner, through inheritance) in creative with their inventory set aside, on every
+# backend, until they switch it off or leave the protected world or the server.
 lpv group admin permission set rapid.command.setspawn true
+lpv group builder permission set rapid.world.build true
+lpv group developer permission set rapid.world.build true
 lpv group admin permission set rapid.world.build true
 
 # Hub perks (rapid-hub, phase 2; plan §6.1): everyone double-jumps; Rapid+ adds a particle
@@ -141,6 +145,40 @@ lpv group developer permission set rapid.hub.trail true server=hub
 lpv group developer permission set rapid.hub.fly true server=hub
 lpv group builder permission set rapid.hub.admin true server=hub
 lpv group admin permission set rapid.hub.admin true server=hub
+
+# Horizons (phase 3; plan §4.1, §5.2, §9). Claiming, towns, /rtp, /pvp and /trades are
+# open to everyone by default. Moderators get /claimadmin (bypass, inspect, transfer, restore;
+# every use is logged to staff_actions); the whole staff track can walk into claims that
+# deny entry (reports, freezes). Admins skip the /rtp, /pvp and Trade cooldowns for testing
+# and can /horizons reload.
+lpv group moderator permission set rapid.claims.admin true server=smp
+lpv group moderator permission set rapid.claims.admin true server=staging
+lpv group helper permission set rapid.claims.entry-exempt true server=smp
+lpv group helper permission set rapid.claims.entry-exempt true server=staging
+lpv group admin permission set rapid.horizons.admin true server=smp
+lpv group admin permission set rapid.horizons.admin true server=staging
+lpv group admin permission set rapid.horizons.rtp.nocooldown true server=staging
+lpv group admin permission set rapid.horizons.pvp.nocooldown true server=staging
+lpv group admin permission set rapid.horizons.trades.nocooldown true server=staging
+# /back moved to rapid-essentials (its node is rapid.essentials.teleport.nocooldown, below).
+lpv group admin permission unset rapid.horizons.back.nocooldown server=staging
+
+# Everyday commands (rapid-essentials, every backend): /spawn, /back, /tpa, homes, /warp,
+# /balance, /pay, /baltop, /list, /ping, /afk and the info pages are open to everyone (plugin
+# defaults). Everyone gets the same home limit (plan §6.1: never sold). Staff see /seen and
+# others' balances; admins manage warps, correct balances (/eco, logged to the ledger and
+# staff_actions), broadcast to every server and reload the plugin. /hat is a Horizons Rapid+
+# perk (plan §6.1); admins skip teleport warmups and cooldowns on staging for testing.
+lpv group helper permission set rapid.command.seen true
+lpv group moderator permission set rapid.command.balance.others true
+lpv group admin permission set rapid.command.setwarp true
+lpv group admin permission set rapid.command.eco true
+lpv group admin permission set rapid.command.broadcast true
+lpv group admin permission set rapid.essentials.admin true
+lpv group rapidplus permission set rapid.command.hat true server=smp
+lpv group rapidplus permission set rapid.command.hat true server=staging
+lpv group admin permission set rapid.essentials.teleport.nocooldown true server=staging
+lpv group admin permission set rapid.essentials.teleport.nowarmup true server=staging
 
 # Admins manage permissions; the owner has everything.
 lpv group admin permission set luckperms.* true

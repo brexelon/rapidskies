@@ -7,21 +7,10 @@ import us.rapidskies.common.lang.Lang;
 import us.rapidskies.core.afk.AfkTracker;
 import us.rapidskies.core.tailwind.TailwindService;
 
-/** {@code /afk} and {@code /tailwind}. */
+/** {@code /tailwind}. ({@code /afk} is rapid-essentials', on {@link AfkTracker#setAfk}.) */
 public final class PlayerStatusCommands {
 
     private PlayerStatusCommands() {
-    }
-
-    /** Marks the player AFK now; moving the mouse or chatting brings them back. */
-    public static BasicCommand afk(AfkTracker afk, Lang lang) {
-        return (stack, args) -> {
-            if (stack.getSender() instanceof Player player) {
-                afk.setAfk(player);
-            } else {
-                lang.send(stack.getSender(), "errors.players-only");
-            }
-        };
     }
 
     /** Shows the Tailwind bank and whether it's being spent here (PLAN.md §5.3). */

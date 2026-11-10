@@ -99,6 +99,25 @@ class WorldConfigTest {
     }
 
     @Test
+    void worldNamesComeFromConfigThenFromTheKey() {
+        WorldConfig c = WorldConfig.from(yaml("""
+                world-names:
+                  "minecraft:overworld": "Heartland"
+                  "rapidskies:spawn": " Spawn "
+                  "rapidskies:blank": ""
+                """));
+        assertEquals("Heartland", c.displayName("minecraft:overworld"));
+        assertEquals("Spawn", c.displayName("rapidskies:spawn"));
+        assertEquals("Blank", c.displayName("rapidskies:blank"), "an empty name falls back to the key");
+        assertEquals("The Nether", c.displayName("minecraft:the_nether"));
+        assertEquals("The End", c.displayName("minecraft:the_end"));
+        assertEquals("Frontier Overgrowth", c.displayName("rapidskies:frontier_overgrowth"));
+        assertEquals("Overworld", WorldConfig.from(ConfigView.empty()).displayName("minecraft:overworld"));
+        assertEquals("Parkour", WorldConfig.titleCase("parkour"));
+        assertEquals("A B", WorldConfig.titleCase("_a__b_"));
+    }
+
+    @Test
     void generatorsAreSuperflatJsonExceptNormal() {
         assertEquals(null, Generator.NORMAL.flatSettings);
         assertTrue(Generator.VOID.flatSettings.contains("\"minecraft:the_void\""));

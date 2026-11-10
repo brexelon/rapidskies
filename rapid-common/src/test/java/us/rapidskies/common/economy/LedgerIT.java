@@ -136,6 +136,44 @@ class LedgerIT {
     }
 
     @Test
+    void transferMovesBothSidesTogether() throws Exception {
+        Ledger crowns = Ledger.mode(TestServices.database(), EconomyMode.HORIZONS);
+        UUID townBank = UUID.randomUUID();
+        crowns.credit(steve, 1000, "seed", "test", null);
+
+        assertEquals(new Ledger.Transfer.Applied(600, 400),
+                crowns.transfer(steve, townBank, 400, "town-deposit", "smp-1", "dep-1"));
+        assertEquals(new Ledger.Transfer.Duplicate(),
+                crowns.transfer(steve, townBank, 400, "town-deposit", "smp-1", "dep-1"));
+        assertEquals(new Ledger.Transfer.Insufficient(600),
+                crowns.transfer(steve, townBank, 601, "town-deposit", "smp-1", null));
+        assertEquals(600, crowns.balance(steve));
+        assertEquals(400, crowns.balance(townBank));
+        assertEquals(-400, crowns.history(steve, 1).getFirst().delta());
+        assertEquals("dep-1/in", crowns.history(townBank, 1).getFirst().txnId());
+        assertThrows(IllegalArgumentException.class, () -> crowns.transfer(steve, steve, 1, "x", "x", null));
+    }
+
+    @Test
+    void concurrentTransfersBothWaysNeverCreateOrLoseMoney() throws Exception {
+        Ledger crowns = Ledger.mode(TestServices.database(), EconomyMode.HORIZONS);
+        UUID alex = UUID.randomUUID();
+        crowns.credit(steve, 500, "seed", "test", null);
+        crowns.credit(alex, 500, "seed", "test", null);
+        List<Callable<Ledger.Transfer>> moves = new ArrayList<>();
+        for (int i = 0; i < 60; i++) {
+            boolean even = i % 2 == 0;
+            moves.add(() -> crowns.transfer(even ? steve : alex, even ? alex : steve, 30, "race", "test", null));
+        }
+        try (ExecutorService pool = Executors.newFixedThreadPool(8)) {
+            for (Future<Ledger.Transfer> f : pool.invokeAll(moves)) {
+                f.get();
+            }
+        }
+        assertEquals(1000, crowns.balance(steve) + crowns.balance(alex), "money is only moved");
+    }
+
+    @Test
     void earnedSinceCountsOneReasonsCreditsInTheWindow() throws Exception {
         java.time.Instant start = java.time.Instant.now().minusSeconds(60);
         bolts.credit(steve, 2, "playtime", "hub-1", null);

@@ -19,10 +19,12 @@ import us.rapidskies.core.rank.RankDisplay;
 public final class ChatListener implements Listener {
 
     private final RankDisplay ranks;
+    private final ChatTags tags;
     private final Lang lang;
 
-    public ChatListener(RankDisplay ranks, Lang lang) {
+    public ChatListener(RankDisplay ranks, ChatTags tags, Lang lang) {
         this.ranks = ranks;
+        this.tags = tags;
         this.lang = lang;
     }
 
@@ -32,10 +34,13 @@ public final class ChatListener implements Listener {
         String format = display.staff().isPresent() ? "chat.staff"
                 : display.rank() == Rank.DEFAULT ? "chat.default" : "chat.ranked";
         Component prefix = ranks.prefix(display);
+        // Other plugins' tags (a Horizons town tag) go in front of the whole line, so the
+        // chat formats in lang stay the same on every server.
+        Component before = tags.of(event.getPlayer());
         // The format is resolved once per message, not once per viewer.
-        event.renderer(ChatRenderer.viewerUnaware((source, displayName, message) -> lang.get(format,
+        event.renderer(ChatRenderer.viewerUnaware((source, displayName, message) -> before.append(lang.get(format,
                 Placeholder.component("rank", prefix),
                 Placeholder.unparsed("player", source.getName()),
-                Placeholder.component("message", message))));
+                Placeholder.component("message", message)))));
     }
 }

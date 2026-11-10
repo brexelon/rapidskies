@@ -72,7 +72,7 @@ spawn:
 
 # Worlds rapid-core looks after, by key (no dots). Each may set:
 #   create: normal|flat|void   load it at startup, creating it if missing (not for the main world)
-#   protect: true              only rapid.world.build may change it
+#   protect: true              nobody may change it outside build mode (/build, rapid.world.build)
 #   void-y: 60                 players below this height go back to the spawn
 #   time: 6000                 fixed time of day, set at startup (with advance_time: false)
 #   clear-weather: true        clear the weather at startup
@@ -80,3 +80,11 @@ spawn:
 #   game-rules: { advance_time: false, pvp: false }   26.x names (minecraft:<name>)
 # The pre-built worlds are shipped with `rsdeploy.py worlds` (infra/README.md → Worlds).
 worlds: {}
+
+# What worlds are called on the sidebar (%rapid_world%), by key. Unlisted worlds get a
+# readable form of their key: minecraft:the_nether is "The Nether", rapidskies:frontier_overgrowth
+# "Frontier Overgrowth".
+#   world-names:
+#     "minecraft:overworld": "Heartland"
+#     "rapidskies:spawn": "Spawn"
+world-names: {}

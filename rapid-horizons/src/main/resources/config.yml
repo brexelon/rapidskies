@@ -1,0 +1,164 @@
+# rapid-horizons (the Horizons SMP server). Written on first start; the smp profile in
+# infra/ may patch it. /horizons reload re-reads it.
+
+# /rtp (aliases /wild, /heartland) and the portal at the spawn: a random safe surface spot
+# in the Heartland, never in or next to a claim, inside the world border.
+rtp:
+  # World key: minecraft:overworld is the main world (level-name heartland).
+  world: "minecraft:overworld"
+  center-x: 0
+  center-z: 0
+  min-radius: 200
+  # Clamped to the world border.
+  max-radius: 5000
+  # Spots tried per search (each loads one pre-generated chunk asynchronously).
+  attempts: 16
+  cooldown-seconds: 300
+  portal:
+    # A box at the spawn that sends players into the Heartland when they walk in:
+    # "world, x1, y1, z1, x2, y2, z2" (inclusive, any corner order). Empty: no portal.
+    region: ""
+    # Standing in the box only triggers once per this many seconds.
+    retrigger-seconds: 5
+    # The portal works even while /rtp is on cooldown (the spawn is where new players start).
+    ignores-cooldown: true
+    # Build an arch around the region at startup and on /horizons reload: mossy stone brick
+    # columns, a spruce lintel, flowering azalea and lanterns on top, and nether portal blocks
+    # filling the opening (they never lead to the Nether). Only blocks that differ are set.
+    # The region must be one block thick. Turn off if builders make their own arch instead.
+    build: true
+    # Floating text in front of the portal (lang travel.portal-hologram): "world, x, y, z" for
+    # the bottom of the text, which always turns to face the viewer. Empty: none.
+    hologram: ""
+
+# Citizens NPCs at the spawn (Citizens is in the smp plugin set). The smp profile sets the
+# locations ("world, x, y, z, yaw, pitch"; /horizons here prints one); an NPC without one isn't
+# spawned. Names and click hints are lang npc.<id>.name and npc.<id>.hint. Clicking (either
+# button) does the action:
+#   rtp               into the Heartland, like the portal (no /rtp cooldown)
+#   trades            the /trades menu
+#   server:<group>    join a server group through the proxy queue, e.g. server:hub
+#   command:<command> run a command as the player, e.g. "command:claim help"
+# Skin: a Minecraft account name (looked up once by Citizens), or a fixed texture and
+# signature (from mineskin.org) so it never changes. Empty: a default skin.
+npcs:
+  heartland:
+    location: ""
+    action: rtp
+    skin: ""
+    skin-texture: ""
+    skin-signature: ""
+  trades:
+    location: ""
+    action: trades
+    skin: ""
+    skin-texture: ""
+    skin-signature: ""
+  land:
+    location: ""
+    action: "command:claim help"
+    skin: ""
+    skin-texture: ""
+    skin-signature: ""
+  hub:
+    location: ""
+    action: "server:hub"
+    skin: ""
+    skin-texture: ""
+    skin-signature: ""
+
+# Opt-in PvP (PLAN.md §5.2). Off by default; claims with PvP off stop every fight, claims
+# with PvP on (and Frontier Wildlands, later) allow every fight.
+pvp:
+  toggle-cooldown-seconds: 300
+  # After dealing or taking player damage you can't switch PvP off for this long.
+  combat-tag-seconds: 30
+
+# Trades (PLAN.md §5.2). XP and Crowns from matching work; nothing while AFK.
+trades:
+  max-active: 2
+  # After dropping a Trade, how long before you may drop another (picking into a free slot is free).
+  switch-cooldown-hours: 24
+  max-level: 50
+  # XP from level n to n+1 is base + step × n.
+  level-xp:
+    base: 100
+    step: 25
+  # Crowns earned grow by this many percent per Trade level.
+  income-per-level-percent: 1
+  # Crowns are paid out this often (and when a player leaves).
+  payout-seconds: 60
+  # Diminishing returns (PLAN.md §5.3): full rewards for the first daily-points Trade points of
+  # a UTC day, then half, a quarter... for each further daily-points, never below floor-percent.
+  soft-cap:
+    daily-points: 2000
+    floor-percent: 10
+  # Extra personal claim chunks (rapid-claims): one per levels-per-chunk total Trade levels.
+  claim-chunks:
+    levels-per-chunk: 5
+    max: 20
+  # Hunter rewards for mobs from spawners, in percent (0: none; grinders pay nothing).
+  spawner-mob-percent: 0
+  # Per Trade: crowns-per-xp, and XP per thing (lowercase ids). Deepslate ores pay like their
+  # stone variant unless listed. "default" is the fallback for anything unlisted.
+  miner:
+    crowns-per-xp: 0.5
+    xp:
+      coal_ore: 2
+      copper_ore: 2
+      iron_ore: 4
+      gold_ore: 5
+      redstone_ore: 3
+      lapis_ore: 4
+      diamond_ore: 12
+      emerald_ore: 15
+      nether_quartz_ore: 2
+      nether_gold_ore: 2
+      ancient_debris: 20
+  farmer:
+    crowns-per-xp: 0.5
+    xp:
+      wheat: 1
+      carrots: 1
+      potatoes: 1
+      beetroots: 1
+      nether_wart: 1
+      cocoa: 1
+      melon: 1
+      pumpkin: 1.5
+      sweet_berry_bush: 0.5
+  hunter:
+    crowns-per-xp: 0.5
+    xp:
+      default: 2
+      zombie: 2
+      skeleton: 2
+      spider: 2
+      creeper: 3
+      enderman: 4
+      witch: 5
+      blaze: 4
+      wither_skeleton: 6
+      ghast: 5
+      guardian: 4
+      piglin_brute: 6
+      ravager: 10
+      evoker: 10
+      elder_guardian: 30
+      warden: 40
+  builder:
+    crowns-per-xp: 0.4
+    xp:
+      # Per block placed (once per position per day).
+      block: 0.25
+  enchanter:
+    crowns-per-xp: 0.4
+    xp:
+      # Per enchantment level spent at a table.
+      level: 2
+  fisher:
+    crowns-per-xp: 0.5
+    xp:
+      fish: 3
+      treasure: 8
+      junk: 1

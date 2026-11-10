@@ -2,7 +2,36 @@ name: rapid-horizons
 version: '${version}'
 main: us.rapidskies.horizons.RapidHorizons
 api-version: '26.3'
-description: "Horizons SMP: Frontiers, Skyborne events, Trades, Chapters (PLAN.md §5.2)."
+description: "Horizons SMP: Heartland travel, opt-in PvP, Trades; later Frontiers, Skyborne events, Chapters (PLAN.md §5.2)."
 author: RapidSkies
 website: https://rapidskies.us
-depend: [rapid-core]
+# rapid-essentials: /back, /spawn, /home and /tpa are its own; Horizons refuses them while
+# combat-tagged and makes the spawn portal count as the spawn for /back.
+depend: [rapid-core, rapid-essentials]
+# Claims decide PvP inside claims, keep /rtp out of claimed chunks and take extra personal
+# claim chunks from Trade levels. Without it Horizons still runs (no claims at all).
+# Citizens: the NPCs at the spawn. Without it the spawn just has no NPCs.
+softdepend: [rapid-claims, Citizens]
+
+permissions:
+  rapid.command.rtp:
+    description: Use /rtp (random spot in the Heartland).
+    default: true
+  rapid.horizons.rtp.nocooldown:
+    description: /rtp without waiting for the cooldown.
+    default: op
+  rapid.command.pvp:
+    description: Toggle personal PvP with /pvp.
+    default: true
+  rapid.horizons.pvp.nocooldown:
+    description: Toggle /pvp without the 5-minute cooldown (combat tag still applies).
+    default: op
+  rapid.command.trades:
+    description: Pick Trades and see their levels with /trades.
+    default: true
+  rapid.horizons.trades.nocooldown:
+    description: Switch Trades without the cooldown.
+    default: op
+  rapid.horizons.admin:
+    description: /horizons here (print positions for the config) and /horizons reload.
+    default: op

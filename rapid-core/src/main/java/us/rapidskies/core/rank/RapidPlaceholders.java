@@ -35,6 +35,8 @@ import us.rapidskies.core.tailwind.TailwindService;
  *   <li>{@code %rapid_tailwind_status%}: Tailwind left, or lang {@code placeholder.no-tailwind}</li>
  *   <li>{@code %rapid_balance_status%}: like {@code %rapid_balance%}, or lang
  *       {@code placeholder.loading} while it loads</li>
+ *   <li>{@code %rapid_world%}: the player's world by its display name ({@code Spawn},
+ *       {@code Heartland}; config {@code world-names}) instead of its folder name</li>
  * </ul>
  *
  * <p>Hex brand colors are written as {@code §x§F§F§D§8§0§0}, which TAB reads back as hex.
@@ -110,6 +112,7 @@ public final class RapidPlaceholders extends PlaceholderExpansion {
                 long left = core.tailwind().remainingSeconds(player);
                 yield left > 0 ? TailwindService.format(left) : text("placeholder.no-tailwind");
             }
+            case "world" -> core.worlds().displayName(player.getWorld());
             default -> null; // unknown placeholder: PlaceholderAPI leaves it as typed
         };
     }

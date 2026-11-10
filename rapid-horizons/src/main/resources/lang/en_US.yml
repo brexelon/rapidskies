@@ -1,0 +1,114 @@
+# rapid-horizons messages (MiniMessage). Brand tags: <primary> <accent> <text> <muted> <dark>
+# <success> <error>, and <prefix> for "RAPIDSKIES »".
+#
+# Every supported client (1.20 – 26.3) renders hex colors, <gradient>, <hover>, <click>
+# and <key> exactly. Don't use <shadow> (1.21.4+), <sprite>/<head> (1.21.9+) or anything else
+# newer than 1.20. Item names, lore and menu titles are components too, but clicks and hovers
+# do nothing there.
+
+errors:
+  players-only: "<prefix><error>Only players can use this.</error>"
+
+admin:
+  usage: "<prefix><text>Usage: <accent>/horizons here|reload</accent></text>"
+  reloaded: "<prefix><success>rapid-horizons config and messages reloaded.</success>"
+  reload-failed: "<prefix><error>The new config is invalid; the old one is still running. See the console.</error>"
+  # /horizons here. <point> is an NPC location, <block> a corner for rtp.portal.region; click either to copy.
+  here: "<prefix><text>Here:</text> <accent><point></accent> <muted>(NPC)</muted> <accent><block></accent> <muted>(portal corner)</muted>"
+  copy-hint: "<muted>Click to copy"
+
+# /rtp and the portal at the spawn.
+travel:
+  searching: "<prefix><text>Finding you a spot in the <accent>Heartland</accent>…</text>"
+  already-searching: "<prefix><muted>Still looking for a spot, hang on.</muted>"
+  arrived: "<prefix><success>Welcome to the Heartland!</success> <muted>You're at <accent><x></accent>, <accent><z></accent>. Claim land with <click:suggest_command:'/claim'><hover:show_text:'<muted>Click to type it</muted>'><accent>/claim</accent></hover></click>.</muted>"
+  failed: "<prefix><error>Couldn't find a safe spot this time.</error> <muted>Try again in a moment.</muted>"
+  cooldown: "<prefix><error>You can travel again in <accent><time></accent>.</error>"
+  unavailable: "<prefix><error>The Heartland isn't available right now.</error>"
+  # The floating text in front of the spawn portal (config rtp.portal.hologram).
+  portal-hologram: "<primary><bold>THE HEARTLAND</bold></primary>\n<text>Walk through to explore the wilds</text>\n<muted>or use <accent>/rtp</accent> from anywhere</muted>"
+
+# NPCs at the spawn (config npcs). The label over each one is npc.label with its name and hint.
+npc:
+  label: "<name>\n<hint>"
+  heartland:
+    name: "<primary><bold>Heartland Guide</bold></primary>"
+    hint: "<accent>Click to explore the Heartland!</accent>"
+  trades:
+    name: "<primary><bold>Trade Master</bold></primary>"
+    hint: "<accent>Click to pick your Trades</accent>"
+  land:
+    name: "<primary><bold>Land Surveyor</bold></primary>"
+    hint: "<accent>Click to learn about claims and towns</accent>"
+  hub:
+    name: "<primary><bold>Lobby</bold></primary>"
+    hint: "<accent>Click to go back to the hub</accent>"
+
+# /pvp (PLAN.md §5.2: opt-in PvP).
+pvp:
+  enabled: "<prefix><error><bold>PvP on.</bold></error> <muted>Other players with PvP on can fight you outside protected claims.</muted>"
+  disabled: "<prefix><success>PvP off.</success> <muted>Nobody can fight you, except in forced-PvP areas.</muted>"
+  already-on: "<prefix><muted>Your PvP is already on.</muted>"
+  already-off: "<prefix><muted>Your PvP is already off.</muted>"
+  status-on: "<prefix><text>Your PvP is <error>on</error>.</text>"
+  status-off: "<prefix><text>Your PvP is <success>off</success>.</text>"
+  cooldown: "<prefix><error>You can switch PvP again in <accent><time></accent>.</error>"
+  in-combat: "<prefix><error>You're in combat. You can switch PvP off in <accent><time></accent>.</error>"
+  # A teleport command (/spawn, /home, /tpa, /back; rapid-essentials) while combat-tagged.
+  no-teleport: "<prefix><error>You can't teleport in combat.</error> <muted>Finish the fight first.</muted>"
+  usage: "<prefix><text>Usage: <accent>/pvp</accent> <muted>[on|off|status]</muted></text>"
+  # Action bar when a hit is stopped.
+  blocked-self: "<error>Your PvP is off.</error> <muted>Use <accent>/pvp</accent> to switch it on.</muted>"
+  blocked-other: "<error><player> has PvP off.</error>"
+
+trades:
+  # Trade names, used in menus and messages.
+  name:
+    miner: "<accent>Miner</accent>"
+    farmer: "<accent>Farmer</accent>"
+    hunter: "<accent>Hunter</accent>"
+    builder: "<accent>Builder</accent>"
+    enchanter: "<accent>Enchanter</accent>"
+    fisher: "<accent>Fisher</accent>"
+  # What each Trade pays for (menu lore).
+  about:
+    miner:
+      - "<muted>Mine natural ores.</muted>"
+    farmer:
+      - "<muted>Harvest fully grown crops,</muted>"
+      - "<muted>melons, pumpkins and berries.</muted>"
+    hunter:
+      - "<muted>Slay hostile mobs.</muted>"
+    builder:
+      - "<muted>Place blocks as you build.</muted>"
+    enchanter:
+      - "<muted>Enchant at an enchanting table.</muted>"
+    fisher:
+      - "<muted>Catch fish and treasure.</muted>"
+  picked: "<prefix><success>You're now a <trade>!</success> <muted>Earn XP and Crowns from its work.</muted>"
+  dropped: "<prefix><text>You dropped <trade>.</text> <muted>Its level is kept. Your next switch is in <accent><hours>h</accent>.</muted>"
+  already-active: "<prefix><muted>You're already a <trade>.</muted>"
+  not-active: "<prefix><muted>You're not a <trade>.</muted>"
+  full: "<prefix><error>You already have <max> Trades.</error> <muted>Drop one first (shift-click it in <accent>/trades</accent>).</muted>"
+  cooldown: "<prefix><error>You can drop a Trade again in <accent><time></accent>.</error>"
+  shift-to-drop: "<prefix><muted>Shift-click an active Trade to drop it.</muted>"
+  not-loaded: "<prefix><error>Your Trades are still loading.</error> <muted>Try again in a moment.</muted>"
+  level-up: "<prefix><primary><bold>Level up!</bold></primary> <text><trade> is now level <accent><level></accent>.</text>"
+  usage: "<prefix><text>Usage: <accent>/trades</accent> <muted>or</muted> <accent>/trades pick|drop</accent> <muted>[trade]</muted></text>"
+  menu:
+    title: "<dark>Trades</dark>"
+    info-name: "<primary>Your Trades</primary>"
+    info-active: "<text>Active: <accent><count></accent><muted>/</muted><accent><max></accent></text>"
+    info-switch-ready: "<success>You can switch Trades now.</success>"
+    info-switch-wait: "<muted>Next switch in <accent><time></accent>.</muted>"
+    info-help:
+      - "<muted>Click a Trade to take it up.</muted>"
+      - "<muted>Shift-click an active one to drop it.</muted>"
+      - "<muted>Levels are kept when you drop a Trade.</muted>"
+    trade-name: "<trade>"
+    level: "<text>Level <accent><level></accent><muted>/<max></muted></text>"
+    progress: "<bar> <muted><percent>%</muted>"
+    active: "<success>✔ Active</success>"
+    inactive: "<muted>Not active</muted>"
+    click-pick: "<accent>Click to take up</accent>"
+    click-drop: "<accent>Shift-click to drop</accent>"

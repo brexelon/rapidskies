@@ -1,0 +1,18 @@
+# rapid-essentials on the hubs: just /spawn and the everyday info commands. Players move between
+# modes with the game menu and /play, so the hub has no homes, warps, /tpa or /back.
+disabled-commands:
+  - back
+  - tpa
+  - tpahere
+  - tpaccept
+  - tpdeny
+  - tpacancel
+  - tptoggle
+  - home
+  - sethome
+  - delhome
+  - homes
+  - warp
+  - warps
+  - setwarp
+  - delwarp

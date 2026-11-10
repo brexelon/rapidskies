@@ -6,7 +6,8 @@ server.gamemode: "horizons"
 # centrepiece of the round plaza in the middle of the village (the map's own spawn x/z; its
 # y 64 is inside the ground), facing north toward the town hall and the moat. New players
 # start here and deaths without a bed come back here; the way out to the Heartland is
-# rapid-horizons' job (phase 3b).
+# rapid-horizons' job: the portal arch on the path south of the plaza, its NPCs and /rtp
+# (profiles/smp/plugins/rapid-horizons).
 spawn.location: "rapidskies:spawn, 0.5, 74.1, 0.5, 180, 0"
 spawn.on-join: "first-join"
 spawn.on-death: true
@@ -34,3 +35,12 @@ worlds:
       # Keeps leaves, crops, farmland and the build exactly as delivered (the builders shipped it with 0).
       random_tick_speed: 0
       fire_spread_radius_around_player: 0
+      # The arch's portal blocks lead to the Heartland (rapid-horizons), never the Nether.
+      allow_entering_nether_using_portals: false
+
+# The sidebar's World line (%rapid_world%) instead of the folder names.
+world-names:
+  "rapidskies:spawn": "Spawn"
+  "minecraft:overworld": "Heartland"
+  "minecraft:the_nether": "The Nether"
+  "minecraft:the_end": "The End"

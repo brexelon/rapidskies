@@ -1,0 +1,108 @@
+# rapid-claims (PLAN.md §4.1). Written on first start; the smp profile in infra/ patches it.
+# Prices are starting points to tune in beta (PLAN.md §13).
+
+# World keys where land can be claimed. Only the Heartland (the main world): Frontiers, the
+# Nether and the End rotate and can't be claimed.
+worlds:
+  - "minecraft:overworld"
+
+# Personal chunks. Never sold for money or Bolts (PLAN.md §6.1, "not sold").
+allowance:
+  starter: 9
+  playtime:
+    # One more chunk per this many hours played on this server, up to `max`.
+    hours-per-chunk: 2
+    max: 40
+  purchase:
+    # Bought with Crowns at a rising price (a Crowns sink): the n-th bought chunk (from 0)
+    # costs base-price + step × n.
+    base-price: 500
+    step: 250
+    max: 100
+
+# Flags a newly claimed chunk starts with: pvp, mob-spawning, fire-spread, leaf-decay.
+# Explosions are always blocked in claims.
+flags:
+  defaults: [mob-spawning, leaf-decay]
+
+towns:
+  # Founding includes the first day of upkeep.
+  found-cost: 5000
+  # Paid from the town bank.
+  rename-cost: 1000
+  chunks:
+    # Cap = base + per-resident × members + chunks from Projects.
+    base: 16
+    per-resident: 8
+  upkeep:
+    # Crowns per day = base + per-chunk × chunks, from the town bank.
+    base: 50
+    per-chunk: 10
+    # A town this many days behind becomes ruins.
+    grace-days: 14
+  # Ruins stay protected this long, then the land is released (builds stay).
+  ruins-days: 7
+  invite-minutes: 5
+
+# Personal land of players away this many days becomes ruins, released ruins-days later
+# unless they log in.
+inactivity:
+  days: 90
+  ruins-days: 7
+
+display:
+  # How long /claim show draws borders.
+  border-seconds: 10
+  # "Entering Steve's land" on the action bar when walking between claims.
+  enter-messages: true
+
+# Town Projects (PLAN.md §5.2). One runs at a time; each finished one is a town level.
+#   name      MiniMessage
+#   icon      item id for the menu
+#   requires  item id (minecraft: may be left out) or crowns, to an amount
+#   unlocks   warp, vault, market-stall, banner, title, chunks:<n>
+# Add new Projects at the end; removing one leaves towns that finished it without its unlock.
+projects:
+  lighthouse:
+    name: "<primary>Build the Lighthouse</primary>"
+    icon: "minecraft:lantern"
+    requires:
+      stone_bricks: 2000
+      glass: 64
+      crowns: 5000
+    unlocks: [warp]
+  storehouse:
+    name: "<primary>Raise the Storehouse</primary>"
+    icon: "minecraft:barrel"
+    requires:
+      oak_planks: 1024
+      chest: 32
+      iron_ingot: 128
+      crowns: 8000
+    unlocks: [vault]
+  town-walls:
+    name: "<primary>Raise the Town Walls</primary>"
+    icon: "minecraft:cobblestone_wall"
+    requires:
+      cobblestone: 3000
+      stone_bricks: 1000
+      torch: 128
+      crowns: 6000
+    unlocks: ["chunks:16"]
+  market-square:
+    name: "<primary>Open a Market Square</primary>"
+    icon: "minecraft:emerald"
+    requires:
+      oak_log: 512
+      white_wool: 128
+      emerald: 64
+      crowns: 12000
+    unlocks: [market-stall]
+  banner-hall:
+    name: "<primary>Hang the Banner Hall</primary>"
+    icon: "minecraft:white_banner"
+    requires:
+      white_wool: 256
+      gold_ingot: 64
+      crowns: 10000
+    unlocks: [banner, title]

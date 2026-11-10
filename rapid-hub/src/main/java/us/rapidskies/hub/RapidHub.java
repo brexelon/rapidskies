@@ -16,7 +16,7 @@ import us.rapidskies.common.parkour.ParkourTimes;
 import us.rapidskies.common.registry.ServerRegistry;
 import us.rapidskies.core.RapidCore;
 import us.rapidskies.core.world.SpawnPoint;
-import us.rapidskies.hub.display.Labels;
+import us.rapidskies.core.display.Labels;
 import us.rapidskies.hub.leaderboard.Leaderboards;
 import us.rapidskies.hub.npc.HubNpcs;
 import us.rapidskies.hub.parkour.ParkourCommand;

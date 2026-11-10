@@ -1,4 +1,4 @@
-package us.rapidskies.hub.display;
+package us.rapidskies.core.display;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -17,9 +17,10 @@ import us.rapidskies.core.world.SpawnPoint;
 
 /**
  * Floating text (NPC labels, leaderboards) as text display entities, which every supported
- * client (1.20+) renders. They're never saved with the world: each start spawns them fresh
- * from the config, so they can't pile up or outlive a config change. Their chunks get a
- * plugin ticket, so they stay loaded (and the labels with them) while nobody is near.
+ * client (1.20+) renders; each rapid-* plugin that shows some keeps its own instance. They're
+ * never saved with the world: each start spawns them fresh from the config, so they can't
+ * pile up or outlive a config change. Their chunks get a plugin ticket, so they stay loaded
+ * (and the labels with them) while nobody is near.
  */
 public final class Labels {
 

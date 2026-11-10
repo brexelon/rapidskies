@@ -1,7 +1,6 @@
 package us.rapidskies.core.staff;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -32,7 +31,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import us.rapidskies.common.lang.Lang;
 import us.rapidskies.core.CoreSettings;
@@ -73,9 +71,7 @@ public final class StaffMode implements Listener {
     private final Lang lang;
     private final CoreSettings.Staff settings;
     private final NamespacedKey toolKey;
-    private final NamespacedKey savedItemsKey;
-    private final NamespacedKey savedModeKey;
-    private final NamespacedKey savedFlightKey;
+    private final SavedState saved;
     private final Set<UUID> active = ConcurrentHashMap.newKeySet();
     /** Vanished by entering staff mode, so leaving it makes them visible again. */
     private final Set<UUID> vanishedByMode = ConcurrentHashMap.newKeySet();
@@ -89,9 +85,7 @@ public final class StaffMode implements Listener {
         this.lang = lang;
         this.settings = settings;
         this.toolKey = new NamespacedKey(plugin, "staff_tool");
-        this.savedItemsKey = new NamespacedKey(plugin, "staff_saved_items");
-        this.savedModeKey = new NamespacedKey(plugin, "staff_saved_mode");
-        this.savedFlightKey = new NamespacedKey(plugin, "staff_saved_flight");
+        this.saved = new SavedState(plugin, "staff", "staff mode");
     }
 
     public Vanish vanish() {
@@ -117,17 +111,8 @@ public final class StaffMode implements Listener {
     // ------------------------------------------------------------------ entering and leaving
 
     private void enter(Player player) {
-        PersistentDataContainer pdc = player.getPersistentDataContainer();
-        ItemStack[] contents = Arrays.stream(player.getInventory().getContents())
-                .map(i -> i == null ? ItemStack.empty() : i)
-                .toArray(ItemStack[]::new);
-        pdc.set(savedItemsKey, PersistentDataType.BYTE_ARRAY, ItemStack.serializeItemsAsBytes(contents));
-        pdc.set(savedModeKey, PersistentDataType.STRING, player.getGameMode().name());
-        pdc.set(savedFlightKey, PersistentDataType.BYTE, (byte) (player.getAllowFlight() ? 1 : 0));
-
+        saved.saveAndClear(player);
         active.add(player.getUniqueId());
-        player.getInventory().clear();
-        player.setItemOnCursor(null);
         player.setGameMode(GameMode.ADVENTURE);
         player.setAllowFlight(true);
         player.setFlying(true);
@@ -148,7 +133,7 @@ public final class StaffMode implements Listener {
         active.remove(player.getUniqueId());
         player.setInvulnerable(false);
         player.setCollidable(true);
-        restore(player);
+        saved.restore(player);
         if (vanishedByMode.remove(player.getUniqueId()) && announce) {
             vanish.set(player, false);
         }
@@ -156,37 +141,6 @@ public final class StaffMode implements Listener {
             lang.send(player, "staff.mode.disabled");
             log.log(player, "staff_mode_off", null, null);
         }
-    }
-
-    /** Puts back what {@link #enter} saved, if anything. Returns whether there was something. */
-    private boolean restore(Player player) {
-        PersistentDataContainer pdc = player.getPersistentDataContainer();
-        byte[] saved = pdc.get(savedItemsKey, PersistentDataType.BYTE_ARRAY);
-        if (saved == null) {
-            return false;
-        }
-        ItemStack[] items;
-        try {
-            items = ItemStack.deserializeItemsFromBytes(saved);
-        } catch (RuntimeException e) {
-            // Touch nothing and keep the saved copy, so an admin can recover it from the player
-            // file. Leftover staff tools do nothing outside staff mode.
-            plugin.getSLF4JLogger().error("Couldn't read the inventory {} had before staff mode", player.getName(), e);
-            return false;
-        }
-        player.getInventory().clear();
-        player.setItemOnCursor(null);
-        player.getInventory().setContents(items);
-        String mode = pdc.get(savedModeKey, PersistentDataType.STRING);
-        Byte flight = pdc.get(savedFlightKey, PersistentDataType.BYTE);
-        player.setGameMode(mode == null ? Bukkit.getDefaultGameMode() : GameMode.valueOf(mode));
-        boolean allow = flight != null && flight == 1;
-        player.setAllowFlight(allow || player.getGameMode() == GameMode.CREATIVE
-                || player.getGameMode() == GameMode.SPECTATOR);
-        pdc.remove(savedItemsKey);
-        pdc.remove(savedModeKey);
-        pdc.remove(savedFlightKey);
-        return true;
     }
 
     /** Ends staff mode for everyone, quietly (plugin shutdown). */
@@ -390,7 +344,7 @@ public final class StaffMode implements Listener {
     /** Staff mode never outlives a session; this also recovers from a crash mid-staff-mode. */
     @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent event) {
-        if (restore(event.getPlayer())) {
+        if (saved.restore(event.getPlayer())) {
             plugin.getSLF4JLogger().warn("Restored the pre-staff-mode inventory of {} (server stopped while they "
                     + "were in staff mode)", event.getPlayer().getName());
         }

@@ -9,6 +9,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import us.rapidskies.common.lang.Lang;
+import us.rapidskies.core.world.BuildMode;
 
 /**
  * Staff commands (PLAN.md §9): {@code /staff}, {@code /vanish}, {@code /freeze <player>},
@@ -18,10 +19,12 @@ import us.rapidskies.common.lang.Lang;
 public final class StaffCommands {
 
     private final StaffMode mode;
+    private final BuildMode buildMode;
     private final Lang lang;
 
-    public StaffCommands(StaffMode mode, Lang lang) {
+    public StaffCommands(StaffMode mode, BuildMode buildMode, Lang lang) {
         this.mode = mode;
+        this.buildMode = buildMode;
         this.lang = lang;
     }
 
@@ -29,6 +32,11 @@ public final class StaffCommands {
         return new PlayerCommand(StaffMode.USE, false) {
             @Override
             void run(Player player, Player target) {
+                // Both modes swap the inventory; one at a time, so each restores the real one.
+                if (!mode.isActive(player) && buildMode.isActive(player)) {
+                    lang.send(player, "staff.mode.building");
+                    return;
+                }
                 mode.toggle(player);
             }
         };

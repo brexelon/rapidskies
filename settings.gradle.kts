@@ -21,6 +21,7 @@ include(
     "rapid-common",     // shared models, Redis, DB layer, lang loader (no platform API)
     "rapid-proxy",      // Velocity
     "rapid-core",       // every Paper backend
+    "rapid-essentials", // every Paper backend: everyday commands (teleports, homes, warps, money)
     "rapid-hub",        // hub
     "rapid-skyrealms",  // skyrealms
     "rapid-horizons",   // smp

@@ -101,6 +101,7 @@ staff:
     teleported: "<prefix><text>Teleported to <player>.</text>"
     nobody: "<prefix><muted>Nobody else to teleport to.</muted>"
     click-a-player: "<prefix><muted>Use this on a player</muted> <text>(<key:key.use>)</text><muted>.</muted>"
+    building: "<prefix><error>Leave build mode first</error> <muted>(<click:run_command:'/build off'><hover:show_text:'<muted>Click to leave build mode</muted>'><accent>/build off</accent></hover></click>).</muted>"
   tool:
     random-name: "<primary>Random player</primary> <muted>(<key:key.use>)</muted>"
     random-lore:
@@ -166,12 +167,22 @@ staff:
     previous: "<accent>Previous page</accent>"
     next: "<accent>Next page</accent>"
 
-# /spawn and /setspawn (WorldService).
-spawn:
-  teleported: "<prefix><text>Welcome back to the spawn.</text>"
-  # <line> is the spawn.location line for the server's profile; clicking it copies the value.
-  set: "<prefix><success>Spawn moved here until the next restart.</success> <muted>To keep it, put this in the server's rapid-core profile:</muted> <accent><line></accent>"
-  copy-hint: "<muted>Click to copy"
+# Build mode (/build): the only way to change the protected spawn worlds.
+build:
+  enabled: "<prefix><success>Build mode on.</success> <muted>You're in creative; changes to this world are live for everyone. Your inventory comes back when you leave.</muted>"
+  disabled: "<prefix><text>Build mode off.</text> <muted>Inventory restored.</muted>"
+  left-world: "<prefix><text>Build mode off: you left the protected world.</text> <muted>Inventory restored.</muted>"
+  left-death: "<prefix><text>Build mode off.</text> <muted>Inventory restored.</muted>"
+  already-on: "<prefix><muted>Build mode is already on.</muted>"
+  already-off: "<prefix><muted>Build mode is already off.</muted>"
+  not-protected: "<prefix><muted>This world isn't protected, so build mode isn't needed here.</muted>"
+  staff-mode: "<prefix><error>Leave staff mode first</error> <muted>(<click:run_command:'/staff'><hover:show_text:'<muted>Click to leave staff mode</muted>'><accent>/staff</accent></hover></click>).</muted>"
+  usage: "<prefix><text>Usage: <accent>/build</accent> <muted>[on|off]</muted></text>"
+  # Boss bar while it's on.
+  bossbar: "<primary><bold>BUILD MODE</bold></primary> <dark>•</dark> <text>changes are live</text> <dark>•</dark> <muted>/build to leave</muted>"
+  # Action bar when a staff member who could build tries to without build mode.
+  hint: "<error>This world is protected.</error> <muted>Use <accent>/build</accent> to change it.</muted>"
+  no-drop: "<muted>Items can't be dropped in build mode.</muted>"
 
 errors:
   players-only: "<prefix><error>Only players can use this.</error>"

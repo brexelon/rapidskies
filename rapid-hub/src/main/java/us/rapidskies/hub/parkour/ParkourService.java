@@ -39,7 +39,7 @@ import us.rapidskies.common.lang.Lang;
 import us.rapidskies.common.parkour.ParkourTimes;
 import us.rapidskies.hub.HubSettings;
 import us.rapidskies.hub.RapidHub;
-import us.rapidskies.hub.display.Labels;
+import us.rapidskies.core.display.Labels;
 import us.rapidskies.hub.parkour.Layout.Trigger;
 
 /**

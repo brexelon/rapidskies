@@ -6,3 +6,19 @@ description: "Chunk claims, trust roles, towns, plots and Town Projects (PLAN.md
 author: RapidSkies
 website: https://rapidskies.us
 depend: [rapid-core]
+# PlaceholderAPI: %rapidclaims_*% for TAB. QuickShop-Hikari: shops only where the creator is a Member.
+softdepend: [PlaceholderAPI, QuickShop-Hikari]
+
+permissions:
+  rapid.command.claim:
+    description: Use /claim (claim land, trust, flags, the claim map).
+    default: true
+  rapid.command.town:
+    description: Use /town and /tc.
+    default: true
+  rapid.claims.admin:
+    description: Use /claimadmin (bypass, inspect, unclaim, transfer, restore, delete towns, allowance).
+    default: op
+  rapid.claims.entry-exempt:
+    description: Can't be kept out of claims (staff moving around for reports).
+    default: op

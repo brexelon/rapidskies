@@ -1,0 +1,375 @@
+# rapid-claims messages (MiniMessage). Brand tags: <primary> <accent> <text> <muted> <dark>
+# <success> <error>, and <prefix> for "RAPIDSKIES »". Every supported client (1.20 – 26.3)
+# renders hex colors, <hover>, <click> and <key>; don't use anything newer than 1.20.
+# Menu titles, item names and lore are components too, but clicks and hovers do nothing there.
+
+errors:
+  players-only: "<prefix><error>Only players can do that.</error>"
+  database: "<prefix><error>Something went wrong saving that. Please try again in a moment.</error>"
+  no-crowns: "<prefix><error>Crowns aren't available on this server.</error>"
+  unknown-player: "<prefix><error>Nobody called <accent><player></accent> has played here.</error>"
+
+# How an owner is named in messages. <name> is the player's name, or the town's in its tag color.
+owner:
+  player: "<accent><name></accent><text>'s land</text>"
+  town: "<text>the town of </text><name>"
+  unknown-town: "<muted>an old town</muted>"
+
+# Trust roles (PLAN.md §4.1).
+role:
+  visitor: "<muted>Visitor</muted>"
+  trusted: "<text>Trusted</text>"
+  member: "<accent>Member</accent>"
+  builder: "<primary>Builder</primary>"
+  co-owner: "<primary><bold>Co-owner</bold></primary>"
+  owner: "<primary><bold>Owner</bold></primary>"
+
+flag:
+  pvp:
+    name: "<text>PvP</text>"
+    lore:
+      - "<muted>Players can fight each other here.</muted>"
+      - "<muted>Off by default; on makes it a PvP area.</muted>"
+  mob-spawning:
+    name: "<text>Monster spawning</text>"
+    lore:
+      - "<muted>Monsters spawn here in the dark.</muted>"
+  fire-spread:
+    name: "<text>Fire spread</text>"
+    lore:
+      - "<muted>Fire spreads and burns blocks here.</muted>"
+  leaf-decay:
+    name: "<text>Leaf decay</text>"
+    lore:
+      - "<muted>Leaves away from logs fall apart.</muted>"
+
+menu:
+  close: "<error>Close</error>"
+  back: "<text>Back</text>"
+
+claim:
+  help:
+    - "<prefix><primary>Claims</primary> <dark>·</dark> <muted>you start with chunks to claim; play to earn more.</muted>"
+    - "<dark>»</dark> <hover:show_text:'<muted>Click to run'><click:run_command:/claim><accent>/claim</accent></click></hover> <muted>claim the chunk you stand in</muted>"
+    - "<dark>»</dark> <hover:show_text:'<muted>Click to run'><click:run_command:/claim map><accent>/claim map</accent></click></hover> <muted>claim and unclaim by clicking a map</muted>"
+    - "<dark>»</dark> <accent>/claim trust <player|*> [trusted|member|builder|co-owner]</accent> <muted>let others in</muted>"
+    - "<dark>»</dark> <accent>/claim untrust</accent><dark>,</dark> <accent>/claim trusted</accent><dark>,</dark> <accent>/claim deny <player></accent><dark>,</dark> <accent>/claim undeny</accent>"
+    - "<dark>»</dark> <accent>/claim flags</accent><dark>,</dark> <accent>/claim info</accent><dark>,</dark> <accent>/claim list</accent><dark>,</dark> <accent>/claim show</accent><dark>,</dark> <accent>/claim unclaim</accent>"
+    - "<dark>»</dark> <accent>/claim allowance</accent><dark>,</dark> <accent>/claim buy [chunks]</accent> <muted>more land for Crowns</muted>"
+  not-claimable: "<prefix><error>Land can only be claimed in the Heartland.</error>"
+  already-yours: "<prefix><muted>This chunk is already yours.</muted>"
+  taken: "<prefix><error>This chunk is <owner></error><error>.</error>"
+  no-allowance: "<prefix><error>You've used all <total> of your chunks.</error> <muted>Earn more by playing, or</muted> <hover:show_text:'<muted>Click to see the price'><click:run_command:/claim buy><accent>buy one with Crowns</accent></click></hover><muted>.</muted>"
+  race-lost: "<prefix><error>Someone claimed that chunk a moment before you.</error>"
+  claimed: "<prefix><success>Claimed chunk <x>, <z>.</success> <muted>You've used <used> of <total> chunks.</muted>"
+  unclaimed: "<prefix><text>Chunk <x>, <z> is no longer yours.</text> <muted>Your builds stay, unprotected.</muted>"
+  not-claimed: "<prefix><muted>Nobody has claimed this chunk.</muted>"
+  not-yours: "<prefix><error>This chunk is <owner></error><error>, not yours.</error>"
+  town-land-unclaim: "<prefix><error>This is town land.</error> <muted>Use <accent>/town unclaim</accent>.</muted>"
+  info: |-
+    <prefix><primary>Chunk <x>, <z></primary> <dark>·</dark> <owner>
+    <dark>»</dark> <muted>Claimed</muted> <text><since></text> <dark>·</dark> <muted>you're</muted> <role>
+    <dark>»</dark> <muted>Flags on:</muted> <text><flags></text>
+  info-no-flags: "none"
+  info-plot: "<dark>»</dark> <muted>Plot of</muted> <accent><resident></accent>"
+  info-wilderness: "<prefix><text>Chunk <x>, <z> is wilderness.</text> <hover:show_text:'<muted>Click to claim it'><click:run_command:/claim><accent>Claim it</accent></click></hover>"
+  list-header: "<prefix><primary>Your land</primary> <muted>(<used> of <total> chunks)</muted>"
+  list-line: "<dark>»</dark> <text>Chunk <x>, <z></text> <muted>around <bx>, <bz></muted>"
+  list-more: "<dark>»</dark> <muted>and <count> more</muted>"
+  allowance: |-
+    <prefix><primary>Claim allowance</primary> <muted>(<used> of <total> used)</muted>
+    <dark>»</dark> <text><starter></text> <muted>to start with</muted>
+    <dark>»</dark> <text><playtime></text><muted>/<playtime-max> for playtime (one per <hours> h here)</muted>
+    <dark>»</dark> <text><extra></text> <muted>from Trade levels</muted>
+    <dark>»</dark> <text><purchased></text> <muted>bought with Crowns, next one</muted> <accent><next-price> Crowns</accent>
+    <dark>»</dark> <text><bonus></text> <muted>granted by staff</muted>
+
+buy:
+  usage: "<prefix><muted>Use <accent>/claim buy [chunks]</accent>.</muted>"
+  limit: "<prefix><error>You've bought <bought> chunks; the limit is <max>.</error>"
+  quote: "<prefix><text><count> more chunk(s) cost</text> <accent><price> Crowns</accent><text>.</text> <muted>(The one after costs <next>.)</muted> <hover:show_text:'<muted>Click to buy'><click:run_command:'/claim buy <count> confirm'><success>[Buy]</success></click></hover>"
+  done: "<prefix><success>Bought <count> chunk(s) for <price> Crowns.</success>"
+  too-poor: "<prefix><error>You need <price> Crowns for that.</error>"
+
+trust:
+  usage: "<prefix><muted>Use <accent>/claim trust <player|*> [trusted|member|builder|co-owner]</accent>.</muted>"
+  untrust-usage: "<prefix><muted>Use <accent>/claim untrust <player|*></accent>.</muted>"
+  bad-role: "<prefix><error>Roles: trusted, member, builder, co-owner.</error>"
+  self: "<prefix><error>You can't change your own access.</error>"
+  owner-only: "<prefix><error>Only the owner can hand out or change Co-owner access.</error>"
+  denied-first: "<prefix><error><player> is kept out of this land.</error> <muted>Use <accent>/claim undeny <player></accent> first.</muted>"
+  everyone: "everyone"
+  set: "<prefix><success><player> is now</success> <role> <success>on</success> <owner><success>.</success>"
+  removed: "<prefix><text><player> is no longer trusted on</text> <owner><text>.</text>"
+  notify: "<prefix><text>You're now</text> <role> <text>on</text> <owner><text>.</text>"
+  list-header: "<prefix><primary>Trusted on</primary> <owner>"
+  list-line: "<dark>»</dark> <text><player></text> <dark>·</dark> <role>"
+  list-empty: "<dark>»</dark> <muted>Nobody yet.</muted>"
+
+deny:
+  usage: "<prefix><muted>Use <accent>/claim deny <player></accent> or <accent>/claim undeny <player></accent>.</muted>"
+  invalid: "<prefix><error>You can't keep that player out.</error>"
+  trusted: "<prefix><error><player> is trusted here or a town member.</error> <muted>Untrust them first.</muted>"
+  set: "<prefix><text><player> can no longer enter.</text>"
+  removed: "<prefix><text><player> may enter again.</text>"
+  notify: "<prefix><error>You've been kept out of</error> <owner><error>.</error>"
+  list: "<dark>»</dark> <muted>Kept out:</muted> <text><players></text>"
+
+flags:
+  title: "<dark>Flags · chunk <x>, <z></dark>"
+  state-on: "<success>✔ On</success>"
+  state-off: "<error>✘ Off</error>"
+  click:
+    - "<accent>Click</accent> <muted>to switch for this chunk</muted>"
+    - "<accent>Shift-click</accent> <muted>for all your land here</muted>"
+  back: "<text>Claim map</text>"
+  switched-on: "<prefix><flag> <success>is on</success> <muted>(<count> chunk(s)).</muted>"
+  switched-off: "<prefix><flag> <error>is off</error> <muted>(<count> chunk(s)).</muted>"
+  not-allowed: "<prefix><error>You can't change flags here.</error>"
+  usage: "<prefix><muted>Use <accent>/claim flag <pvp|mob-spawning|fire-spread|leaf-decay> <on|off> [all]</accent>, or <accent>/claim flags</accent>.</muted>"
+
+show:
+  legend: "<prefix><muted>Borders:</muted> <primary>gold</primary> <muted>yours ·</muted> <aqua>diamond</aqua> <muted>your town ·</muted> <text>iron</text> <muted>trusted ·</muted> <error>redstone</error> <muted>others</muted>"
+
+map:
+  title: "<dark>Claim map</dark>"
+  pan-west: "<text>◀ West</text>"
+  pan-north: "<text>▲ North</text>"
+  pan-south: "<text>▼ South</text>"
+  pan-east: "<text>▶ East</text>"
+  info-name: "<primary>Centre: chunk <x>, <z></primary>"
+  info-lore:
+    - "<muted>Your chunks:</muted> <text><used></text><muted>/<total> (<left> left)</muted>"
+  info-town: "<muted>Town chunks:</muted> <text><count></text><muted>/<cap></muted>"
+  info-recenter: "<accent>Click</accent> <muted>to centre on you</muted>"
+  mode-personal: "<text>Claiming for: you</text>"
+  mode-town: "<aqua>Claiming for: your town</aqua>"
+  mode-lore:
+    - "<accent>Click</accent> <muted>to switch between claiming</muted>"
+    - "<muted>for yourself and for your town.</muted>"
+  borders: "<text>Show borders</text>"
+  borders-lore:
+    - "<muted>Outlines claims around you</muted>"
+    - "<muted>in the world for a few seconds.</muted>"
+  flags: "<text>Flags here</text>"
+  flags-lore:
+    - "<muted>PvP, monsters, fire and leaves</muted>"
+    - "<muted>for the chunk you stand in.</muted>"
+  cell-coords: "<dark>Chunk <x>, <z></dark>"
+  cell-here: "<primary>● You are here</primary>"
+  cell-unclaimable: "<muted>Can't be claimed</muted>"
+  cell-wilderness: "<text>Wilderness</text>"
+  cell-owned: "<owner>"
+  cell-plot: "<muted>Plot of</muted> <accent><resident></accent>"
+  cell-ruins: "<error>Ruins: unclaimed soon unless the owner returns</error>"
+  cell-your-role: "<muted>You're</muted> <role> <muted>here</muted>"
+  click-claim: "<accent>Click</accent> <muted>to claim</muted>"
+  click-claim-town: "<accent>Click</accent> <muted>to claim for your town</muted>"
+  click-unclaim: "<accent>Right-click</accent> <muted>to unclaim</muted>"
+  click-unclaim-town: "<accent>Right-click</accent> <muted>to unclaim for your town</muted>"
+  switch-to-town: "<muted>Switch to town mode to change town land</muted>"
+
+# Shown on the action bar when something is refused. <action> is from protect.action.
+protect:
+  denied: "<owner><dark>:</dark> <error>you need</error> <role> <error>access to <action>.</error>"
+  no-pvp: "<error>PvP is off on this land.</error>"
+  portal: "<error>A portal can't open on land you can't build on.</error>"
+  action:
+    use: "use that"
+    container: "open containers"
+    farm: "farm here"
+    animals: "touch animals"
+    build: "build"
+    manage: "change settings"
+
+entry:
+  denied: "<error>You're kept out of</error> <owner><error>.</error>"
+  wilderness: "<muted>Wilderness</muted>"
+  land: "<text>Entering</text> <owner> <dark>·</dark> <pvp>"
+  plot: "<text>Entering</text> <owner> <dark>·</dark> <muted>plot of</muted> <accent><resident></accent> <dark>·</dark> <pvp>"
+  pvp-on: "<error>PvP on</error>"
+  pvp-off: "<success>PvP off</success>"
+
+ruins:
+  restored: "<prefix><success>Welcome back! Your land had become ruins while you were away; it's yours again.</success>"
+
+shop:
+  claims-only: "<error>Shops can only go inside claimed land.</error>"
+  needs-member: "<error>You need Member access on this land to open a shop here.</error>"
+
+placeholder:
+  no-town: "<muted>None</muted>"
+  wilderness: "<muted>Wilderness</muted>"
+  not-claimable: "<muted>—</muted>"
+
+town:
+  help:
+    - "<prefix><primary>Towns</primary> <dark>·</dark> <muted>found one, or ask a mayor for an invite.</muted>"
+    - "<dark>»</dark> <accent>/town create <name> <TAG></accent> <muted>found a town on the chunk you stand in</muted>"
+    - "<dark>»</dark> <accent>/town</accent><dark>,</dark> <accent>/town info [town]</accent><dark>,</dark> <hover:show_text:'<muted>Click to run'><click:run_command:/town list><accent>/town list</accent></click></hover>"
+    - "<dark>»</dark> <accent>/town invite</accent><dark>,</dark> <accent>join</accent><dark>,</dark> <accent>leave</accent><dark>,</dark> <accent>kick</accent><dark>,</dark> <accent>rank <player> <role></accent><dark>,</dark> <accent>mayor</accent><dark>,</dark> <accent>perms</accent>"
+    - "<dark>»</dark> <accent>/town claim</accent><dark>,</dark> <accent>unclaim</accent><dark>,</dark> <accent>map</accent><dark>,</dark> <accent>plot <player>|clear</accent><dark>,</dark> <accent>trust</accent><dark>,</dark> <accent>deny</accent>"
+    - "<dark>»</dark> <accent>/town deposit <amount></accent><dark>,</dark> <accent>withdraw <amount></accent> <muted>the bank pays daily upkeep</muted>"
+    - "<dark>»</dark> <accent>/town projects</accent><dark>,</dark> <accent>warp</accent><dark>,</dark> <accent>setwarp</accent><dark>,</dark> <accent>vault</accent><dark>,</dark> <accent>tag</accent><dark>,</dark> <accent>color</accent><dark>,</dark> <accent>rename</accent>"
+    - "<dark>»</dark> <accent>/tc <message></accent> <muted>town chat (<accent>/tc</accent> alone to switch)</muted><dark>,</dark> <accent>/town disband</accent>"
+  role:
+    mayor: "<primary>Mayor</primary>"
+    assistant: "<accent>Assistant</accent>"
+    resident: "<text>Resident</text>"
+    recruit: "<muted>Recruit</muted>"
+  role-short:
+    mayor: "<primary>M</primary>"
+    assistant: "<accent>A</accent>"
+    resident: "<text>R</text>"
+    recruit: "<muted>r</muted>"
+  # In front of chat lines and in %rapidclaims_town_tag%. <tag> is in the town's color.
+  chat-tag: "<dark>[</dark><tag><dark>]</dark> "
+  chat-format: "<dark>[</dark><tag><dark>]</dark> <role> <text><player></text><dark>:</dark> <aqua><message></aqua>"
+  chat-on: "<prefix><text>Your chat now goes to your town.</text> <muted><accent>/tc</accent> again to switch back.</muted>"
+  chat-off: "<prefix><text>Your chat is public again.</text>"
+  not-member: "<prefix><error>You're not in a town.</error> <muted>See <accent>/town help</accent>.</muted>"
+  already-member: "<prefix><error>You're already in a town.</error>"
+  no-permission: "<prefix><error>Your town role doesn't allow that (<permission>).</error>"
+  mayor-only: "<prefix><error>Only the mayor can do that.</error>"
+  unknown: "<prefix><error>There's no town called <name>.</error>"
+  create-usage: "<prefix><muted>Use <accent>/town create <name> <TAG></accent> on the chunk that will be the town center. Founding costs</muted> <accent><price> Crowns</accent><muted>. Names: 3–24 letters, digits, - or _; tags: 2–4 capital letters or digits.</muted>"
+  bad-name: "<prefix><error>Town names are 3–24 letters, digits, - or _.</error>"
+  bad-tag: "<prefix><error>Tags are 2–4 capital letters or digits.</error>"
+  name-taken: "<prefix><error>Another town already uses that name or tag.</error>"
+  found-taken: "<prefix><error>This chunk belongs to someone else.</error> <muted>Found your town on wilderness or on your own land.</muted>"
+  found-race: "<prefix><error>That name, tag or chunk was taken a moment ago.</error> <muted>Nothing was charged.</muted>"
+  found-too-poor: "<prefix><error>Founding a town costs <price> Crowns.</error>"
+  founded: "<prefix><success>You founded</success> <town><success>!</success> <muted>Paid <price> Crowns; the first day of upkeep is included. Invite friends with <accent>/town invite</accent>.</muted>"
+  founded-broadcast: "<prefix><text><player> founded the town of</text> <town><text>!</text>"
+  invite-in-town: "<prefix><error><player> is already in a town.</error>"
+  invite-sent: "<prefix><text>Invited <player>.</text>"
+  invite-received: "<prefix><player> <text>invited you to</text> <town><text>.</text> <hover:show_text:'<muted>Click to join'><click:run_command:'/town join <name>'><success>[Join]</success></click></hover> <muted>(<minutes> min)</muted>"
+  no-invite: "<prefix><error>You don't have an invite from that town (or it ran out).</error>"
+  join-failed: "<prefix><error>Couldn't join: you're already in a town, or it's gone.</error>"
+  joined: "<prefix><accent><player></accent> <text>joined</text> <town><text>!</text>"
+  left: "<prefix><accent><player></accent> <text>left</text> <town><text>.</text>"
+  kicked: "<prefix><accent><player></accent> <text>was removed from</text> <town><text>.</text>"
+  you-were-kicked: "<prefix><error>You were removed from</error> <town><error>.</error>"
+  mayor-cant-leave: "<prefix><error>A mayor can't leave.</error> <muted>Hand the town over with <accent>/town mayor <player></accent>, or <accent>/town disband</accent>.</muted>"
+  not-a-member: "<prefix><error><player> isn't in your town.</error>"
+  rank-too-low: "<prefix><error>You can only change members below your own rank.</error>"
+  rank-usage: "<prefix><muted>Use <accent>/town rank <player> <assistant|resident|recruit></accent>.</muted>"
+  use-mayor-command: "<prefix><muted>Use <accent>/town mayor <player></accent> to hand over the town.</muted>"
+  rank-changed: "<prefix><accent><player></accent> <text>is now</text> <role><text>.</text>"
+  mayor-confirm: "<prefix><text>Make <player> mayor? You'll become an assistant.</text> <hover:show_text:'<muted>Click to confirm'><click:run_command:'/town mayor <target> confirm'><error>[Confirm]</error></click></hover>"
+  new-mayor: "<prefix><accent><player></accent> <text>is the new mayor of</text> <town><text>!</text>"
+  perms-line: "<dark>»</dark> <role><dark>:</dark> <text><permissions></text> <dark>·</dark> <muted>land:</muted> <land>"
+  perms-usage: "<prefix><muted>Mayors: <accent>/town perms <role> <permission> <on|off></accent> or <accent>/town perms <role> land <visitor|trusted|member|builder></accent>. Permissions: invite, kick, claim, plots, flags, trust, promote, withdraw, projects, warp.</muted>"
+  perms-bad-land: "<prefix><error>Land access is visitor, trusted, member or builder.</error>"
+  perms-changed: "<prefix><success>Updated what</success> <role> <success>may do.</success>"
+  bank-usage: "<prefix><muted>Use <accent>/town deposit <amount></accent> or <accent>/town withdraw <amount></accent>.</muted>"
+  bank-busy: "<prefix><muted>The bank is busy, try again.</muted>"
+  deposit-too-poor: "<prefix><error>You don't have <amount> Crowns.</error>"
+  withdraw-too-poor: "<prefix><error>The bank doesn't have <amount> Crowns.</error>"
+  deposited: "<prefix><accent><player></accent> <text>paid</text> <accent><amount> Crowns</accent> <text>into the bank.</text>"
+  withdrew: "<prefix><accent><player></accent> <text>took</text> <accent><amount> Crowns</accent> <text>from the bank.</text>"
+  info: |-
+    <prefix><town> <tag><dark>·</dark> <state> <dark>·</dark> <muted>level</muted> <accent><level></accent>
+    <dark>»</dark> <muted>Mayor</muted> <text><mayor></text> <dark>·</dark> <text><members></text> <muted>members:</muted> <text><member-names></text>
+    <dark>»</dark> <muted>Land</muted> <text><chunks></text><muted>/<cap> chunks</muted> <dark>·</dark> <muted>bank</muted> <accent><bank> Crowns</accent>
+    <dark>»</dark> <muted>Upkeep</muted> <accent><upkeep> Crowns</accent><muted>/day,</muted> <upkeep-state>
+  info-paid: "<success>paid <days> day(s) ahead</success>"
+  info-behind: "<error><days> day(s) behind</error>"
+  state-active: "<success>Active</success>"
+  state-ruins: "<error>Ruins</error>"
+  list-header: "<prefix><primary>Towns</primary> <muted>(<count>)</muted>"
+  list-line: "<dark>»</dark> <hover:show_text:'<muted>Click for details'><click:run_command:'/town info <name>'><town></click></hover> <tag><dark>·</dark> <text><members></text> <muted>members, level <level></muted>"
+  claim-already: "<prefix><muted>This chunk is already your town's.</muted>"
+  claim-not-adjacent: "<prefix><error>Town land must touch the town's other land.</error>"
+  claim-cap: "<prefix><error>Your town holds its limit of <cap> chunks.</error> <muted>More members and Projects raise it.</muted>"
+  claimed: "<prefix><success>Claimed chunk <x>, <z> for the town</success> <muted>(<count>/<cap>).</muted>"
+  unclaimed: "<prefix><text>Chunk <x>, <z> is no longer town land.</text>"
+  not-town-land: "<prefix><error>You're not standing on your town's land.</error>"
+  unclaim-center: "<prefix><error>The town center can't be unclaimed.</error>"
+  unclaim-splits: "<prefix><error>That would cut town land off from the center.</error>"
+  ruins-no-claim: "<prefix><error>Your town is in ruins and can't claim land.</error> <muted>Pay upkeep with <accent>/town deposit</accent>.</muted>"
+  plot-assigned: "<prefix><success>This chunk is now <player>'s plot.</success>"
+  plot-received: "<prefix><success>You've been given a plot: chunk <x>, <z>.</success> <muted>Trust friends there with <accent>/claim trust</accent>.</muted>"
+  plot-cleared: "<prefix><text>This plot belongs to the town again.</text>"
+  no-plot-here: "<prefix><muted>This chunk isn't a plot.</muted>"
+  tag-changed: "<prefix><text>The town tag is now</text> <tag><text>.</text>"
+  color-usage: "<prefix><muted>Use <accent>/town color [color]</accent>: <colors>.</muted>"
+  rename-confirm: "<prefix><text>Rename the town to <name>? It costs</text> <accent><price> Crowns</accent> <text>from the bank.</text> <hover:show_text:'<muted>Click to confirm'><click:run_command:'/town rename <name> confirm'><error>[Confirm]</error></click></hover>"
+  rename-too-poor: "<prefix><error>The bank needs <price> Crowns to rename the town.</error>"
+  renamed: "<prefix><text>The town is now called</text> <town><text>.</text>"
+  warp-locked: "<prefix><error>Your town hasn't unlocked a warp yet.</error> <muted>Complete a Project that gives one: <accent>/town projects</accent>.</muted>"
+  warp-unset: "<prefix><muted>The town warp hasn't been set.</muted> <muted><accent>/town setwarp</accent> on town land.</muted>"
+  warp-set: "<prefix><success>Town warp set.</success>"
+  warped: "<prefix><text>Welcome to</text> <town><text>.</text>"
+  vault-locked: "<prefix><error>Your town hasn't unlocked a vault yet.</error> <muted>See <accent>/town projects</accent>.</muted>"
+  vault-recruit: "<prefix><error>Recruits can't open the town vault.</error>"
+  vault-title: "<dark>Town vault · </dark><town>"
+  disband-confirm: "<prefix><error>Disband</error> <town><error>?</error> <muted>Its land is released (builds stay) and the bank is paid to you.</muted> <hover:show_text:'<muted>Click to disband'><click:run_command:/town disband confirm><error>[Disband]</error></click></hover>"
+  disbanded: "<prefix><town> <error>has been disbanded.</error>"
+  disbanded-broadcast: "<prefix><text>The town of</text> <town> <text>has been disbanded.</text>"
+  disband-payout: "<prefix><text>The town bank paid you</text> <accent><amount> Crowns</accent><text>.</text>"
+  upkeep-behind: "<prefix><error><town> is behind on upkeep.</error> <muted>Top up the bank with <accent>/town deposit</accent> before it falls into ruins.</muted>"
+  became-ruins: "<prefix><town> <error>fell into ruins after missing upkeep.</error> <muted>It stays protected for <days> days: pay into the bank to restore it.</muted>"
+  ruins-warning: "<prefix><town> <error>is in ruins.</error> <muted>Pay upkeep with <accent>/town deposit</accent> or its land will be released.</muted>"
+  ruins-restored: "<prefix><town> <success>is restored: upkeep is paid again.</success>"
+  ruins-expired: "<prefix><town> <error>was in ruins too long and has been released.</error>"
+
+project:
+  usage: "<prefix><muted>Use <accent>/town projects</accent>, <accent>/town project start <id></accent> or <accent>/town project donate <id> crowns <amount></accent>.</muted>"
+  menu-title: "<dark>Town Projects · level <level></dark>"
+  donate-title: "<dark>Donate · </dark><project>"
+  name: "<project>"
+  crowns: "<accent>Crowns</accent>"
+  requirement: "<muted>•</muted> <item><dark>:</dark> <text><given></text><muted>/<needed></muted>"
+  requirement-done: "<success>✔</success> <item><dark>:</dark> <success><given>/<needed></success>"
+  unlock-line: "<primary>Unlocks:</primary> <text><unlock></text>"
+  unlock:
+    warp: "a town warp"
+    vault: "a shared town vault"
+    market-stall: "a market stall at spawn"
+    banner: "town banner patterns"
+    title: "a town title"
+    chunks: "<amount> more chunks"
+  state-done: "<success>✔ Completed</success>"
+  state-active: "<accent>In progress</accent> <dark>·</dark> <accent>click</accent> <muted>to donate</muted>"
+  state-start: "<accent>Click</accent> <muted>to start this Project</muted>"
+  state-available: "<muted>Not started</muted>"
+  state-waiting: "<muted>Finish the current Project first</muted>"
+  click-items: "<accent>Click</accent> <muted>to give what you carry</muted>"
+  click-crowns: "<accent>Click</accent> <muted>for how to give Crowns</muted>"
+  crowns-hint: "<prefix><muted>Give Crowns with</muted> <hover:show_text:'<muted>Click to type it'><click:suggest_command:'/town project donate <id> crowns '><accent>/town project donate <id> crowns <amount></accent></click></hover>"
+  already-active: "<prefix><muted>Your town is already working on that Project.</muted>"
+  already-done: "<prefix><muted>Your town has completed that Project.</muted>"
+  one-at-a-time: "<prefix><error>Finish the current Project first.</error>"
+  not-active: "<prefix><error>That Project isn't in progress.</error>"
+  enough: "<prefix><muted>That's already fully given.</muted>"
+  none-carried: "<prefix><error>You aren't carrying any plain</error> <item><error>.</error>"
+  too-poor: "<prefix><error>You don't have that many Crowns.</error>"
+  started: "<prefix><accent><player></accent> <text>started the Project</text> <project><text>!</text>"
+  donated: "<prefix><success>You gave <amount></success> <item> <success>to</success> <project><success>.</success>"
+  donated-crowns: "<prefix><success>You gave <amount> Crowns to</success> <project><success>.</success>"
+  completed: "<prefix><success>Project complete:</success> <project><success>! The town is now level <level>.</success> <muted>Unlocked:</muted> <text><unlocks></text>"
+
+admin:
+  help:
+    - "<prefix><primary>/claimadmin</primary> <muted>(every change is logged)</muted>"
+    - "<dark>»</dark> <accent>bypass</accent><dark>,</dark> <accent>info</accent><dark>,</dark> <accent>unclaim</accent> <muted>(this chunk)</muted>"
+    - "<dark>»</dark> <accent>unclaimall <player></accent><dark>,</dark> <accent>transfer <player|town:name></accent> <muted>(this chunk)</muted>"
+    - "<dark>»</dark> <accent>restore <town></accent><dark>,</dark> <accent>deletetown <town> confirm</accent><dark>,</dark> <accent>allowance <player> <+n|-n></accent>"
+  bypass-on: "<prefix><success>Claim bypass on:</success> <muted>you can build and open anything in claims.</muted>"
+  bypass-off: "<prefix><text>Claim bypass off.</text>"
+  info: |-
+    <prefix><primary>Claim info</primary> <dark>·</dark> <owner> <muted>(<id>)</muted>
+    <dark>»</dark> <muted>Holds</muted> <text><chunks></text> <muted>chunks ·</muted> <text><state></text>
+    <dark>»</dark> <muted>This chunk by</muted> <text><by></text> <muted>at <at></muted>
+    <dark>»</dark> <muted>Trusted:</muted> <text><trusted></text>
+    <dark>»</dark> <muted>Denied:</muted> <text><denied></text>
+  center: "<prefix><error>That's a town center: delete the town instead.</error>"
+  unclaimed: "<prefix><text>Released chunk <x>, <z>.</text>"
+  unclaimed-all: "<prefix><text>Released <count> chunk(s) of</text> <owner><text>.</text>"
+  use-deletetown: "<prefix><muted>Use <accent>/claimadmin deletetown <town> confirm</accent> for towns.</muted>"
+  transferred: "<prefix><text>This chunk now belongs to</text> <owner><text>.</text>"
+  restored: "<prefix><success><name> is out of ruins, with a day of upkeep paid.</success>"
+  allowance: "<prefix><text><player>'s staff-granted chunks:</text> <accent><bonus></accent>"
+  delete-confirm: "<prefix><error>Delete <name>?</error> <hover:show_text:'<muted>Click to delete'><click:run_command:'/claimadmin deletetown <name> confirm'><error>[Delete]</error></click></hover>"
+  deleted: "<prefix><text>Deleted the town <name>.</text>"

@@ -1,0 +1,175 @@
+# rapid-essentials messages (MiniMessage). Brand tags: <primary> <accent> <text> <muted> <dark>
+# <success> <error>, and <prefix> for "RAPIDSKIES »".
+#
+# Every supported client (1.20 – 26.3) renders hex colors, <gradient>, <hover>, <click>
+# and <key> exactly. Don't use <shadow> (1.21.4+), <sprite>/<head> (1.21.9+) or anything else
+# newer than 1.20: 1.20 clients drop it.
+#
+# Buttons whose command is built in code are tags here: <accept>…</accept> runs /tpaccept for
+# that player, <go>…</go> goes to that home or warp. Put the text and hover inside them.
+
+errors:
+  players-only: "<prefix><error>Only players can use this.</error>"
+  not-here: "<prefix><error><player> isn't on this server.</error>"
+
+# Every teleport command (/spawn, /back, /home, /warp, /tpa). <time> is "8s", "1m 30s".
+teleport:
+  warmup: "<prefix><text>Teleporting in <accent><seconds>s</accent>.</text> <muted>Don't move.</muted>"
+  cancelled-move: "<prefix><error>Teleport cancelled:</error> <muted>you moved.</muted>"
+  cancelled-damage: "<prefix><error>Teleport cancelled:</error> <muted>you took damage.</muted>"
+  cooldown: "<prefix><error>You can do that again in <accent><time></accent>.</error>"
+  frozen: "<prefix><error>You can't teleport while frozen.</error>"
+  gone: "<prefix><error>Where you were going isn't there any more.</error>"
+  unsafe: "<prefix><error>That spot isn't safe to go to.</error>"
+  failed: "<prefix><error>Couldn't take you there.</error> <muted>Try again in a moment.</muted>"
+
+# /spawn and /setspawn.
+spawn:
+  teleported: "<prefix><text>Welcome back to the spawn.</text>"
+  # <line> is the spawn.location line for the server's rapid-core profile; clicking it copies the value.
+  set: "<prefix><success>Spawn moved here until the next restart.</success> <muted>To keep it, put this in the server's rapid-core profile:</muted> <accent><line></accent>"
+  copy-hint: "<muted>Click to copy"
+
+# /back.
+back:
+  returned: "<prefix><text>Back where you were.</text> <muted>Use <accent>/back</accent> again to return.</muted>"
+  returned-death: "<prefix><text>Back where you died.</text>"
+  none: "<prefix><muted>There's nowhere to go back to yet.</muted>"
+  gone: "<prefix><error>That world isn't around any more.</error>"
+
+# /tpa, /tpahere, /tpaccept, /tpdeny, /tpacancel, /tptoggle. <seconds> is how long a request lasts.
+tpa:
+  usage: "<prefix><text>Usage: <accent>/tpa</accent> <muted><player></muted></text>"
+  usage-here: "<prefix><text>Usage: <accent>/tpahere</accent> <muted><player></muted></text>"
+  not-here: "<prefix><error><player> isn't on this server.</error>"
+  self: "<prefix><muted>That's you.</muted>"
+  refusing: "<prefix><error><player> isn't taking teleport requests.</error>"
+  sent: "<prefix><text>Asked <accent><player></accent> if you can teleport to them.</text> <muted>It expires in <seconds>s.</muted> <cancel><hover:show_text:'<muted>Withdraw the request'><error>[Cancel]</error></hover></cancel>"
+  sent-here: "<prefix><text>Asked <accent><player></accent> to teleport to you.</text> <muted>It expires in <seconds>s.</muted> <cancel><hover:show_text:'<muted>Withdraw the request'><error>[Cancel]</error></hover></cancel>"
+  received: "<prefix><accent><player></accent> <text>wants to teleport to you.</text> <accept><hover:show_text:'<muted>They come to you'><success>[Accept]</success></hover></accept> <deny><hover:show_text:'<muted>Say no'><error>[Deny]</error></hover></deny> <muted>(<seconds>s)</muted>"
+  received-here: "<prefix><accent><player></accent> <text>wants you to teleport to them.</text> <accept><hover:show_text:'<muted>You go to them'><success>[Accept]</success></hover></accept> <deny><hover:show_text:'<muted>Say no'><error>[Deny]</error></hover></deny> <muted>(<seconds>s)</muted>"
+  none: "<prefix><muted>You have no open teleport requests.</muted>"
+  none-from: "<prefix><muted>There's no open request from <player>.</muted>"
+  blocked: "<prefix><error><player> can't teleport right now.</error>"
+  you-accepted: "<prefix><success>Accepted <player>'s request.</success>"
+  accepted: "<prefix><success><player> accepted your request.</success>"
+  arrived: "<prefix><text>Teleported to <accent><player></accent>.</text>"
+  you-denied: "<prefix><text>Denied <player>'s request.</text>"
+  denied: "<prefix><error><player> denied your request.</error>"
+  nothing-to-cancel: "<prefix><muted>You have no request to cancel.</muted>"
+  cancelled: "<prefix><text>Withdrew your request to <player>.</text>"
+  cancelled-by: "<prefix><muted><player> withdrew their teleport request.</muted>"
+  toggled-off: "<prefix><text>You're no longer taking teleport requests.</text> <muted><accent>/tptoggle</accent> again to allow them; it resets when you leave.</muted>"
+  toggled-on: "<prefix><success>You're taking teleport requests again.</success>"
+
+# /home, /sethome, /delhome, /homes. <limit> is homes.limit, the same for everyone.
+homes:
+  arrived: "<prefix><text>Welcome home</text> <muted>(<accent><name></accent>)</muted><text>.</text>"
+  set: "<prefix><success>Home <accent><name></accent> set.</success> <muted>Go back with <accent>/home <name></accent>.</muted>"
+  moved: "<prefix><success>Home <accent><name></accent> moved here.</success>"
+  deleted: "<prefix><text>Home <accent><name></accent> deleted.</text>"
+  limit: "<prefix><error>You already have <limit> homes.</error> <muted>Move one with <accent>/sethome <name></accent> or remove one with <accent>/delhome</accent>.</muted>"
+  none: "<prefix><muted>You have no homes here yet.</muted> <click:run_command:'/sethome'><hover:show_text:'<muted>Set one where you stand'><accent>/sethome</accent></hover></click> <muted>sets one.</muted>"
+  unknown: "<prefix><error>You have no home called <text><name></text>.</error> <click:run_command:'/homes'><hover:show_text:'<muted>List your homes'><accent>/homes</accent></hover></click>"
+  world-gone: "<prefix><error>Home <name> was in a world that's gone.</error> <muted>Remove it with <accent>/delhome <name></accent>.</muted>"
+  invalid-name: "<prefix><error>A home name is up to <max> letters, digits, - or _.</error>"
+  blocked-world: "<prefix><error>You can't set a home in this world.</error> <muted>It doesn't last.</muted>"
+  list: "<prefix><text>Your homes</text> <muted>(<count>/<limit>):</muted> <homes>"
+  entry: "<go><hover:show_text:'<muted>Click to go there'><accent><name></accent></hover></go>"
+  separator: "<dark>, </dark>"
+  usage-delete: "<prefix><text>Usage: <accent>/delhome</accent> <muted><name></muted></text>"
+  loading: "<prefix><muted>Your homes are still loading; try again in a moment.</muted>"
+  failed: "<prefix><error>Couldn't save that right now; please try again.</error>"
+
+# /warp, /warps, /setwarp, /delwarp.
+warps:
+  arrived: "<prefix><text>Warped to <accent><name></accent>.</text>"
+  list: "<prefix><text>Warps</text> <muted>(<count>):</muted> <warps>"
+  entry: "<go><hover:show_text:'<muted>Click to warp there'><accent><name></accent></hover></go>"
+  separator: "<dark>, </dark>"
+  none: "<prefix><muted>There are no warps on this server.</muted>"
+  unknown: "<prefix><error>There's no warp called <text><name></text>.</error> <click:run_command:'/warps'><hover:show_text:'<muted>List the warps'><accent>/warps</accent></hover></click>"
+  world-gone: "<prefix><error>Warp <name> is in a world that isn't loaded.</error>"
+  set: "<prefix><success>Warp <accent><name></accent> created here.</success>"
+  moved: "<prefix><success>Warp <accent><name></accent> moved here.</success>"
+  deleted: "<prefix><text>Warp <accent><name></accent> deleted.</text>"
+  invalid-name: "<prefix><error>A warp name is up to <max> letters, digits, - or _.</error>"
+  usage-set: "<prefix><text>Usage: <accent>/setwarp</accent> <muted><name></muted></text>"
+  usage-delete: "<prefix><text>Usage: <accent>/delwarp</accent> <muted><name></muted></text>"
+  failed: "<prefix><error>Couldn't save that right now; please try again.</error>"
+
+# /balance, /pay, /baltop, /eco. <amount> is "1,250", <currency> "Crowns" or "Coins" (singular for 1).
+money:
+  balance: "<prefix><text>You have</text> <accent><amount> <currency></accent><text>.</text>"
+  balance-other: "<prefix><text><player> has</text> <accent><amount> <currency></accent><text>.</text>"
+  usage-balance: "<prefix><text>Usage: <accent>/balance</accent> <muted><player></muted></text>"
+  no-others: "<prefix><error>You can only see your own balance.</error>"
+  usage-pay: "<prefix><text>Usage: <accent>/pay</accent> <muted><player> <amount></muted></text>"
+  invalid-amount: "<prefix><error><input> isn't an amount.</error> <muted>Use a whole number, like 250, 1,500 or 2.5k.</muted>"
+  pay-minimum: "<prefix><error>The smallest payment is <amount> <currency>.</error>"
+  pay-self: "<prefix><muted>You can't pay yourself.</muted>"
+  insufficient: "<prefix><error>You don't have enough.</error> <muted>You have <accent><amount> <currency></accent>.</muted>"
+  paid: "<prefix><success>Paid <accent><player></accent> <accent><amount> <currency></accent>.</success>"
+  received: "<prefix><success><accent><player></accent> paid you <accent><amount> <currency></accent>.</success>"
+  unknown-player: "<prefix><error>No player <text><player></text> has ever joined.</error>"
+  top-header: "<prefix><primary>Richest players</primary> <muted>(<currency>)</muted>"
+  top-line: "<dark>#</dark><muted><rank></muted> <text><player></text> <dark>»</dark> <accent><amount></accent>"
+  top-empty: "<prefix><muted>Nobody has any yet.</muted>"
+  usage-eco: "<prefix><text>Usage: <accent>/eco</accent> <muted>give|take <player> <amount></muted></text>"
+  eco-given: "<prefix><success>Gave <player> <amount> <currency>.</success> <muted>Balance: <balance>.</muted>"
+  eco-taken: "<prefix><success>Took <amount> <currency> from <player>.</success> <muted>Balance: <balance>.</muted>"
+  eco-insufficient: "<prefix><error><player> only has <amount> <currency>.</error>"
+  failed: "<prefix><error>Couldn't do that right now; please try again.</error>"
+
+ping:
+  self: "<prefix><text>Your ping:</text> <accent><ping> ms</accent>"
+  other: "<prefix><text><player>'s ping:</text> <accent><ping> ms</accent>"
+
+# /list. <rank> is the player's prefix ("RAPID++ "), empty for players without one.
+list:
+  players: "<prefix><text>On <accent><server></accent> (<count>):</text> <players>"
+  empty: "<prefix><muted>Nobody else is here.</muted>"
+  entry: "<rank><text><player></text>"
+  entry-vanished: "<rank><muted><italic><player></italic></muted>"
+  separator: "<dark>, </dark>"
+
+# /seen (staff). <ago> and <first> are "3d 4h".
+seen:
+  usage: "<prefix><text>Usage: <accent>/seen</accent> <muted><player></muted></text>"
+  online-here: "<prefix><text><player> is</text> <success>online</success> <text>here on <accent><server></accent>.</text>"
+  last: "<prefix><text><player> last joined</text> <accent><server></accent> <text><ago> ago.</text> <muted>First joined <first> ago.</muted>"
+  never: "<prefix><error>No player <text><player></text> has ever joined.</error>"
+  failed: "<prefix><error>Couldn't look that up right now; please try again.</error>"
+
+# /hat (a Horizons Rapid+ perk).
+hat:
+  done: "<prefix><success>Looking good.</success>"
+  empty: "<prefix><muted>Hold the item you want to wear.</muted>"
+  cursed: "<prefix><error>Your helmet won't come off.</error>"
+  full: "<prefix><error>Make room in your inventory for your old helmet first.</error>"
+  not-now: "<prefix><muted>Not while your inventory is set aside.</muted>"
+
+# Text pages (config info-commands): info.<command>. A list is one line per entry.
+info:
+  rules:
+    - "<prefix><primary><bold>Rules</bold></primary>"
+    - "<dark>•</dark> <text>No cheats, hacked clients, X-ray or auto-clickers.</text>"
+    - "<dark>•</dark> <text>No duplicating items or abusing bugs.</text> <muted>Report them to staff instead.</muted>"
+    - "<dark>•</dark> <text>No griefing, stealing or scamming.</text>"
+    - "<dark>•</dark> <text>Be respectful: no harassment, hate or spam.</text>"
+    - "<dark>•</dark> <text>No advertising, and no trading items or currency for real money.</text>"
+    - "<muted>More, and appeals, at</muted> <primary><click:open_url:'https://rapidskies.us'><hover:show_text:'<muted>Open the website in your browser'>rapidskies.us</hover></click></primary>"
+  store: "<prefix><text>Ranks and Bolts, cosmetic only:</text> <primary><click:open_url:'https://store.rapidskies.us'><hover:show_text:'<muted>Open the store in your browser'>store.rapidskies.us</hover></click></primary>"
+  website: "<prefix><text>News, rules and appeals:</text> <primary><click:open_url:'https://rapidskies.us'><hover:show_text:'<muted>Open the website in your browser'>rapidskies.us</hover></click></primary>"
+
+# /broadcast. <message> is the admin's text (MiniMessage, brand tags work).
+broadcast:
+  format: "<primary><bold>ANNOUNCEMENT</bold></primary> <dark>»</dark> <text><message></text>"
+  usage: "<prefix><text>Usage: <accent>/broadcast</accent> <muted><message></muted></text>"
+  local-only: "<prefix><error>Couldn't reach the other servers;</error> <muted>it was only shown here.</muted>"
+
+admin:
+  usage: "<prefix><text>Usage: <accent>/essentials</accent> <muted>reload|version</muted></text>"
+  version: "<prefix><text>rapid-essentials <accent><version></accent></text>"
+  reloaded: "<prefix><success>rapid-essentials config and messages reloaded.</success>"
+  reload-failed: "<prefix><error>The new config is invalid; the old one is still running. See the console.</error>"

@@ -24,7 +24,7 @@ import us.rapidskies.common.lang.Lang;
 class LangKeysTest {
 
     private static final Pattern KEY = Pattern.compile(
-            "\"((?:admin|errors|fly|item|leaderboard|npc|parkour|selector|visibility)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
+            "\"((?:admin|errors|fly|item|leaderboard|npc|parkour|selector|sidebar|visibility)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
 
     @Test
     void everyKeyInTheCodeIsInTheBundle() throws IOException {

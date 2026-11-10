@@ -57,6 +57,11 @@ selector:
   click: "<primary>Click to play!</primary>"
   joining: "<prefix><text>Sending you to</text> <mode><text>...</text>"
 
+# The hub sidebar's %rapidhub_status_<group>% (TAB scoreboard). <count>: players on the mode's servers.
+sidebar:
+  players: "<white><count> playing</white>"
+  offline: "<red>Offline</red>"
+
 # The floating label above each mode NPC. <mode> is modes.<id>.name, <status> selector.players or selector.closed.
 npc:
   label: "<mode>\n<status>\n<accent>Click to play!</accent>"

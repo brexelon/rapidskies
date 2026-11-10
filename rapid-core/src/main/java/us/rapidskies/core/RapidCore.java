@@ -24,6 +24,7 @@ import us.rapidskies.common.redis.RedisBus;
 import us.rapidskies.common.registry.ServerRegistry;
 import us.rapidskies.core.afk.AfkTracker;
 import us.rapidskies.core.chat.ChatListener;
+import us.rapidskies.core.chat.ChatTags;
 import us.rapidskies.core.command.BoltsCommand;
 import us.rapidskies.core.command.PlayerStatusCommands;
 import us.rapidskies.core.command.PlusCommand;
@@ -41,6 +42,7 @@ import us.rapidskies.core.staff.StaffLog;
 import us.rapidskies.core.staff.StaffMode;
 import us.rapidskies.core.staff.Vanish;
 import us.rapidskies.core.tailwind.TailwindService;
+import us.rapidskies.core.world.BuildMode;
 import us.rapidskies.core.world.WorldConfig;
 import us.rapidskies.core.world.WorldProtection;
 import us.rapidskies.core.world.WorldService;
@@ -53,7 +55,8 @@ import us.rapidskies.core.world.WorldService;
  * PlaceholderAPI expansion, AFK detection, anti-farm rules and
  * playtime Bolts, Tailwind, staff mode (vanish, freeze, inspection), on gamemode
  * servers the Vault economy for Coins or Crowns, and the spawn and spawn worlds
- * ({@link us.rapidskies.core.world.WorldService}).
+ * ({@link us.rapidskies.core.world.WorldService}) with build mode for changing them
+ * ({@link BuildMode}).
  *
  * <p>Other plugins get the services through {@link #get()} after declaring
  * {@code depend: [rapid-core]}.
@@ -78,6 +81,7 @@ public final class RapidCore extends JavaPlugin {
     private us.rapidskies.core.economy.BoltsCache boltsCache;
     private final Map<EconomyMode, Ledger> modeLedgers = new EnumMap<>(EconomyMode.class);
     private RankDisplay ranks;
+    private final ChatTags chatTags = new ChatTags();
     private Heartbeat heartbeat;
     private AfkTracker afk;
     private TailwindService tailwind;
@@ -86,6 +90,7 @@ public final class RapidCore extends JavaPlugin {
     private ModeEconomy economy;
     private StaffMode staffMode;
     private WorldService worlds;
+    private BuildMode buildMode;
     private boolean vaultRegistered;
 
     /** The running instance, for plugins that depend on rapid-core. */
@@ -121,7 +126,7 @@ public final class RapidCore extends JavaPlugin {
 
         var pm = getServer().getPluginManager();
         pm.registerEvents(profiles, this);
-        pm.registerEvents(new ChatListener(ranks, lang), this);
+        pm.registerEvents(new ChatListener(ranks, chatTags, lang), this);
         pm.registerEvents(new MenuListener(), this);
 
         afk = new AfkTracker(this, settings.afk(), lang);
@@ -149,12 +154,14 @@ public final class RapidCore extends JavaPlugin {
         freeze.start();
         vanish.restoreOnline();
         freeze.restoreOnline();
-        StaffCommands staffCommands = new StaffCommands(staffMode, lang);
 
-        worlds = new WorldService(this, worldConfig, lang);
+        worlds = new WorldService(this, worldConfig);
         worlds.start();
+        buildMode = new BuildMode(this, worlds, staffMode, staffLog, lang);
         pm.registerEvents(worlds, this);
-        pm.registerEvents(new WorldProtection(worlds), this);
+        pm.registerEvents(buildMode, this);
+        pm.registerEvents(new WorldProtection(worlds, buildMode), this);
+        StaffCommands staffCommands = new StaffCommands(staffMode, buildMode, lang);
 
         settings.gamemode().ifPresent(mode -> {
             economy = new ModeEconomy(this, mode, modeLedgers.get(mode), redis, settings.serverId());
@@ -174,8 +181,6 @@ public final class RapidCore extends JavaPlugin {
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             event.registrar().register("plus", "Choose the color of the pluses in your rank prefix", List.of(), plus);
             event.registrar().register("bolts", "Show your Bolts balance", List.of("bolt"), boltsCommand);
-            event.registrar().register("afk", "Mark yourself as away", List.of(),
-                    PlayerStatusCommands.afk(afk, lang));
             event.registrar().register("tailwind", "Show your Tailwind bonus", List.of("rested"),
                     PlayerStatusCommands.tailwind(tailwind, lang));
             event.registrar().register("staff", "Toggle staff mode", List.of("staffmode", "mod"),
@@ -186,9 +191,9 @@ public final class RapidCore extends JavaPlugin {
             event.registrar().register("invsee", "Inspect a player's inventory", List.of(), staffCommands.invsee());
             event.registrar().register("endersee", "Inspect a player's ender chest", List.of("echest"),
                     staffCommands.endersee());
-            event.registrar().register("spawn", "Go to the spawn", List.of(), worlds.spawnCommand());
-            event.registrar().register("setspawn", "Move the spawn to where you stand", List.of(),
-                    worlds.setSpawnCommand());
+            // /spawn, /setspawn, /afk and the other everyday commands are rapid-essentials'.
+            event.registrar().register("build", "Toggle build mode (change the protected spawn worlds)",
+                    List.of("buildmode", "bm"), buildMode.command());
         });
 
         if (pm.getPlugin("PlaceholderAPI") != null) {
@@ -241,6 +246,10 @@ public final class RapidCore extends JavaPlugin {
     @Override
     public void onDisable() {
         MenuListener.closeAll();
+        if (buildMode != null) {
+            // Before anything else, so nobody keeps a creative inventory.
+            buildMode.leaveAll();
+        }
         if (staffMode != null) {
             // Before anything else, so nobody is left holding staff tools.
             staffMode.leaveAll();
@@ -325,6 +334,11 @@ public final class RapidCore extends JavaPlugin {
         return ranks;
     }
 
+    /** Tags in front of chat lines (a Horizons town tag); register from onEnable, unregister in onDisable. */
+    public ChatTags chatTags() {
+        return chatTags;
+    }
+
     /** AFK state, for anything that should pause while a player is away. */
     public AfkTracker afk() {
         return afk;
@@ -352,6 +366,11 @@ public final class RapidCore extends JavaPlugin {
     /** This server's spawn and the spawn worlds rapid-core looks after. */
     public WorldService worlds() {
         return worlds;
+    }
+
+    /** Who may change the protected spawn worlds right now ({@code /build}). */
+    public BuildMode buildMode() {
+        return buildMode;
     }
 
     /**

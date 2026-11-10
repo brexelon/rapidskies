@@ -54,7 +54,7 @@ servers:
   smp-1:
     ptero_id: "5440367e"
     profiles: [paper-base, survival, smp]
-    plugins: [paper-base, survival, worldgen]
+    plugins: [paper-base, survival, smp, worldgen]
     schedules: [hourly-backup]
     vars: { LP_SERVER: smp }
     # The spawn is its own world next to the Heartland (rapid-core loads it as rapidskies:spawn).
@@ -72,7 +72,7 @@ servers:
     # swap `smp` for `skyrealms` (and the plugin sets) when testing SkyRealms.
     ptero_id: ""
     profiles: [paper-base, survival, smp, staging]
-    plugins: [paper-base, survival, worldgen]
+    plugins: [paper-base, survival, smp, worldgen]
     # Own schema for rapid-* data (Bolts, profiles, ...), so tests never touch production.
     vars: { LP_SERVER: staging, RAPID_DB_NAME: rapidskies_staging }
     worlds: { heartland/dimensions/rapidskies/spawn: horizons-spawn }
@@ -149,6 +149,9 @@ plugin_sets:
     # the proxy cancelled, so the client's signed-chat chain stays valid.
     - "SignedVelocity-Paper-*.jar"
     - "dist/rapid-core.jar"
+    # Everyday commands (/spawn, /back, /tpa, homes, warps, /pay...); the profiles switch off
+    # what a server doesn't use (disabled-commands).
+    - "dist/rapid-essentials.jar"
 
   hub:
     # The mode NPCs on the stage (rapid-hub builds them from its config; Citizens never
@@ -159,9 +162,21 @@ plugin_sets:
   survival:
     # Vault API for the Coins/Crowns economy rapid-core provides (server.gamemode).
     - "VaultUnlocked-*.jar"
-    # Phase 3: "CoreProtect-CE-*.jar"
-    # smp only, phase 3b: "QuickShop-Hikari-*.jar"
+    # Block logging for grief and rollback investigations (plan §4).
+    - "CoreProtect-CE-*.jar"
     # skyrealms only, phase 4b: "SuperiorSkyblock2-*.jar"
+
+  # Horizons (plan §4.1, §5.2): claims and towns, the gamemode itself, and chest shops.
+  # rapid-claims must be on every Horizons server: without it the Heartland is unprotected.
+  smp:
+    - "dist/rapid-claims.jar"
+    - "dist/rapid-horizons.jar"
+    # Shops only inside claims where the creator is a Member (rapid-claims' hook); its own
+    # fake-break protection check is off (profiles/smp/plugins/QuickShop-Hikari).
+    - "QuickShop-Hikari-*.jar"
+    # The NPCs around the spawn plaza (rapid-horizons builds them from its config; Citizens
+    # never saves them).
+    - "Citizens-*.jar"
 
   worldgen:
     - "Chunky-Paper-*.jar"
