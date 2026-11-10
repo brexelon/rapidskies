@@ -110,6 +110,11 @@ trades:
   claim-chunks:
     levels-per-chunk: 5
     max: 20
+  # Extra active auction house listings (rapid-market; everyone starts with its listing.max-active):
+  # one per levels-per-listing total Trade levels. Never from ranks (PLAN.md §4.2).
+  market-listings:
+    levels-per-listing: 10
+    max: 10
   # Hunter rewards for mobs from spawners, in percent (0: none; grinders pay nothing).
   spawner-mob-percent: 0
   # Side-grade perks of active Trades (PLAN.md §5.2): small conveniences that grow with the

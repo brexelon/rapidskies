@@ -1,0 +1,279 @@
+# rapid-market messages (MiniMessage). Brand tags: <primary> <accent> <text> <muted> <dark>
+# <success> <error>, and <prefix> for "RAPIDSKIES »". Every supported client (1.20 – 26.3)
+# renders hex colors, <hover>, <click> and <key>; don't use anything newer than 1.20.
+# Menu titles, item names and lore are components too, but clicks and hovers do nothing there.
+# Amounts of money are <price>, <fee>, <balance>... and already include the currency name.
+
+errors:
+  players-only: "<prefix><error>Only players can do that.</error>"
+  no-permission: "<prefix><error>You can't do that.</error>"
+  database: "<prefix><error>Something went wrong talking to the auction house. Please try again in a moment.</error>"
+  custody: "<prefix><error>The auction house can't take items right now. Your item stayed in your inventory.</error>"
+  not-now: "<prefix><error>You can't use the auction house in staff mode, build mode, creative or spectator.</error>"
+  unknown-player: "<prefix><error>Nobody called <accent><player></accent> has played here.</error>"
+
+format:
+  money: "<accent><amount></accent> <text><currency></text>"
+
+# Where a listing is, for messages that can reach you on the other gamemode.
+mode:
+  horizons: "<primary>Horizons</primary>"
+  skyrealms: "<primary>SkyRealms</primary>"
+
+help:
+  - "<prefix><primary>Auction House</primary> <dark>·</dark> <muted>buy and sell with other players.</muted>"
+  - "<dark>»</dark> <hover:show_text:'<muted>Click to run'><click:run_command:/ah><accent>/ah</accent></click></hover> <muted>browse listings</muted>"
+  - "<dark>»</dark> <hover:show_text:'<muted>Click to fill in'><click:suggest_command:/ah sell ><accent>/ah sell \\<price> [hours]</accent></click></hover> <muted>sell what you hold (<hours>)</muted>"
+  - "<dark>»</dark> <hover:show_text:'<muted>Click to fill in'><click:suggest_command:/ah search ><accent>/ah search \\<text></accent></click></hover> <muted>find an item or seller</muted>"
+  - "<dark>»</dark> <hover:show_text:'<muted>Click to run'><click:run_command:/ah listings><accent>/ah listings</accent></click></hover> <muted>your listings</muted><dark>,</dark> <hover:show_text:'<muted>Click to run'><click:run_command:/ah collect><accent>/ah collect</accent></click></hover> <muted>items waiting for you</muted>"
+
+sell:
+  usage: "<prefix><muted>Hold the item, then</muted> <accent>/ah sell \\<price> [hours]</accent><muted>. The price is for the whole stack; hours: <hours>.</muted>"
+  empty-hand: "<prefix><error>Hold the item you want to sell in your main hand.</error>"
+  blocked: "<prefix><error>That item can't be sold on the auction house.</error>"
+  bad-price: "<prefix><error>The price must be a whole amount from</error> <min> <error>to</error> <max><error>, like 250, 1,500 or 2.5k.</error>"
+  bad-duration: "<prefix><error>A listing can run for <hours>.</error>"
+  too-many: "<prefix><error>You already have <max> listings up, the most you can have. Wait for one to sell, or take one down with</error> <hover:show_text:'<muted>Click to run'><click:run_command:/ah listings><accent>/ah listings</accent></click></hover><error>.</error>"
+  item-changed: "<prefix><error>The item in your hand changed, so nothing was listed. Run /ah sell again.</error>"
+  listed: "<prefix><success>Listed</success> <text><item></text> <muted>x<amount></muted> <success>for</success> <price> <muted>for <time> (fee <fee><muted>).</muted>"
+  listed-short: "<prefix><success>Your item is listed.</success>"
+  cant-afford-fee: "<prefix><error>The listing fee is</error> <fee><error>, and you have</error> <balance><error>. Your item is back with you.</error>"
+  uncertain: "<prefix><error>The auction house didn't answer. If the listing didn't go through, your item will be waiting in</error> <hover:show_text:'<muted>Click to run'><click:run_command:/ah collect><accent>/ah collect</accent></click></hover><error>.</error>"
+  returned-to-bin: "<prefix><muted>Your inventory is full, so the item went to</muted> <hover:show_text:'<muted>Click to run'><click:run_command:/ah collect><accent>/ah collect</accent></click></hover><muted>.</muted>"
+
+buy:
+  gone: "<prefix><error>Too late: that listing sold or ended.</error>"
+  insufficient: "<prefix><error>That costs</error> <price><error>, and you have</error> <balance><error>.</error>"
+  own: "<prefix><error>That's your own listing. Take it down from</error> <accent>/ah listings</accent><error>.</error>"
+  bought: "<prefix><success>Bought</success> <text><item></text> <muted>x<amount></muted> <success>for</success> <price> <muted>from <seller>.</muted>"
+  to-collection: "<prefix><muted>Your inventory is full, so it's waiting in</muted> <hover:show_text:'<muted>Click to run'><click:run_command:/ah collect><accent>/ah collect</accent></click></hover><muted>.</muted>"
+  details:
+    title: "<primary>Buy this?</primary>"
+    lore:
+      - "<muted>Price:</muted> <price>"
+      - "<muted>Each:</muted> <each>"
+      - "<muted>Average lately (<days> days):</muted> <average>"
+      - "<muted>Your balance:</muted> <accent><balance></accent>"
+
+cancel:
+  done: "<prefix><success>Took down your listing of</success> <text><item></text><success>.</success>"
+  to-collection: "<prefix><muted>Your inventory is full, so it's waiting in</muted> <hover:show_text:'<muted>Click to run'><click:run_command:/ah collect><accent>/ah collect</accent></click></hover><muted>.</muted>"
+  not-active: "<prefix><error>That listing already sold or ended.</error>"
+  not-found: "<prefix><error>That isn't one of your listings.</error>"
+  details:
+    title: "<primary>Take this listing down?</primary>"
+    lore:
+      - "<muted>The item comes back to you.</muted>"
+      - "<muted>The listing fee isn't refunded.</muted>"
+
+collect:
+  empty: "<prefix><muted>Nothing is waiting for you.</muted>"
+  all: "<prefix><success>Collected <count> item(s).</success>"
+  partial: "<prefix><success>Collected <count> item(s).</success> <muted><left> more wait in</muted> <accent>/ah collect</accent> <muted>until you have room.</muted>"
+  no-room: "<prefix><error>That doesn't fit in your inventory. Make room and try again.</error>"
+  reminder: "<prefix><muted>You have</muted> <accent><count></accent> <muted>item(s) waiting at the auction house:</muted> <hover:show_text:'<muted>Click to run'><click:run_command:/ah collect><accent>/ah collect</accent></click></hover>"
+  lore:
+    - "<dark>────────────</dark>"
+    - "<muted>Item:</muted> <text><item></text> <muted>x<amount></muted>"
+    - "<muted>Why it's here:</muted> <reason>"
+  action:
+    - "<accent>Click</accent> <muted>to take it</muted>"
+  reason:
+    bought: "<success>you bought it</success>"
+    expired: "<text>your listing expired</text>"
+    cancelled: "<text>you took the listing down</text>"
+    removed: "<text>staff took the listing down</text>"
+    returned: "<text>a listing that didn't go through</text>"
+
+# A seller hears once about each sale, expiry or removal, wherever they are, or at their next login.
+notice:
+  sold: "<prefix><success>Sold</success> <text><item></text> <muted>x<amount></muted> <success>to <buyer> for</success> <price><muted>: you got</muted> <proceeds> <muted>after tax (<where>).</muted>"
+  expired: "<prefix><muted>Your listing of</muted> <text><item></text> <muted>x<amount> expired; it's waiting in</muted> <accent>/ah collect</accent> <muted>(<where>).</muted>"
+  removed: "<prefix><muted>Staff took down your listing of</muted> <text><item></text> <muted>x<amount>; it's waiting in</muted> <accent>/ah collect</accent> <muted>(<where>).</muted>"
+  more: "<prefix><muted>...and <count> more.</muted>"
+
+# Sent to staff chat on every server (through the proxy).
+alert:
+  suspicious: "<text>Auction house (<where>):</text> <accent><seller></accent> <text>sold to</text> <accent><buyer></accent> <text>far below average <count> times in <days> days, latest</text> <text><item></text> <text>for</text> <price><text>. Possible alt transfer or real-money trade:</text> <accent>/ah admin history <seller></accent>"
+
+search:
+  usage: "<prefix><muted>Usage:</muted> <accent>/ah search \\<text></accent>"
+  prompt: "<prefix><text>Type what you're looking for in chat</text> <muted>(an item or a seller), or</muted> <accent>cancel</accent><muted>.</muted>"
+  cancelled: "<prefix><muted>Search cancelled.</muted>"
+
+# Lore added under a listed item's own. <item> is its real name: players on older versions
+# see a stand-in for items newer than their game, so this line tells them what it really is.
+listing:
+  lore:
+    - "<dark>────────────</dark>"
+    - "<muted>Item:</muted> <text><item></text>"
+    - "<muted>Price:</muted> <price>"
+    - "<muted>Seller:</muted> <text><seller></text>"
+    - "<muted>Ends in:</muted> <text><time></text>"
+  lore-stack:
+    - "<dark>────────────</dark>"
+    - "<muted>Item:</muted> <text><item></text> <muted>x<amount></muted>"
+    - "<muted>Price:</muted> <price> <muted>(<each> each)</muted>"
+    - "<muted>Seller:</muted> <text><seller></text>"
+    - "<muted>Ends in:</muted> <text><time></text>"
+  action-buy:
+    - "<accent>Click</accent> <muted>to buy</muted>"
+  action-own:
+    - "<muted>Your listing.</muted> <accent>Click</accent> <muted>to take it down</muted>"
+  action-admin:
+    - "<muted>Listing #<id>.</muted> <accent>Click</accent> <muted>to take it down</muted>"
+
+category:
+  all: "<primary>All items</primary>"
+  blocks: "<primary>Blocks</primary>"
+  tools: "<primary>Tools & armor</primary>"
+  food: "<primary>Food</primary>"
+  farming: "<primary>Farming</primary>"
+  redstone: "<primary>Redstone</primary>"
+  misc: "<primary>Miscellaneous</primary>"
+  selected:
+    - "<success>Showing this</success>"
+  pick:
+    - "<accent>Click</accent> <muted>to show only this</muted>"
+
+sort:
+  newest: "<text>Newest first</text>"
+  price-low: "<text>Cheapest first</text>"
+  price-high: "<text>Most expensive first</text>"
+  ending: "<text>Ending soonest</text>"
+
+price:
+  no-history: "<muted>no sales lately</muted>"
+
+admin:
+  help:
+    - "<prefix><primary>Auction House admin</primary>"
+    - "<dark>»</dark> <accent>/ah admin</accent> <muted>browse; click a listing to take it down (the item goes back to the seller's bin)</muted>"
+    - "<dark>»</dark> <accent>/ah admin player \\<name></accent> <muted>one seller's listings</muted>"
+    - "<dark>»</dark> <accent>/ah admin history \\<name> [page]</accent> <muted>their sales and purchases</muted>"
+    - "<dark>»</dark> <accent>/ah admin remove \\<id></accent> <muted>take a listing down by number</muted>"
+  removed: "<prefix><success>Took down listing #<id></success> <muted>(<item> by <seller>); it's in their collection bin.</muted>"
+  not-active: "<prefix><error>That listing is already <status>.</error>"
+  not-found: "<prefix><error>There's no listing #<id> on this gamemode.</error>"
+  details:
+    title: "<error>Take listing #<id> down?</error>"
+    lore:
+      - "<muted>The item goes back to <seller>'s collection bin,</muted>"
+      - "<muted>and they're told. Logged to staff actions.</muted>"
+  history:
+    header: "<prefix><primary>Auction history</primary> <dark>·</dark> <text><player></text> <muted>(page <page>, newest first, UTC)</muted>"
+    empty: "<muted>Nothing here.</muted>"
+    sold: "<dark>»</dark> <muted>#<id> <when></muted> <success>sold</success> <text><item> x<amount></text> <muted>to</muted> <accent><other></accent> <muted>for</muted> <price> <muted>(<each> each)</muted>"
+    bought: "<dark>»</dark> <muted>#<id> <when></muted> <primary>bought</primary> <text><item> x<amount></text> <muted>from</muted> <accent><other></accent> <muted>for</muted> <price> <muted>(<each> each)</muted>"
+    other: "<dark>»</dark> <muted>#<id> <when></muted> <text>listed</text> <text><item> x<amount></text> <muted>for</muted> <price> <muted>(<status>)</muted>"
+    footer: "<hover:show_text:'<muted>Click for the next page'><click:run_command:'/ah admin history <player> <next>'><accent>Next page »</accent></click></hover>"
+
+menu:
+  unreadable: "<error>Unreadable item</error>"
+  back:
+    name: "<text>Back</text>"
+    lore: []
+  previous: "<text>« Previous page</text> <muted>(<page>/<pages>)</muted>"
+  next: "<text>Next page »</text> <muted>(<page>/<pages>)</muted>"
+  browse:
+    title: "<dark>Auction House · </dark><where>"
+    admin-title: "<error>Auction House · staff</error> <dark><who></dark>"
+    empty: "<muted>Nothing for sale here yet.</muted>"
+    no-results: "<muted>Nothing matches \"<search>\".</muted>"
+    sort:
+      name: "<primary>Sort:</primary> <sort>"
+      lore:
+        - "<accent>Click</accent> <muted>for the next order,</muted> <accent>right-click</accent> <muted>for the last</muted>"
+    search:
+      name: "<primary>Search</primary>"
+      active: "<primary>Search:</primary> <text>\"<search>\"</text>"
+      lore:
+        - "<accent>Click</accent> <muted>and type an item or seller in chat</muted>"
+      lore-active:
+        - "<accent>Click</accent> <muted>to search again,</muted> <accent>right-click</accent> <muted>to clear</muted>"
+    info:
+      name: "<primary>Page <page> of <pages></primary>"
+      lore:
+        - "<muted><total> listing(s) match.</muted>"
+        - "<muted>Sell what you hold:</muted> <accent>/ah sell \\<price></accent>"
+    mine:
+      name: "<primary>Your listings</primary>"
+      lore:
+        - "<accent>Click</accent> <muted>to see or take down your listings</muted>"
+    collection:
+      name: "<primary>Collection bin</primary>"
+      lore:
+        - "<muted>Items you bought with a full inventory,</muted>"
+        - "<muted>and listings that ended or were taken down.</muted>"
+        - "<accent>Click</accent> <muted>to collect</muted>"
+    refresh:
+      name: "<primary>Refresh</primary>"
+      lore:
+        - "<muted>Load the latest listings.</muted>"
+  buy:
+    title: "<dark>Buy this item?</dark>"
+    confirm:
+      name: "<success>Buy</success>"
+      lore:
+        - "<muted>The money is taken and the item</muted>"
+        - "<muted>goes to your inventory (or your bin).</muted>"
+  cancel:
+    title: "<dark>Take your listing down?</dark>"
+    confirm:
+      name: "<error>Take it down</error>"
+      lore:
+        - "<muted>The item comes back to you.</muted>"
+  admin:
+    title: "<error>Take this listing down?</error>"
+    confirm:
+      name: "<error>Take it down</error>"
+      lore:
+        - "<muted>Back to the seller's bin, with a notice.</muted>"
+  sell:
+    title: "<dark>List an item</dark>"
+    preview:
+      - "<dark>────────────</dark>"
+      - "<muted>Item:</muted> <text><item></text> <muted>x<amount></muted>"
+      - "<muted>Price:</muted> <price> <muted>(<each> each)</muted>"
+      - "<muted>Runs for:</muted> <text><time></text>"
+    duration:
+      name: "<primary><time></primary>"
+      selected:
+        - "<success>Selected</success>"
+      pick:
+        - "<accent>Click</accent> <muted>to run the listing this long</muted>"
+    confirm:
+      name: "<success>List it for</success> <price>"
+      lore:
+        - "<muted>Takes the item from your hand and</muted>"
+        - "<muted>charges the listing fee:</muted> <fee>"
+    details:
+      name: "<primary>Fees and prices</primary>"
+      lore:
+        - "<muted>Listing fee (not refunded):</muted> <fee>"
+        - "<muted>Sales tax if it sells:</muted> <tax>"
+        - "<muted>You get if it sells:</muted> <proceeds>"
+        - "<muted>Average lately (<days> days):</muted> <average> <muted>each</muted>"
+        - "<muted>Your price each:</muted> <each>"
+    cancel:
+      name: "<error>Cancel</error>"
+      lore:
+        - "<muted>Keep the item.</muted>"
+  mine:
+    title: "<dark>Your listings</dark>"
+    empty: "<muted>You have nothing listed.</muted>"
+    empty-lore:
+      - "<muted>Hold an item and use</muted> <accent>/ah sell \\<price></accent>"
+    info:
+      name: "<primary><count> of <max> listings</primary>"
+      lore:
+        - "<muted>Everyone can have the same number up;</muted>"
+        - "<muted>it grows with your progress in this mode.</muted>"
+  collection:
+    title: "<dark>Collection bin</dark>"
+    empty: "<muted>Nothing is waiting for you.</muted>"
+    all:
+      name: "<success>Collect everything</success>"
+      lore:
+        - "<muted><count> item(s) waiting.</muted>"
+        - "<muted>Takes what fits; the rest stays here.</muted>"

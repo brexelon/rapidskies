@@ -391,7 +391,9 @@ public record HorizonsSettings(Rtp rtp, Pvp pvp, Trades trades, List<Npc> npcs, 
                 nonNegative(c, "trades.soft-cap.daily-points", 2000, problems),
                 decimal(c, "trades.soft-cap.floor-percent", 10, problems),
                 nonNegative(c, "trades.claim-chunks.levels-per-chunk", 5, problems),
-                nonNegative(c, "trades.claim-chunks.max", 20, problems));
+                nonNegative(c, "trades.claim-chunks.max", 20, problems),
+                nonNegative(c, "trades.market-listings.levels-per-listing", 10, problems),
+                nonNegative(c, "trades.market-listings.max", 10, problems));
         Map<Trade, Source> sources = new EnumMap<>(Trade.class);
         for (Trade t : Trade.values()) {
             String base = "trades." + t.id();

@@ -55,6 +55,19 @@ public final class Channels {
      */
     public static final String BROADCAST = "broadcast";
 
+    /**
+     * The auction house (rapid-market) left a notice for a player (an item sold, a listing
+     * expired or was taken down). The server the player is on shows it and deletes it; if
+     * nobody has them, it waits in {@code market_notices} until their next login.
+     */
+    public static final String MARKET = "market";
+
+    /**
+     * Something staff should look at (rapid-market: repeated far-below-average sales
+     * between two players). The proxy shows it in staff chat on every server.
+     */
+    public static final String STAFF_ALERT = "staff-alert";
+
     /** Redis key holding "true" while maintenance mode is on. */
     public static final String MAINTENANCE_KEY = "maintenance";
 
@@ -119,6 +132,17 @@ public final class Channels {
      * plots, projects and state).
      */
     public record ClaimsChanged(String kind, String key, String origin) {
+    }
+
+    /** {@code noticeId} is the {@code market_notices} row; {@code mode} an EconomyMode id. */
+    public record MarketNotice(String uuid, long noticeId, String mode, String origin) {
+        public UUID player() {
+            return UUID.fromString(uuid);
+        }
+    }
+
+    /** {@code message} is MiniMessage (brand tags allowed); {@code server} where it happened. */
+    public record StaffAlert(String server, String message) {
     }
 
     /** {@code message} is MiniMessage (brand tags allowed); {@code by} the sender's name, for the log. */

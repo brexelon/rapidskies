@@ -14,6 +14,9 @@ dependencies {
     // claimed chunks and take extra claim chunks from Trade levels. Only ClaimsLandHook
     // touches its types, so Horizons runs without it.
     compileOnly(project(":rapid-claims"))
+    // Optional at runtime (softdepend): Trade levels add auction house listings. Only
+    // MarketListings touches its types.
+    compileOnly(project(":rapid-market"))
     // Citizens isn't published to Maven Central: compile against the jar that's deployed
     // (plugins/, smp plugin set). Optional at runtime (softdepend): without it there are no
     // NPCs at the spawn; only CitizensSpawnNpcs touches its types.

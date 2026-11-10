@@ -2,7 +2,7 @@
 
 > Velocity proxy + Paper 26.3 backends · Java clients 1.20 → 26.3 · Hosted on Pterodactyl (VPS/dedicated)
 > Server address: **rapidskies.us** · Store: **store.rapidskies.us**
-> Status: Phases 1–2 complete; Phases 3a (`rapid-claims`) and 3b (`rapid-horizons`) code complete, in-game checks pending (see §11) · Last updated 2026-11-10
+> Status: Phases 1–3 complete; Phase 4a (`rapid-market`, the auction house) code complete, in-game checks pending (see §11) · Last updated 2026-11-10
 
 ---
 
@@ -218,7 +218,7 @@ Building on `rapid-common` keeps one source of truth.
 **Listing**
 - Hold an item and run `/ah sell <price>`, with a duration of 12, 24 or 48 hours.
 - **Listing fee of 2%** (non-refundable) and **5% sales tax** on completed sales. Both are economy sinks.
-- Max active listings is the same for everyone: 10, rising with Trade or island level. **It's never a rank perk.**
+- Max active listings is the same for everyone: 10, rising with Trade or island level (Horizons: +1 per 10 total Trade levels, up to +10). **It's never a rank perk.**
 
 **Browsing (chest GUI)**
 - Categories: blocks, tools & armor, food, farming, redstone, misc.
@@ -236,7 +236,7 @@ Building on `rapid-common` keeps one source of truth.
 - Items are stored with Paper's `ItemStack#serializeAsBytes`, which upgrades item data across Minecraft versions.
 - Every action is written to `mode_economy_ledger`.
 
-**Notifications:** sales notify the seller over Redis on whatever server they're on, or are queued until their next login.
+**Notifications:** sales notify the seller over Redis on whatever gamemode server they're on, or are queued until their next login on one (the hub doesn't run the auction house).
 
 **Moderation**
 - `/ah admin` to view, remove or return listings, plus per-player transaction history.
@@ -451,7 +451,7 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 - `horizons_trades` (uuid, trade, level, xp, active), `horizons_players` (uuid, pvp, pvp_changed_at, trades_changed_at, logout_frontier: the Frontier a player logged out in, so they come back at the spawn if it has closed), `horizons_trade_daily` (uuid, day, points: the Trade soft cap). Migration module `horizons`.
 - **Claims** (migration module `claims`): `claims` (world, chunk_x, chunk_z, owner_type [PLAYER/TOWN], owner_id, flags bit set, claimed_by, claimed_at; PK world+chunk), `claim_trust` (owner_type, owner_id, uuid, role; the all-zero uuid is "everyone"), `claim_denied` (owner_type, owner_id, uuid), `claim_players` (uuid, purchased, bonus, ruins_since). Starter and playtime chunks aren't stored: they're computed from the config and the player's playtime on the server.
 - **Towns:** `towns` (uuid, name, tag, tag_color, mayor, world, center_x, center_z, warp, upkeep_paid_until, state [ACTIVE/RUINS], ruins_since), `town_members` (uuid, town, role, joined_at), `town_roles` (town, role, permissions, land_role), `town_plots` (world, chunk_x, chunk_z, town, resident), `town_projects` (town, project, state, started_at, completed_at), `town_project_contributions` (town, project, uuid, resource, amount), `town_vaults` (town, contents). The **bank** is the town's row in `mode_balance` (mode `horizons`, keyed by the town's uuid), so deposits, upkeep and payouts are ordinary Crowns ledger entries; the **level** is the number of completed Projects.
-- **Market:** `market_listings` (id, mode, seller, item_blob, item_name, category, price, created_at, expires_at, status [ACTIVE/SOLD/EXPIRED/CANCELLED/REMOVED], buyer, sold_at), `market_collection` (id, mode, uuid, item_blob, reason), `market_price_history` (mode, item_key, day, avg_price, volume)
+- **Market** (migration module `market`): `market_listings` (id, token: the custody journal entry, mode, seller, seller_name, item_blob, item_name: the real English name, item_key: the price-history key, category, amount, price for the stack, fee, created_at, expires_at, status [ACTIVE/SOLD/EXPIRED/CANCELLED/REMOVED], buyer, buyer_name, sold_at, tax, flagged: sold far below average, closed_at, closed_by), `market_collection` (id, token UNIQUE: each way in happens once, mode, uuid, item_blob, item_name, amount, reason [BOUGHT/EXPIRED/CANCELLED/REMOVED/RETURNED], listing_id), `market_notices` (id, uuid, mode, kind [SOLD/EXPIRED/REMOVED], item_name, amount, price, proceeds, other_name: shown once, then deleted), `market_price_history` (mode, item_key, day, total, volume, sales: the average is total / volume)
 - `skyrealms_trade_routes` (id, seller_island, buyer_island, item, qty, price, interval, state)
 - `frontier_history` (id, modifier, seed, chapter, state [PREPARING/OPEN/CLOSED], created_at, opened_at, closes_at, closed_at, end_opens_at, dragon_killed_at, archive_path): one row per Frontier; its worlds are `rapidskies:frontier_<id>` (+ `_nether`, `_end`), regenerated from the seed and modifier. `chapter_progress` (uuid, chapter, entry, progress, data, completed_at) and `chapter_completions` (uuid, chapter, cosmetic, completed_at: the cosmetics engine grants from here, and it keeps the Bolts reward from paying twice). Migration module `horizons` (V2)
 - `friends` (two rows per friendship), `friend_requests`. Parties and the join queue are ephemeral and live in the proxy's memory: there is one proxy and a restart drops every player anyway. Move them to Redis (`party:<id>`, `queue:<target>`) if a second proxy is ever added.
@@ -463,7 +463,7 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 
 SuperiorSkyblock2 keeps its own tables in the same MariaDB instance, under its own schema.
 
-Redis (every key and channel is prefixed `rapid:`, since LuckPerms shares the instance): `server:<id>` heartbeat and state, `maintenance`, the sets `vanished` and `frozen` (staff state that survives relogs and server switches), `shared-ip` (written by the proxy: accounts sharing an IP with one that joined earlier, which earn no activity Bolts), and `playtime:<day>:<uuid>` active-second counters; plus pub/sub channels for profile and plus-color updates, Bolts changes, maintenance, connect requests from backends to the proxy (`connect`), `vanish`, `freeze`, `mode-balance` (a Coins/Crowns balance changed on another server), `broadcast` (an admin's `/broadcast`, shown by every backend), and `claims` (a claim, trust list or town changed: other Horizons instances reload it). Private messages, party chat and staff chat run on the single proxy and need no channel; `presence:<uuid>` and per-party keys join them only with a second proxy.
+Redis (every key and channel is prefixed `rapid:`, since LuckPerms shares the instance): `server:<id>` heartbeat and state, `maintenance`, the sets `vanished` and `frozen` (staff state that survives relogs and server switches), `shared-ip` (written by the proxy: accounts sharing an IP with one that joined earlier, which earn no activity Bolts), and `playtime:<day>:<uuid>` active-second counters; plus pub/sub channels for profile and plus-color updates, Bolts changes, maintenance, connect requests from backends to the proxy (`connect`), `vanish`, `freeze`, `mode-balance` (a Coins/Crowns balance changed on another server), `broadcast` (an admin's `/broadcast`, shown by every backend), `claims` (a claim, trust list or town changed: other Horizons instances reload it), `market` (an auction house notice for a player: the server they're on shows it) and `staff-alert` (an automatic alert, such as rapid-market's suspicious sales, shown in staff chat by the proxy). Private messages, party chat and staff chat run on the single proxy and need no channel; `presence:<uuid>` and per-party keys join them only with a second proxy.
 
 **Migrations:** each module keeps `V<n>__<name>.sql` scripts plus an `index` file under `db/migration/<module>/`, applied once under a MariaDB named lock and checksum-verified on every start (`rapid-common` `Migrator`). This replaced Flyway: it's one small class with no classloader or relocation quirks inside shaded plugin jars. Shipped scripts are never edited; fixes go in a new version.
 
@@ -634,6 +634,32 @@ Next:
 - [ ] Later: anti-xray hidden blocks for the rotating Nether (Paper only takes per-world lists from the world's own folder); more fortress designs (§12: a variant a month)
 - [ ] Later, once there's a second Horizons instance: town chat across instances (Redis) and locking the town vault to one server. Also the town tag before names in the tab list on Horizons only (TAB per-server group settings)
 - [x] Known gap fixed: a database failure during a Trade payout used to drop that batch's Crowns; they're now held and retried (see above)
+
+### Phase 4 progress
+
+**4a. Auction house (`rapid-market`)**: code complete, with 49 tests. 27 are unit tests (categories, fees and tax rounding, prices, real names, the alert rule, settings, lang, the custody journal's recovery); 22 run against MariaDB, including the §11 list: parallel buyers on one listing, a crash at each step of listing and buying, and buying with a full inventory:
+
+- [x] One plugin on both gamemodes (the `survival` plugin set). Each server trades in its own currency from rapid-core's `server.gamemode`; every table is scoped by mode, so a SkyRealms server can't see or buy a Horizons listing. It turns itself off where there's no gamemode currency
+- [x] `/ah sell <price> [12h|24h|48h]` opens a sell menu first: the item as buyers will see it, the 2% fee, the 5% tax and what's left, the 7-day average price, and a button per duration. Nothing leaves the inventory until Confirm, and the held item must still match. Prices take `1,500` / `2.5k` / `1m`, whole only; refused in staff mode, build mode, creative and spectator; `listing.blocked-items`
+- [x] Listing cap: 10 for everyone, plus listings from other plugins through `MarketService.registerListingBonus` (rapid-horizons: one per 10 total Trade levels, up to +10; SkyRealms island level in 4b). The fee, the cap check and the insert are one transaction under a lock on the seller's balance row, so parallel listings can't pass the cap
+- [x] Browse menu (6 rows): 36 listings a page, six categories plus All, sort (newest, cheapest or dearest per item, ending soon), search by item, item key or seller through a chat prompt (rapid-core's new `ChatPrompts`, never an anvil), your listings, your collection bin, refresh. Lore shows the real item name, the price (and per item for stacks), the seller and the time left
+- [x] Buying is one transaction: the conditional `ACTIVE → SOLD` (exactly one row, or "too late"), the buyer's guarded debit, the seller's credit less tax, the item into the buyer's bin, the price history and the seller's notice. Balances are locked in uuid order first, so crosswise purchases can't deadlock. The buy menu shows the 7-day average
+- [x] Delivery always goes through the collection bin: the item lands there in the sale's transaction and is moved into the inventory straight away if it fits (`/ah collect` to collect one, or everything that fits, later). Expired, cancelled and staff-removed listings go there too; nothing is ever dropped
+- [x] Custody journal (`plugins/rapid-market/custody/`): an item moving between an inventory and the database is written to disk first and the player's data saved, so a crash at any point ends with the item in exactly one place (a listing with no committed row goes to the bin; a collected row that never reached the inventory is put back). Settled on start and every 30 s; a unique token per way into a bin makes recovery idempotent, and a second move of the same item waits until the first is settled. The one window left is between two consecutive main-thread statements (the player-data save and the journal delete)
+- [x] Every money move is a `mode_economy_ledger` row (`market:fee`, `market:buy`, `market:sale`, each with a transaction id), done inside the market's own transaction through new `Ledger` in-transaction methods; rapid-core's cached balances and the `mode-balance` channel are updated (`ModeEconomy#changed`)
+- [x] Notices: a sale, expiry or removal notifies the seller once, on whatever gamemode server they're on (Redis `market`), or at their next login there, with a reminder of items waiting in the bin
+- [x] `/ah admin` (moderators): browse as staff and take a listing down (back to the seller's bin, with a notice; logged to `staff_actions`), `player <name>` for one seller, `history <name> [page]` for sales and purchases, `remove <id>`
+- [x] Suspicious-sale alerts: a sale under 25% of the item's 7-day average (items averaging 50+) is flagged; the 3rd flagged sale from one seller to one buyer within 7 days (and every 3rd after) goes to staff chat on every server through the proxy (Redis `staff-alert`)
+- [x] Price history per item per UTC day (`market_price_history`): plain items by material, anything enchanted, named or damaged by material plus a hash of its data, so specials don't skew the plain price. The economy health dashboard can read the same table
+- [x] Deploy: `dist/rapid-market.jar` in the `survival` plugin set; LuckPerms gives moderators `rapid.market.admin`
+
+Next:
+
+- [ ] Check on 1.20.1 and 26.3, on Horizons and SkyRealms: `/ah sell` (menu, durations, the fee gone from `/balance`), browse every category and sort, search through chat, buy with room and with a full inventory (the bin and `/ah collect`), cancel, the cap message at 10 listings, an item newer than 1.20 (pale oak, a trial key) listed from 26.3 and browsed from 1.20.1 (the lore line shows its real name), the seller's notice while online on the other server and after a relog, `/ah admin` take-down and `history`, the staff-chat alert with test values (`alerts.repeat: 1`)
+- [ ] On staging, kill the server process (not `stop`) right after confirming a listing and right after collecting: after the restart the item is in exactly one place (the log shows `custody/` being settled)
+- [ ] Tune in beta: fee and tax against the Crowns and Coins supply, listing durations, alert thresholds
+- [ ] Phase 4b: rapid-skyrealms registers an island-level listing bonus
+- [ ] Later (v2): bid-style auctions and buy orders (§13)
 
 ### Everyday commands (`rapid-essentials`)
 

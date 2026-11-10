@@ -214,6 +214,8 @@ freeze:
 staffchat:
   usage: "<red>Staff</red> <dark>»</dark> <muted>Usage:</muted> <text>/sc \\<message></text>"
   format: "<red>Staff</red> <dark>»</dark> <muted>[<server>]</muted> <text><player></text><dark>:</dark> <text><message></text>"
+  # An automatic alert from a backend (rapid-market's suspicious-trade check). <message> is the backend's text.
+  alert: "<red>Staff</red> <dark>»</dark> <muted>[<server>]</muted> <error>⚠</error> <message>"
 
 # Grants (/grant, /grants; PLAN.md §6.3, §9). Staff-facing except grant.received.
 # <what> is a grant.name entry, <term> a grant.term entry, times are UTC.

@@ -24,6 +24,7 @@ import us.rapidskies.common.economy.Ledger;
 import us.rapidskies.common.grant.GrantRepository;
 import us.rapidskies.common.lang.Lang;
 import us.rapidskies.common.profile.ProfileRepository;
+import us.rapidskies.common.redis.Channels;
 import us.rapidskies.common.redis.RedisBus;
 import us.rapidskies.common.registry.ServerRegistry;
 import us.rapidskies.proxy.chat.PrivateMessages;
@@ -172,7 +173,10 @@ public final class RapidProxy {
         // The usual /msg aliases, so muscle memory works and LiteBans' mute list covers them.
         register("msg", messages.msgCommand(), "tell", "w", "whisper", "m", "t", "pm", "message");
         register("r", messages.replyCommand(), "reply");
-        register("staffchat", new StaffChatCommand(proxy, lang, logger), "sc");
+        StaffChatCommand staffChat = new StaffChatCommand(proxy, lang, logger);
+        register("staffchat", staffChat, "sc");
+        // Alerts from the backends (rapid-market's suspicious-trade check), shown in staff chat.
+        redis.subscribeJson(Channels.STAFF_ALERT, Channels.StaffAlert.class, staffChat::alert);
         register("grant", new GrantCommand(proxy, lang, grants));
         register("grants", new GrantsCommand(proxy, lang, grants));
 

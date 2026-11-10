@@ -64,6 +64,7 @@ public final class RapidHorizons extends JavaPlugin {
     private Lang lang;
     private LandHook land = LandHook.none();
     private boolean claims;
+    private boolean market;
     private RtpService rtp;
     private PortalArch arch;
     private SpawnNpcs npcs;
@@ -142,6 +143,10 @@ public final class RapidHorizons extends JavaPlugin {
         trades.setIncomeModifier(frontier::tradeMultiplier);
         frontier.onRotate(row -> skyborne.onRotate());
         land.registerAllowance(this, trades::claimChunks);
+        if (pm.isPluginEnabled("rapid-market")) {
+            // Its own class, so rapid-market's types are only loaded when it's installed.
+            market = us.rapidskies.horizons.market.MarketListings.register(this, trades::marketListings);
+        }
         hookTeleports();
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
@@ -181,6 +186,9 @@ public final class RapidHorizons extends JavaPlugin {
         modifiers.stop();
         wildlands.clear();
         land.unregisterAllowance(this);
+        if (market) {
+            us.rapidskies.horizons.market.MarketListings.unregister(this);
+        }
         // rapid-core (and its database) disables after us: we depend on it.
         trades.stop();
         if (worldHost != null) {

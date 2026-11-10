@@ -1,0 +1,46 @@
+# rapid-market: the auction house (PLAN.md §4.2). One plugin on both gamemodes; each server
+# trades in its own mode's currency (rapid-core's server.gamemode: Crowns on Horizons, Coins on
+# SkyRealms), and listings never cross modes. The database connection is rapid-core's.
+
+listing:
+  # How long a listing can run, in hours. Players pick one when listing (/ah sell <price> [hours]).
+  durations-hours: [12, 24, 48]
+  default-hours: 24
+  # Asking price for the whole listing (stack), in the mode's currency.
+  min-price: 10
+  max-price: 1000000000
+  # Active listings everyone may have at once (PLAN.md §4.2: the same for everyone, never a rank
+  # perk). rapid-horizons adds more for Trade levels; rapid-skyrealms will for island level.
+  max-active: 10
+  # Item keys that can't be listed.
+  blocked-items: []
+
+# Economy sinks, in percent of the asking price (decimals allowed). Both round up.
+fees:
+  # Charged when listing and never refunded, at least 1.
+  listing-percent: 2
+  # Kept from the buyer's payment when a listing sells.
+  sales-tax-percent: 5
+
+price-history:
+  # The average sale price shown when listing and buying is taken over this many days.
+  days: 7
+
+# Staff alerts (staff chat on every server) for sales that look like alt transfers or
+# real-money trading: the same seller selling to the same buyer far below the average price.
+alerts:
+  # A sale at under this percent of the item's average price (per item) is suspicious.
+  below-average-percent: 25
+  # Items whose average price per item is under this are ignored.
+  min-average: 50
+  # Alert when this many suspicious sales went from one seller to one buyer ...
+  repeat: 3
+  # ... within this many days. 0 for repeat turns alerts off.
+  window-days: 7
+
+timers:
+  # How often listings whose time is up are moved to their sellers' collection bins.
+  expiry-seconds: 30
+  # How often items whose move between an inventory and the database didn't finish (the
+  # database was down) are retried. Each always ends up in its owner's bin.
+  custody-retry-seconds: 30

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 class TradeRulesTest {
 
     // max 2 active, max level 50, level XP 100 + 25n, +1%/level, 2000 points/day, floor 10%, 5 levels per chunk, max 20.
-    private final TradeRules rules = new TradeRules(2, 50, 100, 25, 1, 2000, 10, 5, 20);
+    private final TradeRules rules = new TradeRules(2, 50, 100, 25, 1, 2000, 10, 5, 20, 10, 10);
 
     @Test
     void levelsFollowTheArithmeticCurve() {
@@ -38,7 +38,7 @@ class TradeRulesTest {
         assertEquals(0.125, rules.softCap(6000));
         assertEquals(0.1, rules.softCap(8000), "never below the floor");
         assertEquals(0.1, rules.softCap(Long.MAX_VALUE / 2));
-        assertEquals(1.0, new TradeRules(2, 50, 100, 25, 1, 0, 10, 5, 20).softCap(1_000_000), "0 disables the cap");
+        assertEquals(1.0, new TradeRules(2, 50, 100, 25, 1, 0, 10, 5, 20, 10, 10).softCap(1_000_000), "0 disables the cap");
     }
 
     @Test
@@ -63,12 +63,22 @@ class TradeRulesTest {
     }
 
     @Test
+    void marketListingsComeFromTotalLevels() {
+        assertEquals(0, rules.marketListings(9));
+        assertEquals(1, rules.marketListings(10));
+        assertEquals(6, rules.marketListings(60));
+        assertEquals(10, rules.marketListings(300), "capped");
+        assertEquals(0, new TradeRules(2, 50, 100, 25, 1, 2000, 10, 5, 20, 0, 10).marketListings(300),
+                "0 turns it off");
+    }
+
+    @Test
     void claimChunksComeFromTotalLevels() {
         assertEquals(0, rules.claimChunks(4));
         assertEquals(1, rules.claimChunks(5));
         assertEquals(12, rules.claimChunks(60));
         assertEquals(20, rules.claimChunks(300), "capped");
-        assertEquals(0, new TradeRules(2, 50, 100, 25, 1, 2000, 10, 0, 20).claimChunks(300), "0 turns it off");
+        assertEquals(0, new TradeRules(2, 50, 100, 25, 1, 2000, 10, 0, 20, 10, 10).claimChunks(300), "0 turns it off");
     }
 
     @Test

@@ -7,6 +7,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.slf4j.Logger;
 import us.rapidskies.common.lang.Lang;
+import us.rapidskies.common.redis.Channels;
 
 /**
  * {@code /staffchat <message>} (alias {@code /sc}): a channel for the team across every
@@ -49,6 +50,13 @@ public final class StaffChatCommand implements SimpleCommand {
                 p.sendMessage(message);
             }
         }
+    }
+
+    /** An alert a backend sent over Redis ({@link Channels#STAFF_ALERT}); runs on the Redis thread. */
+    public void alert(Channels.StaffAlert alert) {
+        broadcast(lang.get("staffchat.alert", Placeholder.unparsed("server", alert.server()),
+                Placeholder.component("message", Lang.parse(alert.message()))));
+        logger.info("[Staff alert] [{}] {}", alert.server(), alert.message());
     }
 
     @Override

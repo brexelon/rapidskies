@@ -17,9 +17,12 @@ import java.time.Instant;
  * @param floorPercent      returns never drop below this share
  * @param levelsPerChunk    total Trade levels per extra personal claim chunk
  * @param maxChunks         most claim chunks Trades can give
+ * @param levelsPerListing  total Trade levels per extra auction house listing (rapid-market)
+ * @param maxListings       most extra listings Trades can give
  */
 public record TradeRules(int maxActive, int maxLevel, long levelBase, long levelStep, double incomePercentPerLevel,
-                         long dailyPoints, double floorPercent, int levelsPerChunk, int maxChunks) {
+                         long dailyPoints, double floorPercent, int levelsPerChunk, int maxChunks,
+                         int levelsPerListing, int maxListings) {
 
     /** XP needed to go from {@code level} to {@code level + 1}. */
     public long xpToNext(int level) {
@@ -90,6 +93,14 @@ public record TradeRules(int maxActive, int maxLevel, long levelBase, long level
         }
         Instant ready = lastChange.plus(cooldown);
         return ready.isAfter(now) ? Duration.between(now, ready) : Duration.ZERO;
+    }
+
+    /** Extra auction house listings for a player whose Trades add up to {@code totalLevels}. */
+    public int marketListings(int totalLevels) {
+        if (levelsPerListing <= 0) {
+            return 0;
+        }
+        return Math.min(maxListings, Math.max(0, totalLevels) / levelsPerListing);
     }
 
     /** Extra personal claim chunks for a player whose Trades add up to {@code totalLevels}. */

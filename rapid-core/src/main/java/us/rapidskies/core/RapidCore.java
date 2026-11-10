@@ -81,6 +81,7 @@ public final class RapidCore extends JavaPlugin {
     private final Map<EconomyMode, Ledger> modeLedgers = new EnumMap<>(EconomyMode.class);
     private RankDisplay ranks;
     private final ChatTags chatTags = new ChatTags();
+    private final us.rapidskies.core.gui.ChatPrompts prompts = new us.rapidskies.core.gui.ChatPrompts();
     private Heartbeat heartbeat;
     private AfkTracker afk;
     private TailwindService tailwind;
@@ -127,6 +128,7 @@ public final class RapidCore extends JavaPlugin {
         pm.registerEvents(profiles, this);
         pm.registerEvents(new ChatListener(ranks, chatTags, lang), this);
         pm.registerEvents(new MenuListener(), this);
+        pm.registerEvents(prompts, this);
 
         afk = new AfkTracker(this, settings.afk(), lang);
         pm.registerEvents(afk, this);
@@ -336,6 +338,11 @@ public final class RapidCore extends JavaPlugin {
     /** Tags in front of chat lines (a Horizons town tag); register from onEnable, unregister in onDisable. */
     public ChatTags chatTags() {
         return chatTags;
+    }
+
+    /** Typed input through chat (searches, names) instead of anvils or signs. */
+    public us.rapidskies.core.gui.ChatPrompts prompts() {
+        return prompts;
     }
 
     /** AFK state, for anything that should pause while a player is away. */

@@ -181,6 +181,14 @@ lpv group rapidplus permission set rapid.command.hat true server=staging
 lpv group admin permission set rapid.essentials.teleport.nocooldown true server=staging
 lpv group admin permission set rapid.essentials.teleport.nowarmup true server=staging
 
+# Auction house (rapid-market, Horizons and SkyRealms): /ah is open to everyone (plugin
+# default). The listing cap is the same for everyone and grows with Trade/island level, never
+# with rank (plan §4.2), so no rank gets a node here. Moderators get /ah admin: browse as
+# staff, take listings down (the item goes back to the seller's bin, logged to staff_actions)
+# and read per-player history, for scam and real-money-trading reports. Suspicious-sale alerts
+# go to staff chat (rapid.staffchat).
+lpv group moderator permission set rapid.market.admin true
+
 # Staff tools (rapid-essentials, every backend; plan §6.1: never sold, staff only). Every use
 # that changes something is logged to staff_actions, and none of them work on someone in
 # staff or build mode. /gamemode and /give replace vanilla's. Tiers, each inheriting the last:

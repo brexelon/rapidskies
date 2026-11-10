@@ -14,7 +14,8 @@ depend: [rapid-core, rapid-essentials]
 # Chunky: pre-generates each Frontier before it opens. Without it Frontiers generate as players explore.
 # Multiverse-Core: manages the Heartland and the Frontier worlds, and takes rapid-horizons'
 # terrain generators (rapid-horizons:<modifier>). Without it Frontiers are created through Bukkit.
-softdepend: [rapid-claims, Citizens, Chunky, Multiverse-Core]
+# rapid-market: Trade levels add auction house listings. Without it there's no auction house.
+softdepend: [rapid-claims, rapid-market, Citizens, Chunky, Multiverse-Core]
 
 permissions:
   rapid.command.rtp:

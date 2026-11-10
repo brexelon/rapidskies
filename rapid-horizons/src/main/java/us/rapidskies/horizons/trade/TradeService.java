@@ -259,6 +259,12 @@ public final class TradeService implements Listener {
                 Duration.ofHours(settings().switchCooldownHours()));
     }
 
+    /** Extra auction house listings from Trade levels; 0 until the player's Trades are loaded. */
+    public int marketListings(UUID player) {
+        TradeProfile p = profiles.get(player);
+        return p == null ? 0 : rules().marketListings(p.totalLevels());
+    }
+
     /** Extra personal claim chunks from {@code player}'s Trade levels (0 when they aren't online here). */
     public int claimChunks(UUID player) {
         TradeProfile p = profiles.get(player);

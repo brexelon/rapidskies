@@ -164,6 +164,9 @@ plugin_sets:
     - "VaultUnlocked-*.jar"
     # Block logging for grief and rollback investigations (plan §4).
     - "CoreProtect-CE-*.jar"
+    # The auction house (plan §4.2), on both gamemodes: each server trades in its own
+    # currency (rapid-core's server.gamemode), and listings never cross modes.
+    - "dist/rapid-market.jar"
     # skyrealms only, phase 4b: "SuperiorSkyblock2-*.jar"
 
   # Horizons (plan §4.1, §5.2): claims and towns, the gamemode itself, and chest shops.

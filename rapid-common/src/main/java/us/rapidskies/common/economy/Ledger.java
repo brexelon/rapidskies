@@ -218,6 +218,68 @@ public final class Ledger {
         }
     }
 
+    // ------------------------------------------------------------------ inside a caller's transaction
+
+    /*
+     * For a module whose own rows must change in the same transaction as the money (the
+     * auction house: a listing turns SOLD only if the buyer is charged and the seller paid).
+     * The caller opens the transaction ({@link Database#transaction}), calls
+     * {@link #ensureAccounts} before it and {@link #lockIn} first inside it, and retries the
+     * whole transaction on a deadlock (SQLState 40001), as {@link #transfer} does.
+     */
+
+    /**
+     * Makes sure every account has a balance row, outside any transaction (a locking read
+     * of a missing row takes a gap lock, which deadlocks; see {@link #transfer}).
+     */
+    public void ensureAccounts(UUID... accounts) throws SQLException {
+        db.withConnection(c -> {
+            for (UUID a : accounts) {
+                ensureBalanceRow(c, a);
+            }
+            return null;
+        });
+    }
+
+    /** Locks the accounts' balance rows in uuid order, so every caller queues on the same row first. */
+    public void lockIn(Connection c, UUID... accounts) throws SQLException {
+        java.util.TreeSet<String> ordered = new java.util.TreeSet<>();
+        for (UUID a : accounts) {
+            ordered.add(a.toString());
+        }
+        for (String a : ordered) {
+            lockBalance(c, UUID.fromString(a));
+        }
+    }
+
+    /**
+     * The guarded debit inside the caller's transaction: false (nothing written) if the
+     * balance doesn't cover {@code amount}. A reused {@code txnId} fails the statement with a
+     * unique-key violation, which rolls the caller's transaction back.
+     */
+    public boolean debitIn(Connection c, UUID player, long amount, String reason, String source, String txnId)
+            throws SQLException {
+        requirePositive(amount);
+        if (!debitGuarded(c, player, amount)) {
+            return false;
+        }
+        insertEntry(c, player, -amount, reason, source, txnId);
+        return true;
+    }
+
+    /** A credit inside the caller's transaction. */
+    public void creditIn(Connection c, UUID player, long amount, String reason, String source, String txnId)
+            throws SQLException {
+        requirePositive(amount);
+        creditUpsert(c, player, amount);
+        insertEntry(c, player, amount, reason, source, txnId);
+    }
+
+    /** The balance as the caller's transaction sees it. */
+    public long balanceIn(Connection c, UUID player) throws SQLException {
+        return balance(c, player);
+    }
+
     public CompletableFuture<Transfer> transferAsync(UUID from, UUID to, long amount, String reason, String source,
                                                      String txnId) {
         return db.async(() -> transfer(from, to, amount, reason, source, txnId));

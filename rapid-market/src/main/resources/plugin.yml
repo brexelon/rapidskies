@@ -6,3 +6,11 @@ description: "Auction house, scoped per mode and currency (PLAN.md §4.2)."
 author: RapidSkies
 website: https://rapidskies.us
 depend: [rapid-core]
+
+permissions:
+  rapid.command.ah:
+    description: Use /ah (browse, buy, sell, collect).
+    default: true
+  rapid.market.admin:
+    description: Use /ah admin (browse as staff, take listings down, transaction history).
+    default: op

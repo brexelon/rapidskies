@@ -114,6 +114,16 @@ public final class ModeEconomy implements Listener {
         return applied(player, ledger.credit(player, amount, reason, serverId, txnId));
     }
 
+    /**
+     * For plugins that change balances through the {@link Ledger} inside their own
+     * transaction (rapid-market): updates the cached balance and tells the other servers,
+     * as the methods here do after their own changes. Any thread.
+     */
+    public void changed(UUID player, long balance) {
+        cached.computeIfPresent(player, (k, old) -> balance);
+        announce(player, balance);
+    }
+
     private Change applied(UUID player, Ledger.Result result) {
         return switch (result) {
             case Ledger.Result.Applied a -> {
