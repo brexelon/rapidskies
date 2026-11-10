@@ -26,6 +26,9 @@ permissions:
   rapid.horizons.pvp.nocooldown:
     description: Toggle /pvp without the 5-minute cooldown (combat tag still applies).
     default: op
+  rapid.horizons.combatlog.bypass:
+    description: Leave the server while combat-tagged without being killed.
+    default: false
   rapid.command.trades:
     description: Pick Trades and see their levels with /trades.
     default: true

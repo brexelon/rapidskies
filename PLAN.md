@@ -573,7 +573,7 @@ Next:
   - the Redis `claims` channel, so a second Horizons instance stays in step
 - [x] Deploy: the `smp` plugin set (rapid-claims, rapid-horizons, QuickShop-Hikari), CoreProtect in `survival`, the QuickShop patch, the Horizons sidebar lines, and LuckPerms lines for `/claimadmin` and entry exemption
 
-**3b. Horizons SMP (`rapid-horizons`)**: started, with 28 tests (2 against MariaDB):
+**3b. Horizons SMP (`rapid-horizons`)**: started, with 37 tests (2 against MariaDB):
 
 - [x] `/rtp` into the Heartland: a random safe surface spot inside the border, never in or next to a claimed chunk, with async chunk loading and a cooldown; plus an optional exit region at the spawn
 - [x] The Heartland portal at the spawn: an arch across the path south of the plaza (opening `-2 72 12`..`2 76 12`, facing the spawn), built by rapid-horizons from its config on every start (mossy stone brick columns, spruce lintel, flowering azalea and lanterns, nether portal fill). Physics can't break the frameless portal blocks, and vanilla portal travel from them is cancelled (plus `allow_entering_nether_using_portals: false` in the spawn world). A "The Heartland" text-display hologram floats in front of it (`rtp.portal.hologram`, lang `travel.portal-hologram`), respawned on start and `/horizons reload`
@@ -582,6 +582,7 @@ Next:
 - [x] `/back`: the spot before the last command or plugin teleport, or the death spot (`back.on-death`); never a void fall, lands on the nearest safe footing in the same column or refuses, not while combat-tagged, 10 s cooldown
 - [x] Citizens NPCs on the plaza's four pedestals, rebuilt from the config each start with text-display labels (`npcs.<id>`: `rtp`, `trades`, `server:<group>` or `command:<command>`): Heartland Guide, Land Surveyor (`/claim help`), Trade Master, Lobby. `/horizons here` prints positions; `/horizons reload` rebuilds the NPCs and the arch. `Labels` moved from rapid-hub to rapid-core so both use it
 - [x] Opt-in PvP (`/pvp`): off by default, with a 5-minute toggle cooldown and a 30 s combat tag; claims' PvP flag decides inside claims. Covers melee, projectiles, potions, clouds, pets, TNT, crystals, fire and fishing rods, with a hook for Wildlands
+- [x] Combat logging (`pvp.combat-log`): leaving while combat-tagged (quitting, timing out, or switching server through the proxy) kills the player where they stood, so their items drop there and the kill goes to their last opponent. A "logged out in combat" death message, optional console `commands` (`<player>`, `<uuid>`, `<attacker>`), and a notice on their next join. Restarts and server-side errors never count, kicks only with `punish-kicks`, and `rapid.horizons.combatlog.bypass` is exempt. Tagged players get a warning, an action-bar countdown and an "out of combat" line; the spawn's `server:` NPCs refuse them; dying ends their own tag
 - [x] Trades: Miner, Farmer, Hunter, Builder, Enchanter and Fisher, up to 2 at once with a switching cooldown
   - XP and Crowns per action, with anti-abuse: placed ores and crops don't pay, spawner mobs pay less, nothing while AFK
   - a daily soft cap with diminishing returns, and Tailwind
@@ -599,6 +600,7 @@ Next:
   - a QuickShop shop inside and outside a claim
   - `/rtp` and `/pvp`
 - [x] Check in-game on 1.20.1 and 26.3: the portal arch (looks right in the path, the portal blocks stay, walking in lands in the Heartland and never the Nether), the four NPCs (labels readable from the spawn, skins, clicks), `/back` after `/rtp`, `/spawn` and a death, and `/build` on the hub and the Horizons spawn (creative, boss bar, can't drop, ends on `/rtp`)
+- [ ] Check in-game: combat logging. Tag two players, then quit (one dies at the spot, items drop, the death message names the opponent, the notice shows on rejoin and the respawn works); `/hub` while tagged does the same; a `/kick` doesn't kill; restart `smp-1` mid-fight and nobody dies; the action-bar countdown and "out of combat" line on 1.20.1 and 26.3
 - [ ] Check in-game: restart `smp-1` with players on it; they land in a lobby with the `queue.returning` line and the action bar, go back once it's up, and a party follows its leader back
 - [ ] NPC skins for the four spawn NPCs (`npcs.<id>.skin-texture` / `skin-signature` from mineskin.org)
 - [ ] Pick the Heartland's pre-generated radius (Chunky, world border)

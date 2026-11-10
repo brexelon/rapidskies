@@ -35,6 +35,8 @@ class HorizonsSettingsTest {
                 s.npcs().stream().map(HorizonsSettings.Npc::id).toList());
         assertTrue(s.npcs().stream().allMatch(n -> n.location().isEmpty()), "the profile places the NPCs");
         assertEquals(300, s.pvp().toggleCooldownSeconds());
+        assertEquals(new HorizonsSettings.CombatLog(true, false, true, List.of()), s.pvp().combatLog(),
+                "combat logging kills by default, kicks don't count, no extra commands");
         assertEquals(2, s.trades().rules().maxActive());
         for (Trade t : Trade.values()) {
             assertFalse(s.trades().source(t).xp().isEmpty(), t + " earns from something");
@@ -51,6 +53,15 @@ class HorizonsSettingsTest {
         for (Trade t : Trade.values()) {
             assertEquals(bundled.trades().source(t), empty.trades().source(t), t.id());
         }
+    }
+
+    @Test
+    void combatLogCommandsDropSlashesAndBlanks() {
+        HorizonsSettings s = HorizonsSettings.from(ConfigView.of(Map.of("pvp", Map.of("combat-log", Map.of(
+                "punish-kicks", true, "action-bar", false,
+                "commands", List.of("/eco take <player> 100", "  ", "say <player> fled"))))));
+        assertEquals(new HorizonsSettings.CombatLog(true, true, false,
+                List.of("eco take <player> 100", "say <player> fled")), s.pvp().combatLog());
     }
 
     @Test

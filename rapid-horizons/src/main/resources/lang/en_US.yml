@@ -56,6 +56,23 @@ pvp:
   in-combat: "<prefix><error>You're in combat. You can switch PvP off in <accent><time></accent>.</error>"
   # A teleport command (/spawn, /home, /tpa, /back; rapid-essentials) while combat-tagged.
   no-teleport: "<prefix><error>You can't teleport in combat.</error> <muted>Finish the fight first.</muted>"
+  # A spawn NPC that changes server, clicked while combat-tagged.
+  no-leave: "<prefix><error>You can't leave in combat.</error> <muted>Finish the fight first.</muted>"
+  # The first hit of a fight (config pvp.combat-tag-seconds; <time> is its length).
+  combat-tagged: "<prefix><error><bold>You're in combat!</bold></error> <text>Don't log out or change server for <accent><time></accent>, or you'll be killed.</text>"
+  # The same, when pvp.combat-log.enabled is off.
+  combat-tagged-no-log: "<prefix><error><bold>You're in combat!</bold></error> <muted>No teleports for <accent><time></accent>.</muted>"
+  # Action bar while tagged (config pvp.combat-log.action-bar).
+  combat-bar: "<error>⚔ In combat</error> <dark>┃</dark> <accent><time></accent>"
+  combat-over: "<prefix><success>You're out of combat.</success> <muted>You can log out safely.</muted>"
+  # Combat logging: leaving while tagged kills the player (rapid-horizons CombatLog).
+  combat-log:
+    # Death messages; <attacker> is who they were fighting.
+    death: "<error><player> logged out in combat and was killed.</error>"
+    death-fled: "<error><player> logged out while fighting <attacker> and was killed.</error>"
+    # Told on their next join.
+    punished: "<prefix><error>You were killed for logging out in combat.</error> <muted>Your items dropped where you left.</muted>"
+    punished-fled: "<prefix><error>You were killed for logging out while fighting <accent><attacker></accent>.</error> <muted>Your items dropped where you left.</muted>"
   usage: "<prefix><text>Usage: <accent>/pvp</accent> <muted>[on|off|status]</muted></text>"
   # Action bar when a hit is stopped.
   blocked-self: "<error>Your PvP is off.</error> <muted>Use <accent>/pvp</accent> to switch it on.</muted>"

@@ -71,8 +71,21 @@ npcs:
 # with PvP on (and Frontier Wildlands, later) allow every fight.
 pvp:
   toggle-cooldown-seconds: 300
-  # After dealing or taking player damage you can't switch PvP off for this long.
+  # After dealing or taking player damage you can't switch PvP off, teleport or leave for this long.
   combat-tag-seconds: 30
+  # Combat logging: leaving the server while combat-tagged kills you where you stood (your
+  # items drop there, and the kill goes to whoever you were fighting). Server restarts never
+  # count. rapid.horizons.combatlog.bypass is exempt.
+  combat-log:
+    enabled: true
+    # Kicks (staff, anti-cheat) count too. Off: only disconnects and time-outs.
+    punish-kicks: false
+    # Show the time left in combat on the action bar.
+    action-bar: true
+    # Extra console commands run after the kill, no slash. <player>, <uuid>, and <attacker>
+    # (the last player they fought; "nobody" if unknown). For example:
+    #   - "eco take <player> 100"
+    commands: []
 
 # Trades (PLAN.md §5.2). XP and Crowns from matching work; nothing while AFK.
 trades:

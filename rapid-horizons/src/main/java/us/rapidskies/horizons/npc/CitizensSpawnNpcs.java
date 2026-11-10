@@ -139,7 +139,14 @@ public final class CitizensSpawnNpcs implements SpawnNpcs, Listener {
             // Like the portal beside it: no /rtp cooldown, the spawn is where new players start.
             case RTP -> plugin.rtp().start(player, true);
             case TRADES -> new TradesMenu(plugin).open(player);
-            case SERVER -> plugin.core().connect(player, config.action().value());
+            case SERVER -> {
+                // Leaving mid-fight is combat logging (CombatLog): refuse instead of killing them.
+                if (plugin.pvp().inCombat(player.getUniqueId())) {
+                    plugin.lang().send(player, "pvp.no-leave");
+                } else {
+                    plugin.core().connect(player, config.action().value());
+                }
+            }
             case COMMAND -> player.performCommand(config.action().value());
         }
     }

@@ -116,7 +116,19 @@ public record HorizonsSettings(Rtp rtp, Pvp pvp, Trades trades, List<Npc> npcs) 
     }
 
     /** Opt-in PvP (PLAN.md §5.2): {@code /pvp} cooldown and how long a hit keeps you "in combat". */
-    public record Pvp(int toggleCooldownSeconds, int combatTagSeconds) {
+    public record Pvp(int toggleCooldownSeconds, int combatTagSeconds, CombatLog combatLog) {
+    }
+
+    /**
+     * Leaving the server while combat-tagged ({@code CombatLog}).
+     *
+     * @param enabled     kill players who leave mid-fight
+     * @param punishKicks kicks count too (staff, anti-cheat); off: only disconnects and time-outs
+     * @param actionBar   show the time left in combat on the action bar
+     * @param commands    console commands run after the kill ({@code <player>}, {@code <uuid>},
+     *                    {@code <attacker>}), no slash
+     */
+    public record CombatLog(boolean enabled, boolean punishKicks, boolean actionBar, List<String> commands) {
     }
 
     /**
@@ -223,8 +235,14 @@ public record HorizonsSettings(Rtp rtp, Pvp pvp, Trades trades, List<Npc> npcs) 
 
         List<Npc> npcs = npcs(c, problems);
 
+        List<String> combatCommands = c.stringList("pvp.combat-log.commands").stream()
+                .map(String::trim).map(s -> s.startsWith("/") ? s.substring(1) : s).filter(s -> !s.isEmpty())
+                .toList();
+        CombatLog combatLog = new CombatLog(c.bool("pvp.combat-log.enabled", true),
+                c.bool("pvp.combat-log.punish-kicks", false), c.bool("pvp.combat-log.action-bar", true),
+                combatCommands);
         Pvp pvp = new Pvp(nonNegative(c, "pvp.toggle-cooldown-seconds", 300, problems),
-                nonNegative(c, "pvp.combat-tag-seconds", 30, problems));
+                nonNegative(c, "pvp.combat-tag-seconds", 30, problems), combatLog);
 
         TradeRules rules = new TradeRules(
                 positive(c, "trades.max-active", 2, problems),

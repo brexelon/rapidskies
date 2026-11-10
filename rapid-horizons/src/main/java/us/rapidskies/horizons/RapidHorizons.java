@@ -14,6 +14,7 @@ import us.rapidskies.essentials.RapidEssentials;
 import us.rapidskies.horizons.data.HorizonsRepository;
 import us.rapidskies.horizons.land.LandHook;
 import us.rapidskies.horizons.npc.SpawnNpcs;
+import us.rapidskies.horizons.pvp.CombatLog;
 import us.rapidskies.horizons.pvp.PvpService;
 import us.rapidskies.horizons.trade.TradeService;
 import us.rapidskies.horizons.travel.PortalArch;
@@ -21,8 +22,8 @@ import us.rapidskies.horizons.travel.RtpService;
 
 /**
  * rapid-horizons, the Horizons SMP (PLAN.md §5.2, phase 3b). This first slice: the way from
- * the spawn into the Heartland ({@code /rtp} and the portal arch at the spawn), the spawn's NPCs (Citizens, optional), opt-in PvP ({@code /pvp}) and Trades
- * ({@code /trades}). Frontier rotation and modifiers, Wildlands, Skyborne events and Chapters
+ * the spawn into the Heartland ({@code /rtp} and the portal arch at the spawn), the spawn's NPCs (Citizens, optional), opt-in PvP ({@code /pvp}) with
+ * combat-log punishment ({@link CombatLog}) and Trades ({@code /trades}). Frontier rotation and modifiers, Wildlands, Skyborne events and Chapters
  * come next.
  *
  * <p>Land claims (rapid-claims) are optional: without them nothing is claimed, PvP follows
@@ -83,7 +84,9 @@ public final class RapidHorizons extends JavaPlugin {
         pm.registerEvents(rtp, this);
         pm.registerEvents(arch, this);
         pm.registerEvents(pvp, this);
+        pm.registerEvents(new CombatLog(this), this);
         pm.registerEvents(trades, this);
+        pvp.start();
         trades.start();
         land.registerAllowance(this, trades::claimChunks);
         hookTeleports();

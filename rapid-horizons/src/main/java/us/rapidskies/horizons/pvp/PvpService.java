@@ -29,6 +29,7 @@ import org.bukkit.event.entity.AreaEffectCloudApplyEvent;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerFishEvent;
@@ -51,6 +52,10 @@ import us.rapidskies.horizons.land.LandHook.PvpZone;
  *
  * <p>Wildlands (forced PvP in a Frontier zone) arrive with the Frontier rotation:
  * {@link #setWildlands} is the hook.
+ *
+ * <p>A tagged player is warned once, sees the time left on the action bar, and is told when
+ * the fight is over. Leaving while tagged is combat logging ({@link CombatLog}). Dying ends
+ * your own tag (the fight is over for you), but not your opponent's.
  */
 public final class PvpService implements Listener {
 
@@ -66,6 +71,8 @@ public final class PvpService implements Listener {
     private final HorizonsRepository repository;
     private final Map<UUID, State> states = new ConcurrentHashMap<>();
     private final Map<UUID, Instant> combatUntil = new ConcurrentHashMap<>();
+    /** The last player each tagged player fought, for the combat-log kill credit. */
+    private final Map<UUID, UUID> lastOpponent = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> crystalHitBy = new ConcurrentHashMap<>();
     private final Map<UUID, Long> crystalHitAt = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastNotice = new ConcurrentHashMap<>();
@@ -89,6 +96,49 @@ public final class PvpService implements Listener {
     public boolean inCombat(UUID player) {
         Instant until = combatUntil.get(player);
         return until != null && until.isAfter(Instant.now());
+    }
+
+    /** When {@code player}'s combat tag ends, or null if they were never tagged (or it was cleared). */
+    public Instant combatUntil(UUID player) {
+        return combatUntil.get(player);
+    }
+
+    /** The last player {@code player} fought while tagged, or null. */
+    public UUID lastOpponent(UUID player) {
+        return lastOpponent.get(player);
+    }
+
+    /** Ends {@code player}'s combat tag at once (they died, or were punished for leaving). */
+    public void untag(UUID player) {
+        combatUntil.remove(player);
+        lastOpponent.remove(player);
+    }
+
+    /** Starts the once-a-second combat countdown. Bukkit cancels it when the plugin disables. */
+    public void start() {
+        Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L);
+    }
+
+    /** Action-bar countdown for tagged players, and "out of combat" once the tag runs out. */
+    private void tick() {
+        Instant now = Instant.now();
+        boolean bar = plugin.settings().pvp().combatLog().actionBar();
+        for (Map.Entry<UUID, Instant> e : combatUntil.entrySet()) {
+            Player player = Bukkit.getPlayer(e.getKey());
+            long left = CombatLogRules.secondsLeft(now, e.getValue());
+            if (left == 0) {
+                // Only if it wasn't renewed meanwhile.
+                if (combatUntil.remove(e.getKey(), e.getValue())) {
+                    lastOpponent.remove(e.getKey());
+                    if (player != null) {
+                        plugin.lang().send(player, "pvp.combat-over");
+                    }
+                }
+            } else if (bar && player != null) {
+                player.sendActionBar(plugin.lang().get("pvp.combat-bar",
+                        Placeholder.unparsed("time", Durations.format(Duration.ofSeconds(left)))));
+            }
+        }
     }
 
     // ------------------------------------------------------------------ /pvp
@@ -138,12 +188,22 @@ public final class PvpService implements Listener {
         }
     }
 
+    /** The fight is over for whoever died; their killer stays tagged until it runs out. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onDeath(PlayerDeathEvent event) {
+        UUID id = event.getPlayer().getUniqueId();
+        if (combatUntil.containsKey(id)) {
+            untag(id);
+        }
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onConnectionClose(PlayerConnectionCloseEvent event) {
         UUID id = event.getPlayerUniqueId();
         states.remove(id);
         lastNotice.remove(id);
-        // The combat tag stays until it runs out, so relogging can't reset it.
+        // The combat tag stays until it runs out, so relogging can't reset it (for those
+        // CombatLog spared: kicks, the bypass permission).
     }
 
     // ------------------------------------------------------------------ deciding
@@ -155,9 +215,24 @@ public final class PvpService implements Listener {
     }
 
     private void tag(Player a, Player b) {
-        Instant until = Instant.now().plusSeconds(plugin.settings().pvp().combatTagSeconds());
-        combatUntil.put(a.getUniqueId(), until);
-        combatUntil.put(b.getUniqueId(), until);
+        int seconds = plugin.settings().pvp().combatTagSeconds();
+        if (seconds <= 0) {
+            return;
+        }
+        Instant until = Instant.now().plusSeconds(seconds);
+        tag(a, b, until, seconds);
+        tag(b, a, until, seconds);
+    }
+
+    private void tag(Player player, Player opponent, Instant until, int seconds) {
+        boolean fresh = !inCombat(player.getUniqueId());
+        combatUntil.put(player.getUniqueId(), until);
+        lastOpponent.put(player.getUniqueId(), opponent.getUniqueId());
+        if (fresh) {
+            plugin.lang().send(player, plugin.settings().pvp().combatLog().enabled() ? "pvp.combat-tagged"
+                    : "pvp.combat-tagged-no-log", Placeholder.unparsed("time", Durations.format(
+                    Duration.ofSeconds(seconds))));
+        }
     }
 
     private void notice(Player attacker, Player victim) {
