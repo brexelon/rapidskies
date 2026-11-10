@@ -95,6 +95,9 @@ queue:
   party-member: "<accent>Queue</accent> <dark>»</dark> <error>Your party leader picks where the party goes.</error> <muted>/party leave to go alone.</muted>"
   left: "<accent>Queue</accent> <dark>»</dark> <text>You left the queue.</text>"
   not-queued: "<accent>Queue</accent> <dark>»</dark> <muted>You're not in a queue.</muted>"
+  # The server the player was on is restarting; they're queued to go back.
+  returning: "<accent>Queue</accent> <dark>»</dark> <accent><target></accent> <text>is restarting. You'll be sent back as soon as it's up.</text> <muted>/leavequeue to stay in the lobby.</muted>"
+  return-expired: "<accent>Queue</accent> <dark>»</dark> <accent><target></accent> <muted>didn't come back in time, so you left the queue. Try</muted> <text>/play</text> <muted>later.</muted>"
 
 # Parties (PLAN.md §7). Size depends on the leader's rank.
 party:

@@ -78,7 +78,7 @@ class JoinQueueTest {
                 new ServerStatus("hub-1", "hub", "", State.ONLINE, 0, 100, 0, NOW));
         assertEquals(List.of(), drained(none, NOW));
         assertEquals(List.of(), queue.drain(List.of(smp("smp-9", 0, 100, NOW)), NOW, id -> false));
-        assertTrue(JoinQueue.noServerUp(SMP, none, NOW));
+        assertTrue(queue.noServerUp(SMP, none, NOW));
         assertEquals(List.of(a), drained(List.of(smp("smp-1", 0, 100, NOW)), NOW));
     }
 
@@ -106,5 +106,37 @@ class JoinQueueTest {
         JoinQueue.Entry sent = queue.drain(List.of(smp("smp-1", 99, 100, NOW)), NOW, id -> true).getFirst().entry();
         queue.retry(sent);
         assertEquals(1, queue.position(a).orElseThrow().place(), "a failed send goes back in front");
+    }
+
+    @Test
+    void holdKeepsPlayersOffTheStoppedInstanceUntilItRestarts() {
+        UUID a = UUID.randomUUID();
+        QueueTarget smp1 = QueueTarget.server("smp-1");
+        queue.holdUntilRestarted("smp-1", 500, NOW);
+        queue.join(a, smp1, QueueSettings.RETURN_PRIORITY, NOW, NOW + 60_000);
+        // The snapshot still has the old instance (started at 500) as online and fresh.
+        ServerStatus old = new ServerStatus("smp-1", "smp", "", State.ONLINE, 40, 100, 500, NOW);
+        assertEquals(List.of(), drained(List.of(old), NOW));
+        assertTrue(queue.noServerUp(smp1, List.of(old), NOW));
+        // Group targets skip it too.
+        UUID b = UUID.randomUUID();
+        queue.join(b, SMP, 0, NOW);
+        assertEquals(List.of(), drained(List.of(old), NOW));
+
+        ServerStatus restarted = new ServerStatus("smp-1", "smp", "", State.ONLINE, 0, 100, NOW + 20_000, NOW + 21_000);
+        assertEquals(List.of(a, b), drained(List.of(restarted), NOW + 21_000));
+    }
+
+    @Test
+    void returnEntriesGoFirstAndExpire() {
+        UUID waiting = UUID.randomUUID();
+        UUID returning = UUID.randomUUID();
+        queue.join(waiting, SMP, 2, NOW);
+        queue.join(returning, QueueTarget.server("smp-1"), QueueSettings.RETURN_PRIORITY, NOW, NOW + 1000);
+        assertEquals(List.of(), queue.expire(NOW + 999));
+        List<JoinQueue.Entry> gone = queue.expire(NOW + 1000);
+        assertEquals(List.of(returning), gone.stream().map(JoinQueue.Entry::player).toList());
+        assertTrue(queue.position(returning).isEmpty());
+        assertEquals(1, queue.position(waiting).orElseThrow().place(), "entries without an expiry stay");
     }
 }

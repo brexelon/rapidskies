@@ -19,6 +19,12 @@ public final class Channels {
     public static final String CONNECT = "connect";
 
     /**
+     * A backend is shutting down (restart, stop) and is about to move everyone off. Sent
+     * before players are kicked, so the proxy can put them back in line for this server.
+     */
+    public static final String SERVER_STOPPING = "server-stopping";
+
+    /**
      * A staff member vanished or reappeared. The proxy hides vanished staff from friend
      * notices, friend lists and {@code /msg}; backends hide them from players.
      */
@@ -117,6 +123,14 @@ public final class Channels {
 
     /** {@code message} is MiniMessage (brand tags allowed); {@code by} the sender's name, for the log. */
     public record Broadcast(String message, String by) {
+    }
+
+    /**
+     * {@code startedAt} is the stopping instance's, from its heartbeat: anything up to it is
+     * this instance, anything later is the server back up. {@code players} are the UUIDs of
+     * everyone on it.
+     */
+    public record ServerStopping(String server, String group, long startedAt, java.util.List<String> players) {
     }
 
     /** {@code target} is a server group ({@code smp}) or a server id ({@code smp-1}). */

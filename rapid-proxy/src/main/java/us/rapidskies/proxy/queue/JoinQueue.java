@@ -24,22 +24,36 @@ import us.rapidskies.common.registry.ServerStatus;
  * target's live servers, fullest last. A heartbeat only reports players who had arrived
  * when it was sent, so recent sends count against a server until a heartbeat taken a
  * little after them comes in; that keeps a burst of sends from overfilling it.
+ *
+ * <p>When a server shuts down, {@link #holdUntilRestarted} keeps everyone off it until a
+ * heartbeat from its next start shows up: the proxy's snapshot can still list the old
+ * instance as online for a few seconds. Entries may also expire, for players who were
+ * queued for them (put back in line after a restart) rather than asking.
  */
 public final class JoinQueue {
 
     /** How long after a send a heartbeat must be before it's assumed to include that player. */
     static final long CONNECT_GRACE_MILLIS = 2_000;
     private static final long FORGET_SENDS_MILLIS = 30_000;
+    /** Well past {@link ServerRegistry#STALE_MILLIS}: by then the old instance can't look online. */
+    private static final long FORGET_HOLD_MILLIS = 5 * 60_000;
 
     private final Map<QueueTarget, List<Entry>> lines = new LinkedHashMap<>();
     private final Map<UUID, Entry> byPlayer = new HashMap<>();
     private final Map<String, Deque<Long>> recentSends = new HashMap<>();
+    /** Server id → the stopped instance's start time, and when it stopped. */
+    private final Map<String, Hold> holds = new HashMap<>();
     private long sequence;
 
-    public record Entry(UUID player, QueueTarget target, int priority, long seq, long joinedAt, int attempts) {
+    /** {@code expiresAt}: epoch millis after which the player leaves the line, or {@link Long#MAX_VALUE}. */
+    public record Entry(UUID player, QueueTarget target, int priority, long seq, long joinedAt, int attempts,
+                        long expiresAt) {
         Entry retried() {
-            return new Entry(player, target, priority, seq, joinedAt, attempts + 1);
+            return new Entry(player, target, priority, seq, joinedAt, attempts + 1, expiresAt);
         }
+    }
+
+    private record Hold(long startedAt, long since) {
     }
 
     /** "Send {@code player} to {@code serverId} now." */
@@ -52,8 +66,13 @@ public final class JoinQueue {
 
     /** Puts {@code player} in line for {@code target}, leaving any other line they were in. */
     public synchronized Position join(UUID player, QueueTarget target, int priority, long now) {
+        return join(player, target, priority, now, Long.MAX_VALUE);
+    }
+
+    /** Like {@link #join(UUID, QueueTarget, int, long)}, leaving the line at {@code expiresAt} if still waiting. */
+    public synchronized Position join(UUID player, QueueTarget target, int priority, long now, long expiresAt) {
         remove(player);
-        Entry entry = new Entry(player, target, priority, sequence++, now, 0);
+        Entry entry = new Entry(player, target, priority, sequence++, now, 0, expiresAt);
         insert(entry);
         return position(player).orElseThrow();
     }
@@ -88,6 +107,26 @@ public final class JoinQueue {
         return Optional.of(new Position(e.target(), line.indexOf(e) + 1, line.size()));
     }
 
+    /**
+     * {@code serverId} is shutting down: send nobody there until a heartbeat from a later
+     * start than {@code startedAt} comes in.
+     */
+    public synchronized void holdUntilRestarted(String serverId, long startedAt, long now) {
+        holds.put(serverId, new Hold(startedAt, now));
+    }
+
+    /** Takes everyone whose entry has expired off their lines. */
+    public synchronized List<Entry> expire(long now) {
+        List<Entry> out = new ArrayList<>();
+        for (Entry e : List.copyOf(byPlayer.values())) {
+            if (e.expiresAt() <= now) {
+                remove(e.player());
+                out.add(e);
+            }
+        }
+        return out;
+    }
+
     /** Everyone waiting, with their place in line. */
     public synchronized Map<UUID, Position> all() {
         Map<UUID, Position> out = new LinkedHashMap<>();
@@ -105,6 +144,7 @@ public final class JoinQueue {
      */
     public synchronized List<Dispatch> drain(Collection<ServerStatus> servers, long now, Predicate<String> known) {
         forgetOldSends(now);
+        updateHolds(servers, now);
         List<Dispatch> out = new ArrayList<>();
         for (var it = lines.entrySet().iterator(); it.hasNext(); ) {
             var e = it.next();
@@ -112,8 +152,7 @@ public final class JoinQueue {
             Map<String, Integer> free = new LinkedHashMap<>();
             Map<String, Integer> load = new HashMap<>();
             for (ServerStatus s : servers) {
-                if (!e.getKey().matches(s) || !s.isFresh(now, ServerRegistry.STALE_MILLIS)
-                        || s.state() != ServerStatus.State.ONLINE || !known.test(s.id())) {
+                if (!e.getKey().matches(s) || !up(s, now) || !known.test(s.id())) {
                     continue;
                 }
                 int pending = pendingSends(s);
@@ -145,9 +184,28 @@ public final class JoinQueue {
     }
 
     /** True if the target has no live server at all (as opposed to all of them being full). */
-    public static boolean noServerUp(QueueTarget target, Collection<ServerStatus> servers, long now) {
-        return servers.stream().noneMatch(s -> target.matches(s) && s.isFresh(now, ServerRegistry.STALE_MILLIS)
-                && s.state() == ServerStatus.State.ONLINE);
+    public synchronized boolean noServerUp(QueueTarget target, Collection<ServerStatus> servers, long now) {
+        return servers.stream().noneMatch(s -> target.matches(s) && up(s, now));
+    }
+
+    /** Fresh, accepting players, and not the old instance of a server that's restarting. */
+    private boolean up(ServerStatus s, long now) {
+        if (!s.isFresh(now, ServerRegistry.STALE_MILLIS) || s.state() != ServerStatus.State.ONLINE) {
+            return false;
+        }
+        Hold hold = holds.get(s.id());
+        return hold == null || s.startedAt() > hold.startedAt();
+    }
+
+    /** Lifts a hold once its server is back (a later start), or once it's old enough not to matter. */
+    private void updateHolds(Collection<ServerStatus> servers, long now) {
+        holds.values().removeIf(h -> h.since() < now - FORGET_HOLD_MILLIS);
+        for (ServerStatus s : servers) {
+            Hold hold = holds.get(s.id());
+            if (hold != null && s.startedAt() > hold.startedAt()) {
+                holds.remove(s.id());
+            }
+        }
     }
 
     private void insert(Entry entry) {

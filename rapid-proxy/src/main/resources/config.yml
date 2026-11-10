@@ -51,6 +51,9 @@ queue:
     rapidplusplus: 1
     rapidplusplusplus: 2
     staff: 3
+  # Players moved to a lobby because their game server restarted are queued to go back
+  # (ahead of new arrivals) and wait this long for it before leaving the line. 0 = off.
+  return-after-restart-minutes: 5
 
 parties:
   # Max members by the leader's rank, leader included (PLAN.md §6.1).

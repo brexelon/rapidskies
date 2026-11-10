@@ -116,7 +116,7 @@ class LangKeysTest {
         }
         // Prefixes the code completes at runtime, and config paths that share a key's shape.
         keys.removeIf(k -> List.of("party.fail", "grant.name", "queue.groups", "queue.priority", "queue.priority.staff",
-                "motd.rotate-seconds").contains(k));
+                "queue.return-after-restart-minutes", "motd.rotate-seconds").contains(k));
         return keys;
     }
 }

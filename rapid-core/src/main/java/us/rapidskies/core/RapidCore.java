@@ -21,7 +21,6 @@ import us.rapidskies.common.lang.Lang;
 import us.rapidskies.common.profile.ProfileRepository;
 import us.rapidskies.common.redis.Channels;
 import us.rapidskies.common.redis.RedisBus;
-import us.rapidskies.common.registry.ServerRegistry;
 import us.rapidskies.core.afk.AfkTracker;
 import us.rapidskies.core.chat.ChatListener;
 import us.rapidskies.core.chat.ChatTags;
@@ -201,7 +200,7 @@ public final class RapidCore extends JavaPlugin {
             new RapidPlaceholders(this).register();
         }
 
-        heartbeat = new Heartbeat(this, new ServerRegistry(redis), settings);
+        heartbeat = new Heartbeat(this, redis, settings);
         heartbeat.start();
         log.info("rapid-core {} enabled as {} (group {})", getPluginMeta().getVersion(), settings.serverId(),
                 settings.group());

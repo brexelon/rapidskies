@@ -13,11 +13,15 @@ import us.rapidskies.common.rank.RankValues;
  *                       names. Staff-only servers (build, staging) are left out on purpose.
  * @param priority       place in line by rank; higher goes first (PLAN.md §6.1)
  * @param staffPriority  for anyone with a team role
+ * @param returnMinutes  how long players moved off a restarting server wait in line to go
+ *                       back before giving up; 0 turns returning off
  */
-public record QueueSettings(Map<String, String> groups, RankValues priority, int staffPriority) {
+public record QueueSettings(Map<String, String> groups, RankValues priority, int staffPriority, int returnMinutes) {
 
     /** Party members following their leader go ahead of everyone. */
     public static final int FOLLOW_PRIORITY = Integer.MAX_VALUE;
+    /** Players going back to a server that restarted under them go next: they had a place there. */
+    public static final int RETURN_PRIORITY = Integer.MAX_VALUE - 1;
 
     public static QueueSettings from(ConfigView c) {
         Map<String, String> groups = new LinkedHashMap<>();
@@ -32,6 +36,7 @@ public record QueueSettings(Map<String, String> groups, RankValues priority, int
         }
         return new QueueSettings(Collections.unmodifiableMap(groups), // keeps file order for /play
                 RankValues.of(0, 1, 1, 2).overriddenBy(c.section("queue.priority")),
-                c.integer("queue.priority.staff", 3));
+                c.integer("queue.priority.staff", 3),
+                Math.max(0, c.integer("queue.return-after-restart-minutes", 5)));
     }
 }

@@ -3,6 +3,8 @@ package us.rapidskies.core;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
+import us.rapidskies.common.redis.Channels;
+import us.rapidskies.common.redis.RedisBus;
 import us.rapidskies.common.registry.ServerRegistry;
 import us.rapidskies.common.registry.ServerStatus;
 import us.rapidskies.common.registry.ServerStatus.State;
@@ -13,18 +15,23 @@ import us.rapidskies.core.staff.Vanish;
  * count towards {@code online} (they take a slot) but not {@code visible}, the number the
  * network shows players. The values are
  * read on the main thread and written to Redis off it, so a slow Redis never costs a tick.
+ *
+ * <p>On shutdown it also tells the proxy who was here ({@link Channels#SERVER_STOPPING}),
+ * so they're queued to come back once the server is up again.
  */
 final class Heartbeat {
 
     private final RapidCore plugin;
+    private final RedisBus redis;
     private final ServerRegistry registry;
     private final CoreSettings settings;
     private final long startedAt = System.currentTimeMillis();
     private BukkitTask task;
 
-    Heartbeat(RapidCore plugin, ServerRegistry registry, CoreSettings settings) {
+    Heartbeat(RapidCore plugin, RedisBus redis, CoreSettings settings) {
         this.plugin = plugin;
-        this.registry = registry;
+        this.redis = redis;
+        this.registry = new ServerRegistry(redis);
         this.settings = settings;
     }
 
@@ -57,10 +64,22 @@ final class Heartbeat {
         });
     }
 
-    /** Drops the heartbeat at shutdown so the proxy stops sending players here immediately. */
+    /**
+     * Drops the heartbeat at shutdown so the proxy stops sending players here immediately.
+     * Plugins are disabled before Paper kicks anyone, so the players are all still here.
+     */
     void stop() {
         if (task != null) {
             task.cancel();
+        }
+        if (Bukkit.isStopping()) { // not a plugin reload: nobody is being moved then
+            try {
+                redis.publishJson(Channels.SERVER_STOPPING, new Channels.ServerStopping(settings.serverId(),
+                        settings.group(), startedAt,
+                        Bukkit.getOnlinePlayers().stream().map(p -> p.getUniqueId().toString()).toList()));
+            } catch (RuntimeException e) {
+                plugin.getSLF4JLogger().warn("Couldn't tell the proxy this server is stopping: {}", e.getMessage());
+            }
         }
         try {
             registry.remove(settings.serverId());

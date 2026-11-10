@@ -139,7 +139,8 @@ public final class RapidProxy {
         sharedIps.start(this);
         var luckPerms = LuckPermsProvider.get();
         ProxyRanks ranks = new ProxyRanks(luckPerms, proxy);
-        queue = new QueueService(proxy, lang, QueueSettings.from(config), ranks, directory::servers, logger);
+        queue = new QueueService(proxy, lang, QueueSettings.from(config), ranks, directory::servers,
+                settings.hubGroup(), logger);
         queue.start(this, redis);
         parties = new PartyService(proxy, lang, PartySettings.from(config), ranks, queue);
         parties.start(this);

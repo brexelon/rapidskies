@@ -28,7 +28,9 @@ import us.rapidskies.proxy.rank.ProxyRanks;
  * it shows everyone waiting their place on the action bar.
  *
  * <p>Requests come from {@code /play}, from backends over Redis ({@link Channels#CONNECT}:
- * the hub selector and NPCs), from party follow and from {@code /friend join}.
+ * the hub selector and NPCs), from party follow and from {@code /friend join}. When a game
+ * server shuts down ({@link Channels#SERVER_STOPPING}), everyone on it is put back in line
+ * for it, to go back as soon as it's up again.
  */
 public final class QueueService {
 
@@ -40,23 +42,26 @@ public final class QueueService {
     private final QueueSettings settings;
     private final ProxyRanks ranks;
     private final Supplier<List<ServerStatus>> servers;
+    private final String hubGroup;
     private final Logger logger;
     private final JoinQueue queue = new JoinQueue();
     private ScheduledTask task;
     private long ticks;
 
     public QueueService(ProxyServer proxy, Lang lang, QueueSettings settings, ProxyRanks ranks,
-                        Supplier<List<ServerStatus>> servers, Logger logger) {
+                        Supplier<List<ServerStatus>> servers, String hubGroup, Logger logger) {
         this.proxy = proxy;
         this.lang = lang;
         this.settings = settings;
         this.ranks = ranks;
         this.servers = servers;
+        this.hubGroup = hubGroup;
         this.logger = logger;
     }
 
     public void start(Object plugin, RedisBus redis) {
         redis.subscribeJson(Channels.CONNECT, Channels.ConnectRequest.class, this::onConnectRequest);
+        redis.subscribeJson(Channels.SERVER_STOPPING, Channels.ServerStopping.class, this::onServerStopping);
         task = proxy.getScheduler().buildTask(plugin, this::tick).repeat(1, TimeUnit.SECONDS).schedule();
     }
 
@@ -125,7 +130,7 @@ public final class QueueService {
         if (sent || !announce) {
             return;
         }
-        if (JoinQueue.noServerUp(target, servers.get(), System.currentTimeMillis())) {
+        if (queue.noServerUp(target, servers.get(), System.currentTimeMillis())) {
             lang.send(player, "queue.joined-offline", name(target));
         } else {
             lang.send(player, "queue.joined", name(target),
@@ -181,8 +186,48 @@ public final class QueueService {
         join(player.get(), target.get());
     }
 
+    /**
+     * A game server is going down and is about to move everyone to a lobby: queue them to go
+     * back. Not for lobbies (they land on another one anyway) or staff-only servers.
+     */
+    private void onServerStopping(Channels.ServerStopping stop) {
+        // Redis subscriber thread: everything below is thread-safe.
+        long now = System.currentTimeMillis();
+        // Whatever happens below, nobody new is sent to the old instance.
+        queue.holdUntilRestarted(stop.server(), stop.startedAt(), now);
+        if (settings.returnMinutes() == 0 || stop.players() == null || hubGroup.equals(stop.group())
+                || !settings.groups().containsKey(stop.group())) {
+            return;
+        }
+        QueueTarget target = QueueTarget.server(stop.server());
+        long expiresAt = now + TimeUnit.MINUTES.toMillis(settings.returnMinutes());
+        for (String uuid : stop.players()) {
+            Optional<Player> player;
+            try {
+                player = proxy.getPlayer(UUID.fromString(uuid));
+            } catch (IllegalArgumentException e) {
+                continue;
+            }
+            if (player.isEmpty() || !leftBecauseOfStop(player.get(), stop.server())) {
+                continue;
+            }
+            queue.join(player.get().getUniqueId(), target, QueueSettings.RETURN_PRIORITY, now, expiresAt);
+            lang.send(player.get(), "queue.returning", name(target));
+        }
+    }
+
+    /** Still on the stopping server, or already moved to a lobby (or between servers): not somewhere they chose. */
+    private boolean leftBecauseOfStop(Player player, String stoppingServer) {
+        Optional<String> current = player.getCurrentServer().map(c -> c.getServerInfo().getName());
+        return current.isEmpty() || current.get().equals(stoppingServer)
+                || groupOf(current.get()).filter(hubGroup::equals).isPresent();
+    }
+
     private void tick() {
         try {
+            for (JoinQueue.Entry e : queue.expire(System.currentTimeMillis())) {
+                proxy.getPlayer(e.player()).ifPresent(p -> lang.send(p, "queue.return-expired", name(e.target())));
+            }
             dispatch();
             if (++ticks % ACTION_BAR_EVERY_TICKS == 0) {
                 showPositions();
@@ -233,7 +278,7 @@ public final class QueueService {
     private void showPositions() {
         for (Map.Entry<UUID, JoinQueue.Position> e : queue.all().entrySet()) {
             proxy.getPlayer(e.getKey()).ifPresent(p -> p.sendActionBar(lang.get(
-                    JoinQueue.noServerUp(e.getValue().target(), servers.get(), System.currentTimeMillis())
+                    queue.noServerUp(e.getValue().target(), servers.get(), System.currentTimeMillis())
                             ? "queue.actionbar-offline" : "queue.actionbar",
                     name(e.getValue().target()),
                     Placeholder.unparsed("place", Integer.toString(e.getValue().place())),
