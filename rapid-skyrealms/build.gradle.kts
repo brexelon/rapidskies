@@ -16,6 +16,9 @@ dependencies {
     compileOnly(project(":rapid-market"))
     // Optional (softdepend): %rapidskyrealms_*% placeholders for the TAB sidebar.
     compileOnly(fileTree("${rootDir}/plugins") { include("PlaceholderAPI-*.jar") })
+    // Optional (softdepend): the NPCs round the Trading Post's compass rose. Not published to
+    // Maven Central: compiled against the deployed jar. Only the npc.Citizens* class touches it.
+    compileOnly(fileTree("${rootDir}/plugins") { include("Citizens-*.jar") })
 
     testImplementation(libs.paper.api)
     testImplementation(project(":rapid-core"))

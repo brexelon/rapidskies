@@ -70,6 +70,11 @@ player-respawn:
   - ISLAND_TELEPORT
   - SPAWN_TELEPORT
 
+# Messages come from lang/en-US.yml (patched to the RapidSkies prefix); the network is English
+# only, so players don't get a stock translation picked from their client's language.
+default-language: "en-US"
+auto-language-detection: false
+
 # Whole numbers on the sidebar (%superior_island_level%).
 rounded-island-level: true
 island-level-rounding-mode: DOWN

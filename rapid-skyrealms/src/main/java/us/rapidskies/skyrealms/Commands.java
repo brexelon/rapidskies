@@ -7,9 +7,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import us.rapidskies.core.world.SpawnPoint;
 import us.rapidskies.skyrealms.expedition.Theme;
 import us.rapidskies.skyrealms.island.Islands.IslandRef;
 import us.rapidskies.skyrealms.route.Route;
@@ -358,21 +363,43 @@ final class Commands {
 
     // ------------------------------------------------------------------ /skyrealms
 
+    /**
+     * {@code /skyrealms reload}: re-reads the config and lang and rebuilds the NPCs;
+     * {@code /skyrealms here}: the position you stand at as an NPC location, click to copy.
+     * Positions belong in the skyrealms profile in infra/ (rsdeploy would put the old ones back
+     * otherwise).
+     */
     static BasicCommand admin(RapidSkyRealms plugin) {
         return new BasicCommand() {
             @Override
             public void execute(CommandSourceStack stack, String[] args) {
                 CommandSender sender = stack.getSender();
-                if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
-                    plugin.lang().send(sender, plugin.reload() ? "admin.reloaded" : "admin.reload-failed");
-                } else {
-                    plugin.lang().send(sender, "admin.usage");
+                String sub = args.length == 1 ? args[0].toLowerCase(Locale.ROOT) : "";
+                switch (sub) {
+                    case "reload" -> plugin.lang().send(sender,
+                            plugin.reload() ? "admin.reloaded" : "admin.reload-failed");
+                    case "here" -> here(sender);
+                    default -> plugin.lang().send(sender, "admin.usage");
                 }
+            }
+
+            private void here(CommandSender sender) {
+                if (!(sender instanceof Player player)) {
+                    plugin.lang().send(sender, "errors.players-only");
+                    return;
+                }
+                Location at = player.getLocation();
+                // Same rounding as /setspawn (2 decimals, yaw and pitch to 1).
+                String point = new SpawnPoint(at.getWorld().getKey().asString(), at.getX(), at.getY(), at.getZ(),
+                        at.getYaw(), at.getPitch()).format();
+                plugin.lang().send(player, "admin.here", Placeholder.component("point",
+                        Component.text("\"" + point + "\"").clickEvent(ClickEvent.copyToClipboard(point))
+                                .hoverEvent(HoverEvent.showText(plugin.lang().get("admin.copy-hint")))));
             }
 
             @Override
             public Collection<String> suggest(CommandSourceStack stack, String[] args) {
-                return match(args, 0, Stream.of("reload"));
+                return match(args, 0, Stream.of("here", "reload"));
             }
 
             @Override

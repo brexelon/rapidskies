@@ -21,6 +21,7 @@ import us.rapidskies.skyrealms.expedition.ExpeditionService;
 import us.rapidskies.skyrealms.island.IslandEvents;
 import us.rapidskies.skyrealms.island.IslandSchematics;
 import us.rapidskies.skyrealms.island.Islands;
+import us.rapidskies.skyrealms.npc.SpawnNpcs;
 import us.rapidskies.skyrealms.route.RouteService;
 import us.rapidskies.skyrealms.season.SeasonService;
 import us.rapidskies.skyrealms.shop.ShopService;
@@ -38,7 +39,9 @@ import us.rapidskies.skyrealms.tier.TierService;
  *   <li>the server shop, where Coins are earned ({@code /shop}, {@code /sell});</li>
  *   <li>Expeditions in their own world ({@code /expedition}, {@link ExpeditionService});</li>
  *   <li>Trade Routes between islands ({@code /route}, {@link RouteService});</li>
- *   <li>seasons of the island-value leaderboard ({@code /season}, {@link SeasonService}).</li>
+ *   <li>seasons of the island-value leaderboard ({@code /season}, {@link SeasonService});</li>
+ *   <li>NPCs round the Trading Post's compass rose that open each of those (Citizens, when
+ *       it's installed).</li>
  * </ul>
  *
  * <p>Island level adds auction house listings when rapid-market is installed.
@@ -55,6 +58,7 @@ public final class RapidSkyRealms extends JavaPlugin implements Listener {
     private RouteService routes;
     private ExpeditionService expeditions;
     private SeasonService seasons;
+    private SpawnNpcs npcs;
     private boolean market;
     private boolean started;
 
@@ -140,9 +144,11 @@ public final class RapidSkyRealms extends JavaPlugin implements Listener {
             r.register("route", "Trade Routes between islands", List.of("routes", "traderoute", "traderoutes"),
                     Commands.route(this));
             r.register("season", "This season's island leaderboard", List.of("seasons"), Commands.season(this));
-            r.register("skyrealms", "rapid-skyrealms admin: reload", List.of(), Commands.admin(this));
+            r.register("skyrealms", "rapid-skyrealms admin: reload, here", List.of(), Commands.admin(this));
         });
         tiers.reapplyOnline();
+        // After every plugin (Citizens) is enabled; the Trading Post is the main world, loaded by now.
+        getServer().getScheduler().runTask(this, this::startNpcs);
         getSLF4JLogger().info("rapid-skyrealms {} enabled ({} tiers, {} shop categories{})",
                 getPluginMeta().getVersion(), settings.tiers().size(), settings.shop().categories().size(),
                 market ? ", auction house listings from island level" : "");
@@ -159,6 +165,7 @@ public final class RapidSkyRealms extends JavaPlugin implements Listener {
                 p.closeInventory();
             }
         }
+        stopNpcs();
         expeditions.stop();
         routes.stop();
         seasons.stop();
@@ -167,6 +174,23 @@ public final class RapidSkyRealms extends JavaPlugin implements Listener {
         }
         // rapid-core (and its database) disables after us: we depend on it.
         tiers.stop();
+    }
+
+    private void startNpcs() {
+        if (getServer().getPluginManager().isPluginEnabled("Citizens")) {
+            // Its own class, so Citizens' types are only loaded when it's installed.
+            npcs = new us.rapidskies.skyrealms.npc.CitizensSpawnNpcs(this);
+            npcs.start();
+        } else if (settings.npcs().stream().anyMatch(n -> n.location().isPresent())) {
+            getSLF4JLogger().warn("Citizens isn't installed, so there are no NPCs at the Trading Post");
+        }
+    }
+
+    private void stopNpcs() {
+        if (npcs != null) {
+            npcs.stop();
+            npcs = null;
+        }
     }
 
     /** Extra auction house listings for the player's island level. Main thread. */
@@ -192,9 +216,9 @@ public final class RapidSkyRealms extends JavaPlugin implements Listener {
     }
 
     /**
-     * Re-reads the config and messages. Island layouts are registered once at startup, so a
-     * change to {@code islands.layouts} waits for a restart. Returns false (changing nothing) if
-     * the new config is invalid.
+     * Re-reads the config and messages and rebuilds the NPCs from them. Island layouts are
+     * registered once at startup, so a change to {@code islands.layouts} waits for a restart.
+     * Returns false (changing nothing) if the new config is invalid.
      */
     public boolean reload() {
         try {
@@ -203,6 +227,8 @@ public final class RapidSkyRealms extends JavaPlugin implements Listener {
             settings = next;
             lang = nextLang;
             tiers.reapplyOnline();
+            stopNpcs();
+            startNpcs();
             return true;
         } catch (IOException | IllegalArgumentException e) {
             getSLF4JLogger().error("rapid-skyrealms reload failed, keeping the running config: {}", e.getMessage());

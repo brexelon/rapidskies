@@ -39,6 +39,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Spider;
 import org.bukkit.entity.WitherSkeleton;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -304,8 +305,14 @@ public final class SkyborneService implements Listener {
                 // Only into air: the fortress never replaces terrain, so removing it can't hurt any.
                 if (b.getType().isAir()) {
                     Material m = Material.matchMaterial(p.material());
-                    if (m != null) {
+                    if (m != null && p.state().isEmpty()) {
                         b.setType(m, false);
+                    } else if (m != null) {
+                        try {
+                            b.setBlockData(Bukkit.createBlockData(m, "[" + p.state() + "]"), false);
+                        } catch (IllegalArgumentException e) {
+                            b.setType(m, false); // a state this version doesn't have: still build the block
+                        }
                     }
                 }
             }
@@ -367,6 +374,7 @@ public final class SkyborneService implements Listener {
             end(false);
             return;
         }
+        aimSpiders(here);
         if (state == State.ACTIVE) {
             if (mobs.isEmpty() && !here.isEmpty()) {
                 if (wave < settings().waves()) {
@@ -388,6 +396,45 @@ public final class SkyborneService implements Listener {
             bar.progress((float) Math.max(0, Math.min(1, living.getHealth() / full)));
         }
         showBar(here);
+    }
+
+    /**
+     * Spiders lose interest in bright light: they won't pick a target and drop the one they
+     * have, and the fortress hangs in open sky. Keep the event's spiders (cave spiders too) on
+     * the nearest fighter so they attack day or night.
+     */
+    private void aimSpiders(List<Player> here) {
+        if (here.isEmpty()) {
+            return;
+        }
+        for (UUID id : mobs) {
+            if (!(Bukkit.getEntity(id) instanceof Spider spider)) {
+                continue;
+            }
+            LivingEntity target = spider.getTarget();
+            if (target instanceof Player p && p.isValid() && !p.isDead() && here.contains(p) && fighting(p)) {
+                continue;
+            }
+            Player nearest = null;
+            double best = Double.MAX_VALUE;
+            for (Player p : here) {
+                if (!fighting(p)) {
+                    continue;
+                }
+                double d = p.getLocation().distanceSquared(spider.getLocation());
+                if (d < best) {
+                    best = d;
+                    nearest = p;
+                }
+            }
+            if (nearest != null) {
+                spider.setTarget(nearest);
+            }
+        }
+    }
+
+    private static boolean fighting(Player p) {
+        return p.getGameMode() == GameMode.SURVIVAL || p.getGameMode() == GameMode.ADVENTURE;
     }
 
     private void spawnWave(int players) {

@@ -329,6 +329,52 @@ seasons:
     - { top: 3, cosmetic: "title:season-<n>-podium", bolts: 250 }
     - { top: 10, cosmetic: "badge:season-<n>-top10", bolts: 100 }
 
+# Citizens NPCs round the Trading Post's compass rose (Citizens is in the skyrealms plugin set).
+# The skyrealms profile sets the locations ("world, x, y, z, yaw, pitch"); an NPC without one
+# isn't spawned. Names and click hints are lang npc.<id>.name and npc.<id>.hint. Clicking
+# (either button) does the action:
+#   command:<command>   run a command as the player, e.g. "command:shop"
+#   server:<group>      join a server group through the proxy queue, e.g. server:hub
+# Skin: a Minecraft account name (looked up once by Citizens), or a fixed texture and
+# signature (from mineskin.org) so it never changes. Empty: a default skin.
+npcs:
+  island:
+    location: ""
+    action: "command:is"
+    skin: ""
+    skin-texture: ""
+    skin-signature: ""
+  shop:
+    location: ""
+    action: "command:shop"
+    skin: ""
+    skin-texture: ""
+    skin-signature: ""
+  realm:
+    location: ""
+    action: "command:realm"
+    skin: ""
+    skin-texture: ""
+    skin-signature: ""
+  expedition:
+    location: ""
+    action: "command:expedition"
+    skin: ""
+    skin-texture: ""
+    skin-signature: ""
+  route:
+    location: ""
+    action: "command:route"
+    skin: ""
+    skin-texture: ""
+    skin-signature: ""
+  hub:
+    location: ""
+    action: "server:hub"
+    skin: ""
+    skin-texture: ""
+    skin-signature: ""
+
 # The auction house (rapid-market): one more listing per `levels-per-listing` island levels,
 # up to `max-extra` (PLAN.md §4.2: it rises with island level, never with rank).
 market:

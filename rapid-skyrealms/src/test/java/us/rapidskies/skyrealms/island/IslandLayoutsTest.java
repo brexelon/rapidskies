@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.bukkit.Material;
 import org.junit.jupiter.api.Test;
 
@@ -48,8 +50,86 @@ class IslandLayoutsTest {
     }
 
     @Test
+    void islandsHangDeep() {
+        for (String id : IslandLayouts.IDS) {
+            int[] bounds = IslandLayouts.build(id).blueprint().bounds();
+            assertTrue(bounds[1] <= -9, id + ": the rock under it reaches y " + bounds[1]);
+            assertTrue(bounds[3] - bounds[0] <= 16 && bounds[5] - bounds[2] <= 16, id + ": fits well inside the island");
+        }
+    }
+
+    /** Drawn from a fixed seed: every paste (and every test run) is the same island. */
+    @Test
+    void sameIslandEveryTime() {
+        for (String id : IslandLayouts.IDS) {
+            assertEquals(List.copyOf(IslandLayouts.build(id).blueprint().blocks()),
+                    List.copyOf(IslandLayouts.build(id).blueprint().blocks()), id);
+        }
+    }
+
+    /**
+     * Blocks are pasted without physics, so anything that needs support has to have it, or the
+     * first block update next to it drops it into the void or pops it off.
+     */
+    @Test
+    void everythingIsHeldUp() {
+        Set<Material> soil = Set.of(Material.GRASS_BLOCK, Material.DIRT);
+        Set<Material> plants = Set.of(Material.SHORT_GRASS, Material.FERN, Material.DANDELION, Material.POPPY,
+                Material.OXEYE_DAISY, Material.AZURE_BLUET, Material.CORNFLOWER, Material.ALLIUM,
+                Material.LILY_OF_THE_VALLEY, Material.PINK_PETALS);
+        // Material.isSolid() needs a server (Registry), so: air and everything the layouts hang or plant.
+        Set<Material> flimsy = new java.util.HashSet<>(plants);
+        flimsy.addAll(Set.of(Material.AIR, Material.TALL_GRASS, Material.LARGE_FERN, Material.DEAD_BUSH,
+                Material.HANGING_ROOTS, Material.GLOW_LICHEN, Material.VINE, Material.MOSS_CARPET));
+        java.util.function.Predicate<Material> solid = m -> !flimsy.contains(m);
+        for (String id : IslandLayouts.IDS) {
+            Blueprint b = IslandLayouts.build(id).blueprint();
+            for (Blueprint.Block blk : b.blocks()) {
+                Material m = blk.material();
+                Material below = b.material(blk.x(), blk.y() - 1, blk.z());
+                Material above = b.material(blk.x(), blk.y() + 1, blk.z());
+                String where = id + " " + blk;
+                if (IslandLayouts.FALLING.contains(m)) {
+                    assertTrue(solid.test(below), where + " rests on " + below);
+                } else if (plants.contains(m)) {
+                    assertTrue(soil.contains(below), where + " grows on " + below);
+                } else if (m == Material.DEAD_BUSH) {
+                    assertEquals(Material.SAND, below, where);
+                } else if (m == Material.TALL_GRASS || m == Material.LARGE_FERN) {
+                    boolean lower = blk.state().equals("[half=lower]");
+                    assertTrue(lower ? soil.contains(below) && above == m : below == m, where + ": both halves");
+                } else if (m == Material.HANGING_ROOTS || m == Material.GLOW_LICHEN) {
+                    assertTrue(solid.test(above), where + " hangs from " + above);
+                } else if (m == Material.MOSS_CARPET) {
+                    assertTrue(solid.test(below), where);
+                }
+            }
+        }
+    }
+
+    @Test
     void unknownLayoutsAreRefused() {
         assertThrows(IllegalArgumentException.class, () -> IslandLayouts.build("castle"));
+    }
+
+    /** SuperiorSkyblock2 gunzips every schematic file before a parser reads it; ours must survive that. */
+    @Test
+    void markersReadTheWaySuperiorSkyblockReadsThem() throws Exception {
+        byte[] file = IslandSchematics.marker("cherry");
+        try (java.io.DataInputStream in = new java.io.DataInputStream(
+                new java.util.zip.GZIPInputStream(new java.io.ByteArrayInputStream(file)))) {
+            assertEquals("cherry", IslandSchematics.markerId(in.readNBytes(64)));
+        }
+        assertEquals("cherry", IslandSchematics.markerId(IslandSchematics.unpack(file)));
+        // The plain-text markers of the first deploy are still recognised (and rewritten).
+        assertEquals("cherry", IslandSchematics.markerId(IslandSchematics.unpack(
+                (IslandSchematics.MAGIC + "cherry\n").getBytes(StandardCharsets.US_ASCII))));
+        // A real (gzipped NBT) schematic isn't ours.
+        java.io.ByteArrayOutputStream nbt = new java.io.ByteArrayOutputStream();
+        try (java.util.zip.GZIPOutputStream gz = new java.util.zip.GZIPOutputStream(nbt)) {
+            gz.write(new byte[] {10, 0, 0, 3, 0, 5});
+        }
+        assertNull(IslandSchematics.markerId(IslandSchematics.unpack(nbt.toByteArray())));
     }
 
     @Test

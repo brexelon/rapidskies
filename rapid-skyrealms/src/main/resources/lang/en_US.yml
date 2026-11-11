@@ -14,9 +14,12 @@ errors:
   not-manager: "<prefix><error>Only your island's leader or admins can do that.</error>"
 
 admin:
-  usage: "<prefix><text>Usage: <accent>/skyrealms reload</accent></text>"
-  reloaded: "<prefix><success>rapid-skyrealms config and messages reloaded.</success> <muted>(Island layouts change on a restart.)</muted>"
+  usage: "<prefix><text>Usage: <accent>/skyrealms reload</accent> or <accent>/skyrealms here</accent></text>"
+  reloaded: "<prefix><success>rapid-skyrealms config and messages reloaded, NPCs rebuilt.</success> <muted>(Island layouts change on a restart.)</muted>"
   reload-failed: "<prefix><error>The new config is invalid; the old one is still running. See the console.</error>"
+  # /skyrealms here. <point> is an NPC location (config npcs.<id>.location); click it to copy.
+  here: "<prefix><text>Here:</text> <accent><point></accent> <muted>(NPC location)</muted>"
+  copy-hint: "<muted>Click to copy"
 
 # The sidebar (PlaceholderAPI, through TAB).
 placeholder:
@@ -25,6 +28,29 @@ placeholder:
   expedition-arriving: "<accent>arriving <minutes>m</accent>"
   expedition-here: "<success>here! <minutes>m</success>"
   expedition-leaving: "<muted>drifting away</muted>"
+
+# NPCs round the Trading Post's compass rose (config npcs). The label over each one is
+# npc.label with its name and hint.
+npc:
+  label: "<name>\n<hint>"
+  island:
+    name: "<primary><bold>Island Keeper</bold></primary>"
+    hint: "<accent>Click to start or visit your island</accent>"
+  shop:
+    name: "<primary><bold>Merchant</bold></primary>"
+    hint: "<accent>Click to buy and sell</accent>"
+  realm:
+    name: "<primary><bold>Realm Warden</bold></primary>"
+    hint: "<accent>Click for your Realm Tier and goals</accent>"
+  expedition:
+    name: "<primary><bold>Expedition Captain</bold></primary>"
+    hint: "<accent>Click to see the next Expedition</accent>"
+  route:
+    name: "<primary><bold>Route Master</bold></primary>"
+    hint: "<accent>Click to trade with other islands</accent>"
+  hub:
+    name: "<primary><bold>Lobby</bold></primary>"
+    hint: "<accent>Click to go back to the hub</accent>"
 
 # Realm Tiers (/realm).
 realm:
@@ -126,19 +152,24 @@ expedition:
   theme:
     crystal-caverns:
       name: "<#C58CF2><bold>Crystal Caverns</bold></#C58CF2>"
-      about: "<muted>Amethyst spires and ore outcrops.</muted>"
+      about: "<muted>An open geode, amethyst spires and ore in the crags.</muted>"
+      heart: "<#C58CF2><bold>Geode Heart</bold></#C58CF2>"
     sunken-ship:
       name: "<#5FC9C9><bold>Sunken Ship</bold></#5FC9C9>"
-      about: "<muted>A beached wreck with cargo in the hold.</muted>"
+      about: "<muted>A beached wreck with cargo in the hold, tide pools and a reef.</muted>"
+      heart: "<#FFC94D><bold>Captain's Chest</bold></#FFC94D>"
     overgrown-ruins:
       name: "<#7CB342><bold>Overgrown Ruins</bold></#7CB342>"
       about: "<muted>Mossy walls, wild melons and bee nests.</muted>"
+      heart: "<#8BD45A><bold>Ancient Altar</bold></#8BD45A>"
   warning: "<prefix><text>An Expedition, the</text> <theme><text>, drifts into SkyRealms in <accent><minutes> minutes</accent>!</text> <muted>Join in with <click:run_command:'/play skyrealms'><hover:show_text:'<muted>Click to go to SkyRealms</muted>'><accent>/play skyrealms</accent></hover></click>.</muted>"
   arrived: "<prefix><text>The</text> <theme> <text>has arrived! It stays <accent><minutes> minutes</accent>.</text> <click:run_command:'/expedition go'><hover:show_text:'<muted>Click to go there</muted>'><accent>[Go: /expedition go]</accent></hover></click>"
-  welcome: "<prefix><text>Welcome to the</text> <theme><text>! Mine its resource blocks; what they give goes straight to you. Strike the heart in the middle together: its loot is shared by everyone's hits.</text>"
+  welcome: "<prefix><text>Welcome to the</text> <theme><text>! Mine its resource blocks; what they give goes straight to you. Strike the glowing heart together (the path from here leads to it): its loot is shared by everyone's hits.</text>"
   bar: "<theme> <dark>|</dark> <text><time></text> <dark>|</dark> <muted><nodes> left</muted> <dark>|</dark> <heart>"
   bar-heart: "<accent>Heart <hits>/<needed></accent>"
   bar-heart-broken: "<success>Heart broken</success>"
+  # Floats over the heart. <heart> is the theme's heart name.
+  heart-label: "<heart><newline><muted>Strike it together:</muted> <accent><hits>/<needed></accent>"
   points: "<success>+<gained> points</success> <muted>(<total> this Expedition)</muted>"
   strike: "<accent>Heart struck!</accent> <muted>Your hits: <mine> · Together: <hits>/<needed></muted>"
   heart-share: "<prefix><success>The heart broke! You struck it <hits> of <total> times; your share of its loot is in your inventory.</success>"

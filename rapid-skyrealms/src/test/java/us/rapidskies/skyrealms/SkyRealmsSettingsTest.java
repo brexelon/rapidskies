@@ -106,6 +106,53 @@ class SkyRealmsSettingsTest {
     }
 
     @Test
+    void bundledNpcsWaitForTheProfile() throws IOException {
+        SkyRealmsSettings s = bundled();
+        assertEquals(List.of("island", "shop", "realm", "expedition", "route", "hub"),
+                s.npcs().stream().map(SkyRealmsSettings.Npc::id).toList());
+        assertTrue(s.npcs().stream().allMatch(n -> n.location().isEmpty()), "the skyrealms profile places them");
+        assertEquals(new SkyRealmsSettings.NpcAction(SkyRealmsSettings.NpcAction.Kind.SERVER, "hub"),
+                s.npcs().getLast().action());
+    }
+
+    @Test
+    void npcActionsParse() {
+        assertEquals(new SkyRealmsSettings.NpcAction(SkyRealmsSettings.NpcAction.Kind.COMMAND, "is"),
+                SkyRealmsSettings.NpcAction.parse("command: /is"));
+        assertEquals(new SkyRealmsSettings.NpcAction(SkyRealmsSettings.NpcAction.Kind.SERVER, "hub"),
+                SkyRealmsSettings.NpcAction.parse(" Server:hub "));
+        assertThrows(IllegalArgumentException.class, () -> SkyRealmsSettings.NpcAction.parse("shop"));
+        assertThrows(IllegalArgumentException.class, () -> SkyRealmsSettings.NpcAction.parse("command:"));
+        assertThrows(IllegalArgumentException.class, () -> SkyRealmsSettings.NpcAction.parse("teleport:spawn"));
+    }
+
+    @Test
+    void npcsParseFromTheProfileFormat() throws IOException {
+        Map<String, Object> root;
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream("config.yml")) {
+            root = new LinkedHashMap<>(ConfigView.load(in).asMap());
+        }
+        root.put("npcs", Map.of(
+                "shop", Map.of("location", "minecraft:overworld, 22.5, 150, -25.5, -124, 0", "action", "command:shop",
+                        "skin", "Notch"),
+                "Bad Id", Map.of("action", "command:shop"),
+                "odd", Map.of("action", "fly", "skin-texture", "abc")));
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                () -> SkyRealmsSettings.from(ConfigView.of(root)));
+        assertTrue(e.getMessage().contains("npcs.Bad Id"), e.getMessage());
+        assertTrue(e.getMessage().contains("npcs.odd.action"), e.getMessage());
+
+        root.put("npcs", Map.of("shop", Map.of("location", "minecraft:overworld, 22.5, 150, -25.5, -124, 0",
+                "action", "command:shop", "skin", "Notch")));
+        SkyRealmsSettings.Npc npc = SkyRealmsSettings.from(ConfigView.of(root)).npcs().getFirst();
+        assertEquals("minecraft:overworld", npc.location().orElseThrow().world());
+        assertEquals(-25.5, npc.location().orElseThrow().z());
+        assertEquals(-124f, npc.location().orElseThrow().yaw());
+        assertEquals("Notch", npc.skin().name());
+        assertFalse(npc.skin().fixed());
+    }
+
+    @Test
     void routeNumbers() {
         assertEquals(2000, Commands.number("2,000"));
         assertEquals(2500, Commands.number("2.5k"));

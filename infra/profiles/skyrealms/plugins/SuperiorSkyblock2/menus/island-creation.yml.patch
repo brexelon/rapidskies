@@ -15,8 +15,8 @@ items:
       type: OAK_SAPLING
       name: '&6&lMeadow'
       lore:
-        - '&7The classic: a round grass island'
-        - '&7with an oak tree and a sand patch.'
+        - '&7The classic: a grass island with'
+        - '&7an oak, wildflowers and a sand patch.'
         - '&7'
         - '&eClick to start here.'
     no-access:
@@ -43,8 +43,8 @@ items:
       type: JUNGLE_SAPLING
       name: '&e&lAtoll'
       lore:
-        - '&7A sand rim round a grass middle,'
-        - '&7with a tall jungle tree.'
+        - '&7A sand beach round a grass middle,'
+        - '&7under a tall, vine-hung jungle tree.'
         - '&7'
         - '&eClick to start here.'
     no-access:

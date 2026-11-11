@@ -175,6 +175,9 @@ plugin_sets:
   skyrealms:
     - "SuperiorSkyblock2-*.jar"
     - "dist/rapid-skyrealms.jar"
+    # The NPCs round the Trading Post's compass rose (rapid-skyrealms builds them from its
+    # config; Citizens never saves them).
+    - "Citizens-*.jar"
 
   # Horizons (plan §4.1, §5.2): claims and towns, the gamemode itself, and chest shops.
   # rapid-claims must be on every Horizons server: without it the Heartland is unprotected.

@@ -36,7 +36,8 @@ import us.rapidskies.skyrealms.SkyRealmsSettings.ItemAmount;
  *
  * <p>SuperiorSkyblock2 only knows schematics it reads from files in its {@code schematics/}
  * folder, and asks parsers registered through its API before its own. So for each layout this
- * writes a small marker file ({@code meadow.schematic}, holding {@value #MAGIC} and the id) and
+ * writes a small marker file ({@code meadow.schematic}: {@value #MAGIC} and the id, gzipped like
+ * every SuperiorSkyblock2 schematic, since it unzips each file before any parser sees it) and
  * registers a parser that turns those markers into a {@link LayoutSchematic}. Both happen in
  * rapid-skyrealms' {@code onLoad}: SuperiorSkyblock2 (a {@code depend}) has loaded by then, and
  * reads its schematics during its own {@code onEnable}, which comes after every plugin's onLoad.
@@ -62,20 +63,21 @@ public final class IslandSchematics {
             Files.createDirectories(dir);
             for (String id : layouts) {
                 Path file = dir.resolve(id + ".schematic");
-                String marker = MAGIC + id + "\n";
+                byte[] marker = marker(id);
                 if (Files.exists(file)) {
-                    String head = new String(Files.readAllBytes(file), 0,
-                            (int) Math.min(Files.size(file), 64), StandardCharsets.ISO_8859_1);
-                    if (!head.startsWith(MAGIC)) {
+                    byte[] existing = Files.readAllBytes(file);
+                    if (java.util.Arrays.equals(existing, marker)) {
+                        continue;
+                    }
+                    // A marker of ours in an older form (plain text, or another layout id) is
+                    // rewritten; anything else is a real schematic and wins.
+                    if (markerId(unpack(existing)) == null) {
                         log.warn("{} isn't rapid-skyrealms' marker (an in-game schematic?); the '{}' layout is "
                                 + "skipped while it's there", file, id);
                         continue;
                     }
-                    if (head.equals(marker)) {
-                        continue;
-                    }
                 }
-                Files.writeString(file, marker, StandardCharsets.US_ASCII);
+                Files.write(file, marker);
             }
         } catch (IOException e) {
             log.error("Couldn't write the island layout markers to {}: {}", dir, e.getMessage());
@@ -86,7 +88,33 @@ public final class IslandSchematics {
         log.info("Island layouts {} registered with SuperiorSkyblock2", layouts);
     }
 
-    /** Reads a marker file's layout id, or null if it's not a marker. */
+    /**
+     * A marker file's bytes: {@value #MAGIC} and the id, gzipped. SuperiorSkyblock2 opens every
+     * schematic file as GZIP before handing it to any parser, so a plain-text marker fails
+     * before the parser is asked.
+     */
+    static byte[] marker(String id) throws IOException {
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        try (java.util.zip.GZIPOutputStream gz = new java.util.zip.GZIPOutputStream(out)) {
+            gz.write((MAGIC + id + "\n").getBytes(StandardCharsets.US_ASCII));
+        }
+        return out.toByteArray();
+    }
+
+    /** The first bytes of a file's content: unzipped if it's gzip, as it is otherwise. */
+    static byte[] unpack(byte[] file) {
+        if (file.length >= 2 && (file[0] & 0xFF) == 0x1f && (file[1] & 0xFF) == 0x8b) {
+            try (java.util.zip.GZIPInputStream in = new java.util.zip.GZIPInputStream(
+                    new java.io.ByteArrayInputStream(file))) {
+                return in.readNBytes(64);
+            } catch (IOException e) {
+                return new byte[0];
+            }
+        }
+        return java.util.Arrays.copyOf(file, Math.min(file.length, 64));
+    }
+
+    /** Reads a marker's (unzipped) layout id, or null if it's not a marker. */
     static String markerId(byte[] head) {
         String s = new String(head, StandardCharsets.ISO_8859_1);
         if (!s.startsWith(MAGIC)) {

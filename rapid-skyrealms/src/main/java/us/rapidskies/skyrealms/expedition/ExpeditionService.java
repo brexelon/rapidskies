@@ -22,6 +22,7 @@ import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -105,6 +106,7 @@ public final class ExpeditionService implements Listener {
         int needed;
         boolean heartBroken;
         boolean warnedLeaving;
+        HeartMarker marker;
 
         Run(Theme theme, long seed, World world, int ox, int oy, int oz, BossBar bar) {
             this.theme = theme;
@@ -123,6 +125,18 @@ public final class ExpeditionService implements Listener {
 
         Location pad() {
             return new Location(world, ox + layout.padX(), oy + layout.padY(), oz + layout.padZ(), layout.padYaw(), 0);
+        }
+
+        int struck() {
+            return hits.values().stream().mapToInt(Integer::intValue).sum();
+        }
+
+        /** Takes the heart's glow and label away (it broke, or the Expedition is leaving). */
+        void unmark() {
+            if (marker != null) {
+                marker.remove();
+                marker = null;
+            }
         }
 
         String txnBase() {
@@ -166,6 +180,7 @@ public final class ExpeditionService implements Listener {
                 payOut(run);
             }
             sendAway(run.world);
+            run.unmark();
             for (Blueprint.Block b : run.layout.blueprint().blocks()) {
                 run.world.getBlockAt(run.ox + b.x(), run.oy + b.y(), run.oz + b.z()).setType(Material.AIR, false);
             }
@@ -324,6 +339,9 @@ public final class ExpeditionService implements Listener {
         r.needed = Shares.hitsNeeded(cfg().hitsPerPlayer(), cfg().minHits(), r.world.getPlayers().size());
         phase = Phase.ACTIVE;
         rotation++;
+        r.marker = new HeartMarker(plugin, r.world, r.ox + r.layout.heartX(), r.oy + r.layout.heartY(),
+                r.oz + r.layout.heartZ(), r.theme.heart(), Color.fromRGB(r.theme.glow()));
+        r.marker.show(heartLabel(r));
         plugin.announcer().network(plugin.lang().get("expedition.arrived",
                 Placeholder.component("theme", themeName(r.theme)),
                 Placeholder.unparsed("minutes", Integer.toString(cfg().durationMinutes()))));
@@ -339,7 +357,11 @@ public final class ExpeditionService implements Listener {
         List<Player> here = r.world.getPlayers();
         r.needed = Math.max(r.needed, Shares.hitsNeeded(cfg().hitsPerPlayer(), cfg().minHits(), here.size()));
         long left = Math.max(0, Duration.between(now, r.endsAt).getSeconds());
-        int struck = r.hits.values().stream().mapToInt(Integer::intValue).sum();
+        int struck = r.struck();
+        if (r.marker != null) {
+            r.marker.show(heartLabel(r));
+            r.marker.sparkle();
+        }
         Component heart = r.heartBroken ? plugin.lang().get("expedition.bar-heart-broken")
                 : plugin.lang().get("expedition.bar-heart", Placeholder.unparsed("hits", Integer.toString(struck)),
                 Placeholder.unparsed("needed", Integer.toString(r.needed)));
@@ -429,16 +451,20 @@ public final class ExpeditionService implements Listener {
 
     private void strike(Run r, Player player, Block heart) {
         int mine = r.hits.merge(player.getUniqueId(), 1, Integer::sum);
-        int struck = r.hits.values().stream().mapToInt(Integer::intValue).sum();
+        int struck = r.struck();
         heart.getWorld().spawnParticle(Particle.CRIT, heart.getLocation().add(0.5, 0.8, 0.5), 12, 0.3, 0.3, 0.3, 0.1);
         heart.getWorld().playSound(heart.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_HIT, 1f, 0.6f + 0.8f * struck / r.needed);
         player.sendActionBar(plugin.lang().get("expedition.strike", Placeholder.unparsed("mine", Integer.toString(mine)),
                 Placeholder.unparsed("hits", Integer.toString(struck)), Placeholder.unparsed("needed",
                         Integer.toString(r.needed))));
         if (struck < r.needed) {
+            if (r.marker != null) {
+                r.marker.show(heartLabel(r));
+            }
             return;
         }
         r.heartBroken = true;
+        r.unmark();
         heart.setType(Material.AIR, false);
         heart.getWorld().spawnParticle(Particle.EXPLOSION, heart.getLocation().add(0.5, 0.5, 0.5), 3);
         heart.getWorld().playSound(heart.getLocation(), Sound.BLOCK_AMETHYST_CLUSTER_BREAK, 1.5f, 0.7f);
@@ -473,6 +499,7 @@ public final class ExpeditionService implements Listener {
         payOut(r);
         sendAway(r.world);
         hideBar(r);
+        r.unmark();
         List<Blueprint.Block> blocks = new ArrayList<>(r.layout.blueprint().blocks());
         blocks.sort(Comparator.comparingInt(Blueprint.Block::y).reversed());
         clear(r, blocks, 0, () -> {
@@ -707,6 +734,14 @@ public final class ExpeditionService implements Listener {
 
     public Component themeName(Theme theme) {
         return plugin.lang().get("expedition.theme." + theme.id() + ".name");
+    }
+
+    /** The label over the heart: its name and the strikes so far. */
+    private Component heartLabel(Run r) {
+        return plugin.lang().get("expedition.heart-label",
+                Placeholder.component("heart", plugin.lang().get("expedition.theme." + r.theme.id() + ".heart")),
+                Placeholder.unparsed("hits", Integer.toString(r.struck())),
+                Placeholder.unparsed("needed", Integer.toString(r.needed)));
     }
 
     /** The status line ({@code /expedition}, the "not here" reply). */

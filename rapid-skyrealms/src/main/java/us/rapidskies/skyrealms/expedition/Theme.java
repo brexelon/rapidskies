@@ -13,18 +13,20 @@ import org.bukkit.Material;
  * {@link #nodeMaterials()}, whose loot and points come from the config.
  */
 public enum Theme {
-    CRYSTAL_CAVERNS(Material.BUDDING_AMETHYST, Set.of(Material.IRON_ORE, Material.GOLD_ORE, Material.LAPIS_ORE,
+    CRYSTAL_CAVERNS(Material.BUDDING_AMETHYST, 0xC58CF2, Set.of(Material.IRON_ORE, Material.GOLD_ORE, Material.LAPIS_ORE,
             Material.REDSTONE_ORE, Material.DIAMOND_ORE, Material.EMERALD_ORE, Material.AMETHYST_BLOCK)),
-    SUNKEN_SHIP(Material.CHEST, Set.of(Material.BARREL, Material.PRISMARINE, Material.SEA_LANTERN,
+    SUNKEN_SHIP(Material.CHEST, 0xFFC94D, Set.of(Material.BARREL, Material.PRISMARINE, Material.SEA_LANTERN,
             Material.WET_SPONGE, Material.DRIED_KELP_BLOCK)),
-    OVERGROWN_RUINS(Material.CHISELED_STONE_BRICKS, Set.of(Material.MOSSY_COBBLESTONE,
+    OVERGROWN_RUINS(Material.CHISELED_STONE_BRICKS, 0x8BD45A, Set.of(Material.MOSSY_COBBLESTONE,
             Material.CRACKED_STONE_BRICKS, Material.MELON, Material.PUMPKIN, Material.BEE_NEST, Material.MOSS_BLOCK));
 
     private final Material heart;
+    private final int glow;
     private final Set<Material> nodes;
 
-    Theme(Material heart, Set<Material> nodes) {
+    Theme(Material heart, int glow, Set<Material> nodes) {
         this.heart = heart;
+        this.glow = glow;
         this.nodes = nodes;
     }
 
@@ -36,6 +38,11 @@ public enum Theme {
     /** The block of the heart, which takes hits instead of breaking. */
     public Material heart() {
         return heart;
+    }
+
+    /** The colour (0xRRGGBB) the heart's outline glows in. */
+    public int glow() {
+        return glow;
     }
 
     /** The resource blocks the layout places. */

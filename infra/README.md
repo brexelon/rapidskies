@@ -301,7 +301,7 @@ pre-generated vanilla terrain is never regenerated.
 ## SkyRealms (SuperiorSkyblock2, rapid-skyrealms)
 
 skyrealms-1 gets the `skyrealms` plugin set on top of `paper-base` and `survival`:
-SuperiorSkyblock2 and `rapid-skyrealms`.
+SuperiorSkyblock2, `rapid-skyrealms` and Citizens.
 
 Before the first start, create SuperiorSkyblock2's schema like the others and add its
 credentials to `secrets.env` (`SS2_DB_NAME`, `SS2_DB_USER`, `SS2_DB_PASSWORD`; see
@@ -314,7 +314,9 @@ default to op, so everyone gets `superior.island.*` on skyrealms (minus its biom
   value, in its own world `skyrealms_islands`; its spawn is the Trading Post (same point as
   rapid-core's). The skyrealms profile patches its `config.yml`, the island creation menu, the
   upgrades (`modules/upgrades/config.yml` and `menus/upgrades.yml`, re-priced in Coins and
-  without the generator upgrade) and turns its missions off. Disbanding clears inventories, so
+  without the generator upgrade) and turns its missions off. `lang/en-US.yml` swaps its
+  per-message tags ("Island |", "Error |", ...) for the RAPIDSKIES prefix, and language
+  auto-detection is off so every player gets that file. Disbanding clears inventories, so
   nobody farms fresh starter chests.
 - **rapid-skyrealms** registers the starter islands (`meadow`, `cherry`, `atoll`) with
   SuperiorSkyblock2 while loading: they're built in code, and it writes a small marker file per
@@ -324,14 +326,22 @@ default to op, so everyone gets `superior.island.*` on skyrealms (minus its biom
   biome), the shop (`/shop`, `/sell`), Expeditions (`/expedition`) in the void world
   `rapidskies:expeditions` that rapid-core creates (skyrealms rapid-core profile), Trade Routes
   (`/route`) and seasons (`/season`). Its tables are the `skyrealms` migration module.
-  `/skyrealms reload` re-reads its config and messages (layouts change on a restart).
+  `/skyrealms reload` re-reads its config and messages and rebuilds the NPCs (layouts change
+  on a restart).
+- Six Citizens NPCs stand in a ring round the Trading Post's compass rose, inside the oak
+  pillars: Island Keeper (`/is`), Merchant (`/shop`), Realm Warden (`/realm`), Expedition
+  Captain (`/expedition`), Route Master (`/route`) and Lobby (to the hub). rapid-skyrealms
+  builds them from its config on every start (never saved by Citizens); their positions are in
+  `profiles/skyrealms/plugins/rapid-skyrealms/config.yml.patch`. `/skyrealms here` prints a
+  position to paste there.
 - Deaths respawn on the player's island (SuperiorSkyblock2's `player-respawn`); rapid-core's
   `spawn.on-death` is off on skyrealms.
 - An Expedition is journalled in `plugins/rapid-skyrealms/expedition-journal.txt` while it's
   up, so a crash never leaves one floating: the next start removes it.
 - The SkyRealms sidebar shows the island level (`%superior_island_level%`), the realm, the
   season place and the next Expedition (`%rapidskyrealms_tier%`, `_season_rank%`,
-  `_expedition%`).
+  `_expedition%`). It's at TAB's 15-line limit: a new line means dropping one, or the
+  `rapidskies.us` footer is cut off.
 
 ## Hub (rapid-hub)
 

@@ -43,7 +43,8 @@ bossbar:
 # Lines use TAB's own color codes (&#RRGGBB, &7, &l) so the legacy-colored values from
 # rapid-core (%rapid_rank_name% carries the plus color) mix in cleanly. There's no right
 # column, and nothing relies on hiding the score numbers, so 1.20–1.20.2 (red numbers)
-# reads the same as 26.3. At most 15 lines.
+# reads the same as 26.3. At most 15 lines: TAB drops anything past the 15th, which is the
+# rapidskies.us footer, so count before adding one (smp and skyrealms are at 15).
 # Placeholders: TAB's own (%server%, %player%, %online% = network, %serveronline%, %world%,
 # %ping%) and, through TAB-Bridge, rapid-core's %rapid_rank_name%, %rapid_bolts%,
 # %rapid_tailwind_status%, %rapid_balance_status% (Coins/Crowns), %rapid_world% (the world's
@@ -93,7 +94,7 @@ scoreboard:
         - "&7Realm: %rapidskyrealms_tier%"
         - "&7Season: &f%rapidskyrealms_season_rank%"
         - "&7Expedition: %rapidskyrealms_expedition%"
-        - "&7Players here: &f%serveronline%"
+        # No "Players here" line: it would push the footer past 15 (the tab list shows who's on).
         - ""
         - "&#FFD800rapidskies.us"
     smp:

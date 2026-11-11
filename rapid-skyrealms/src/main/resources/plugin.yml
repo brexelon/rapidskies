@@ -9,8 +9,8 @@ website: https://rapidskies.us
 # while loading, before SuperiorSkyblock2 reads its schematics.
 depend: [rapid-core, SuperiorSkyblock2]
 # rapid-market: island level adds auction house listings. PlaceholderAPI: the sidebar's tier,
-# Expedition and season lines.
-softdepend: [rapid-market, PlaceholderAPI]
+# Expedition and season lines. Citizens: the NPCs at the Trading Post (without it there are none).
+softdepend: [rapid-market, PlaceholderAPI, Citizens]
 
 permissions:
   rapid.command.realm:
@@ -32,7 +32,7 @@ permissions:
     description: See this season's island leaderboard.
     default: true
   rapid.skyrealms.admin:
-    description: /skyrealms reload, /realm set and /route admin end.
+    description: /skyrealms reload and here, /realm set and /route admin end.
     default: op
   rapid.skyrealms.expedition.admin:
     description: /expedition start and stop; build in the Expedition world while in creative.

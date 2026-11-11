@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.random.RandomGenerator;
 import org.bukkit.Material;
 import us.rapidskies.common.config.ConfigView;
+import us.rapidskies.core.world.SpawnPoint;
 import us.rapidskies.skyrealms.expedition.Theme;
 import us.rapidskies.skyrealms.island.IslandLayouts;
 import us.rapidskies.skyrealms.tier.TierGoal;
@@ -20,7 +21,8 @@ import us.rapidskies.skyrealms.tier.TierGoal;
  * at once, and a bad config never half-loads ({@link #from} throws instead).
  */
 public record SkyRealmsSettings(Islands islands, List<Tier> tiers, int manageRoleWeight, Shop shop,
-                                Expeditions expeditions, Routes routes, Seasons seasons, Market market) {
+                                Expeditions expeditions, Routes routes, Seasons seasons, Market market,
+                                List<Npc> npcs) {
 
     /** {@code <material> [x<n>|x<min>-<max>]}: an item and how many (a range is rolled). */
     public record ItemAmount(Material material, int min, int max) {
@@ -146,6 +148,56 @@ public record SkyRealmsSettings(Islands islands, List<Tier> tiers, int manageRol
     }
 
     public record Market(int levelsPerListing, int maxExtra) {
+    }
+
+    /**
+     * A Citizens NPC round the Trading Post's compass rose. Its name and click hint are lang
+     * {@code npc.<id>.name} and {@code npc.<id>.hint}; without a location it isn't spawned.
+     */
+    public record Npc(String id, Optional<SpawnPoint> location, NpcAction action, Skin skin) {
+    }
+
+    /** What clicking an NPC does: run a command as the player, or join a server group. */
+    public record NpcAction(Kind kind, String value) {
+
+        public enum Kind {
+            /** Run a command as the player ({@code command:shop}, no slash). */
+            COMMAND,
+            /** Join a server group through the proxy queue ({@code server:hub}). */
+            SERVER
+        }
+
+        /** {@code command:<command>} or {@code server:<group>}. */
+        public static NpcAction parse(String text) {
+            String t = text.trim();
+            int colon = t.indexOf(':');
+            if (colon < 0) {
+                throw new IllegalArgumentException("expected command:<command> or server:<group>, got '" + text + "'");
+            }
+            String kind = t.substring(0, colon).trim().toLowerCase(Locale.ROOT);
+            String value = t.substring(colon + 1).trim();
+            if (value.startsWith("/")) {
+                value = value.substring(1).trim();
+            }
+            Kind k = switch (kind) {
+                case "command" -> Kind.COMMAND;
+                case "server" -> Kind.SERVER;
+                default -> throw new IllegalArgumentException(
+                        "expected command:<command> or server:<group>, got '" + text + "'");
+            };
+            if (value.isEmpty()) {
+                throw new IllegalArgumentException("'" + text + "' needs a value after the colon");
+            }
+            return new NpcAction(k, value);
+        }
+    }
+
+    /** An NPC skin: by account name, or a fixed texture and signature. All empty: the default skin. */
+    public record Skin(String name, String texture, String signature) {
+
+        public boolean fixed() {
+            return !texture.isEmpty() && !signature.isEmpty();
+        }
     }
 
     /** The tier with {@code id}, if configured. */
@@ -389,12 +441,50 @@ public record SkyRealmsSettings(Islands islands, List<Tier> tiers, int manageRol
         Market market = new Market(positive(c, "market.levels-per-listing", 100, "", problems),
                 Math.max(0, c.integer("market.max-extra", 10)));
 
+        List<Npc> npcs = npcs(c, problems);
+
         if (!problems.isEmpty()) {
             throw new IllegalArgumentException("config.yml has " + problems.size() + " problem(s):\n  - "
                     + String.join("\n  - ", problems));
         }
         return new SkyRealmsSettings(islands, List.copyOf(tiers), roleWeight, shop, expeditions, routes, seasons,
-                market);
+                market, npcs);
+    }
+
+    private static List<Npc> npcs(ConfigView c, List<String> problems) {
+        List<Npc> out = new ArrayList<>();
+        ConfigView all = c.section("npcs");
+        for (String id : all.keys()) {
+            String where = "npcs." + id;
+            if (!id.matches("[a-z0-9_-]+")) {
+                problems.add(where + ": ids are lowercase letters, digits, - and _ (they name lang keys)");
+                continue;
+            }
+            ConfigView n = all.section(id);
+            Optional<SpawnPoint> location = Optional.empty();
+            String at = n.string("location", "").trim();
+            if (!at.isEmpty()) {
+                try {
+                    location = Optional.of(SpawnPoint.parse(at));
+                } catch (IllegalArgumentException e) {
+                    problems.add(where + ".location: " + e.getMessage());
+                }
+            }
+            NpcAction action;
+            try {
+                action = NpcAction.parse(n.string("action", ""));
+            } catch (IllegalArgumentException e) {
+                problems.add(where + ".action: " + e.getMessage());
+                continue;
+            }
+            Skin skin = new Skin(n.string("skin", "").trim(), n.string("skin-texture", "").trim(),
+                    n.string("skin-signature", "").trim());
+            if (skin.texture().isEmpty() != skin.signature().isEmpty()) {
+                problems.add(where + ": skin-texture and skin-signature go together");
+            }
+            out.add(new Npc(id, location, action, skin));
+        }
+        return List.copyOf(out);
     }
 
     /** {@code "<material> <buy> <sell>"}; selling may never pay more than buying costs. */

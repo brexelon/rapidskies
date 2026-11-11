@@ -27,7 +27,7 @@ import us.rapidskies.skyrealms.tier.TierGoal;
 class LangKeysTest {
 
     private static final Pattern KEY = Pattern.compile(
-            "\"((?:admin|errors|realm|shop|route|expedition|season|placeholder)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
+            "\"((?:admin|errors|npc|realm|shop|route|expedition|season|placeholder)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
 
     @Test
     void everyKeyInTheCodeIsInTheBundle() throws IOException {
@@ -55,12 +55,18 @@ class LangKeysTest {
         for (Theme theme : Theme.values()) {
             keys.add("expedition.theme." + theme.id() + ".name");
             keys.add("expedition.theme." + theme.id() + ".about");
+            keys.add("expedition.theme." + theme.id() + ".heart");
         }
         for (String reason : List.of("declined", "cancelled", "expired", "missed", "disbanded", "staff")) {
             keys.add("route.ended-" + reason);
         }
         for (String why : List.of("no-chest", "short", "unpaid")) {
             keys.add("route.missed-" + why);
+        }
+        assertTrue(bundled.npcs().size() >= 2, "the bundled config lists the Trading Post NPCs");
+        for (SkyRealmsSettings.Npc npc : bundled.npcs()) {
+            keys.add("npc." + npc.id() + ".name");
+            keys.add("npc." + npc.id() + ".hint");
         }
         Set<String> missing = new TreeSet<>();
         for (String key : keys) {

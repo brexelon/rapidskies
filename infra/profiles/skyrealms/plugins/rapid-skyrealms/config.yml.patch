@@ -1,0 +1,17 @@
+# rapid-skyrealms on the Trading Post (skyrealms_spawn, rapid-core's minecraft:overworld; the
+# rapid-core profile next door). Positions come from the map itself (its region files); fine-tune
+# in-game with /skyrealms here (prints a copyable line) and /skyrealms reload, then put the
+# final values here, or the next `rsdeploy.py apply` puts these back.
+
+# NPCs in a ring round the compass rose (centre 28.5 -29.5, floor y 149), about seven blocks
+# out: inside the twelve oak pillars, clear of the rose's wool border. Each faces the rose;
+# they turn to look at players nearby. Players spawn on the rose facing west, so the two in
+# front come first: the Island Keeper (/is) front right, the Merchant (/shop) front left. Then
+# the Realm Warden to the north and the Expedition Captain to the south; behind, the Route
+# Master and the way back to the lobby.
+npcs.island.location: "minecraft:overworld, 22.5, 150, -33.5, -56, 0"
+npcs.shop.location: "minecraft:overworld, 22.5, 150, -25.5, -124, 0"
+npcs.realm.location: "minecraft:overworld, 28.5, 150, -36.5, 0, 0"
+npcs.expedition.location: "minecraft:overworld, 28.5, 150, -22.5, 180, 0"
+npcs.route.location: "minecraft:overworld, 34.5, 150, -33.5, 56, 0"
+npcs.hub.location: "minecraft:overworld, 34.5, 150, -25.5, 124, 0"
