@@ -279,6 +279,11 @@ public final class ChapterService implements Listener {
                 Placeholder.component("reward", plugin.lang().get("chapter." + chapter.id() + ".reward")));
         Bukkit.getServer().sendMessage(plugin.lang().get("chapter.completed-broadcast",
                 Placeholder.unparsed("player", player.getName()), Placeholder.component("chapter", name)));
+        if (!chapter.cosmetic().isEmpty()) {
+            // The cosmetics engine (PLAN.md §6.1); the completion row above is the record.
+            plugin.core().cosmetics().grant(player.getUniqueId(), chapter.cosmetic(), "chapter:" + chapter.id());
+        }
+        plugin.core().levels().award(player, "chapter");
         if (chapter.bolts() > 0) {
             plugin.core().earning().award(player, chapter.bolts(), "chapter", 0,
                     "chapter:" + chapter.id() + ":" + player.getUniqueId()).thenAccept(paid -> {

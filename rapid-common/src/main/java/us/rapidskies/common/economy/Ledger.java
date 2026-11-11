@@ -280,6 +280,42 @@ public final class Ledger {
         return balance(c, player);
     }
 
+    /**
+     * Whether {@code txnId} was already used, inside the caller's transaction. For a credit
+     * that must happen at most once without failing the transaction around it (a level-up's
+     * Bolts in the same transaction as the XP): check, then {@link #creditIn}.
+     */
+    public boolean hasTxnIn(Connection c, String txnId) throws SQLException {
+        return txnExists(c, txnId);
+    }
+
+    /**
+     * Every entry whose transaction id is {@code prefix} or starts with {@code prefix + ":"},
+     * oldest first: what one store transaction delivered ({@code tbx-1:bolts},
+     * {@code tbx-1:bonus}), for chargebacks (PLAN.md §6.3).
+     */
+    public List<Entry> byTxnPrefix(String prefix) throws SQLException {
+        String like = prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + ":%";
+        return db.withConnection(c -> {
+            try (PreparedStatement ps = c.prepareStatement(
+                    "SELECT id, uuid, delta, reason, source, txn_id, created_at FROM " + ledgerTable
+                            + " WHERE " + scopeWhere() + "(txn_id = ? OR txn_id LIKE ?) ORDER BY id")) {
+                int i = bindScope(ps, 1);
+                ps.setString(i++, prefix);
+                ps.setString(i, like);
+                List<Entry> out = new ArrayList<>();
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        out.add(new Entry(rs.getLong(1), UUID.fromString(rs.getString(2)), rs.getLong(3),
+                                rs.getString(4), rs.getString(5), rs.getString(6),
+                                rs.getObject(7, LocalDateTime.class).toInstant(ZoneOffset.UTC)));
+                    }
+                }
+                return out;
+            }
+        });
+    }
+
     public CompletableFuture<Transfer> transferAsync(UUID from, UUID to, long amount, String reason, String source,
                                                      String txnId) {
         return db.async(() -> transfer(from, to, amount, reason, source, txnId));

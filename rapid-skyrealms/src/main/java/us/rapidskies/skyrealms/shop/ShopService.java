@@ -194,6 +194,10 @@ public final class ShopService {
                     Placeholder.unparsed("rate", Integer.toString(sale.ratePercent())));
             plugin.islands().of(player).ifPresent(i ->
                     plugin.tiers().record(i.id(), TierGoal.Type.SELL, null, sale.paid()));
+            if (player.isOnline()) {
+                // Quests and achievements (PLAN.md §7): Coins earned at the shop.
+                plugin.core().quests().record(player, "shop-sell", sale.paid());
+            }
         }, player, () -> {
             busy.remove(id);
             List<ItemStack> back = new ArrayList<>();

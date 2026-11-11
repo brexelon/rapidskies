@@ -268,6 +268,8 @@ public final class Market implements Listener {
 
     private void bought(Player p, MarketRepository.Bought.Done d) {
         Listing l = d.listing();
+        // Quests and achievements (PLAN.md §7).
+        RapidCore.get().quests().record(p, "ah-buy", 1);
         economy.changed(p.getUniqueId(), d.buyerBalance());
         economy.changed(l.seller(), d.sellerBalance());
         lang().send(p, "buy.bought", Placeholder.unparsed("item", l.itemName()),

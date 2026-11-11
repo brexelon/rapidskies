@@ -52,6 +52,13 @@ rewards:
     every-minutes: 15
     daily-cap: 20
 
+# Cosmetics (PLAN.md §6.1, §6.2). The catalog itself is cosmetics.yml inside the jar, the same
+# on every server.
+cosmetics:
+  # Walking trails here (particles at the feet of players wearing one). Projectile trails and
+  # everything else are unaffected.
+  trails: true
+
 # Staff mode (PLAN.md §9).
 staff:
   # /staff also vanishes you (if you may vanish); leaving staff mode reappears you.

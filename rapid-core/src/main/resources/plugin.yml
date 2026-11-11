@@ -38,3 +38,7 @@ permissions:
   rapid.world.build:
     description: Use /build (build mode) to change protected spawn worlds (the hub, the Trading Post, the Horizons spawn).
     default: op
+  # Phase 5 (PLAN.md §6, §7).
+  rapid.admin.progress:
+    description: Grant or take cosmetics and network XP (/progressadmin).
+    default: op

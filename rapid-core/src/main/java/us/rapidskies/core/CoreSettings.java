@@ -7,7 +7,7 @@ import us.rapidskies.common.economy.EconomyMode;
 
 /** rapid-core's non-connection settings. */
 public record CoreSettings(String serverId, String group, String advertiseAddress, Optional<EconomyMode> gamemode,
-                           Afk afk, Tailwind tailwind, Playtime playtime, Staff staff) {
+                           Afk afk, Tailwind tailwind, Playtime playtime, Staff staff, boolean trails) {
 
     /** AFK detection (PLAN.md §6.2 anti-farm, §5.3). */
     public record Afk(int idleSeconds) {
@@ -54,6 +54,7 @@ public record CoreSettings(String serverId, String group, String advertiseAddres
                         Math.max(1, c.integer("rewards.playtime.every-minutes", 15)),
                         Math.max(0, c.integer("rewards.playtime.daily-cap", 20))),
                 new Staff(c.bool("staff.vanish-on-staff-mode", true),
-                        Math.max(5, c.integer("staff.freeze-reminder-seconds", 15))));
+                        Math.max(5, c.integer("staff.freeze-reminder-seconds", 15))),
+                c.bool("cosmetics.trails", true));
     }
 }

@@ -31,6 +31,8 @@ public final class PlaytimeRewards {
     private final CoreSettings.Playtime settings;
     private final Lang lang;
     private BukkitTask task;
+    private java.util.function.Consumer<Player> onActiveMinute = p -> { };
+    private java.util.function.BiConsumer<UUID, Long> onInterval = (id, n) -> { };
 
     public PlaytimeRewards(Plugin plugin, EarnGuard guard, RedisBus redis, CoreSettings.Playtime settings, Lang lang) {
         this.plugin = plugin;
@@ -38,6 +40,19 @@ public final class PlaytimeRewards {
         this.redis = redis;
         this.settings = settings;
         this.lang = lang;
+    }
+
+    /** Called on the main thread for every player who earned an active minute (quests' play-minutes). */
+    public void onActiveMinute(java.util.function.Consumer<Player> hook) {
+        this.onActiveMinute = hook;
+    }
+
+    /**
+     * Called off the main thread with the day's interval number each time a player completes
+     * an interval of active play, whether or not the Bolts cap was reached (playtime XP).
+     */
+    public void onInterval(java.util.function.BiConsumer<UUID, Long> hook) {
+        this.onInterval = hook;
     }
 
     public void start() {
@@ -62,6 +77,13 @@ public final class PlaytimeRewards {
         if (earning.isEmpty()) {
             return;
         }
+        for (Player p : earning) {
+            try {
+                onActiveMinute.accept(p);
+            } catch (RuntimeException e) {
+                plugin.getSLF4JLogger().warn("Active-minute hook failed for {}: {}", p.getName(), e.toString());
+            }
+        }
         String day = LocalDate.now(ZoneOffset.UTC).toString();
         long period = settings.everyMinutes() * 60L;
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -76,6 +98,11 @@ public final class PlaytimeRewards {
                 }
                 long interval = completedInterval(active, TICK_SECONDS, period);
                 if (interval > 0) {
+                    try {
+                        onInterval.accept(id, interval);
+                    } catch (RuntimeException e) {
+                        plugin.getSLF4JLogger().warn("Playtime interval hook failed: {}", e.toString());
+                    }
                     guard.pay(id, settings.amount(), REASON, settings.dailyCap(),
                                     REASON + ":" + id + ":" + day + ":" + interval)
                             .thenAccept(paid -> {

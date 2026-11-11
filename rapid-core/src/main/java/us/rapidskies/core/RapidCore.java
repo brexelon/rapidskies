@@ -24,6 +24,18 @@ import us.rapidskies.common.redis.RedisBus;
 import us.rapidskies.core.afk.AfkTracker;
 import us.rapidskies.core.chat.ChatListener;
 import us.rapidskies.core.chat.ChatTags;
+import us.rapidskies.core.command.ProgressCommands;
+import us.rapidskies.core.cosmetic.Catalog;
+import us.rapidskies.core.cosmetic.CosmeticService;
+import us.rapidskies.core.cosmetic.ProfileCard;
+import us.rapidskies.core.cosmetic.Trails;
+import us.rapidskies.core.progress.LevelService;
+import us.rapidskies.core.progress.ProgressConfig;
+import us.rapidskies.core.quest.ObjectiveListener;
+import us.rapidskies.core.quest.QuestConfig;
+import us.rapidskies.core.quest.QuestService;
+import us.rapidskies.core.reward.DailyRewards;
+import us.rapidskies.core.shop.BoltShop;
 import us.rapidskies.core.command.BoltsCommand;
 import us.rapidskies.core.command.PlayerStatusCommands;
 import us.rapidskies.core.command.PlusCommand;
@@ -92,6 +104,16 @@ public final class RapidCore extends JavaPlugin {
     private WorldService worlds;
     private BuildMode buildMode;
     private boolean vaultRegistered;
+    private Catalog catalog;
+    private ProgressConfig progressConfig;
+    private QuestConfig questConfig;
+    private CosmeticService cosmetics;
+    private LevelService levels;
+    private QuestService quests;
+    private BoltShop boltShop;
+    private DailyRewards daily;
+    private Trails trails;
+    private ProgressCommands progress;
 
     /** The running instance, for plugins that depend on rapid-core. */
     public static RapidCore get() {
@@ -108,6 +130,10 @@ public final class RapidCore extends JavaPlugin {
             settings = CoreSettings.from(config, getServer().getPort(), log);
             worldConfig = worldConfig(config, log);
             lang = Lang.load(cl, Lang.DEFAULT_RESOURCE, data.resolve(Lang.DEFAULT_RESOURCE), log);
+            // Phase 5 catalogs, read from the jar so every server agrees (tested in the build).
+            catalog = Catalog.load(cl);
+            progressConfig = ProgressConfig.load(cl, catalog);
+            questConfig = QuestConfig.load(cl, catalog);
             connect(config, cl, log);
         } catch (Exception e) {
             log.error("rapid-core can't start; shutting the server down so Wings restarts it", e);
@@ -126,7 +152,8 @@ public final class RapidCore extends JavaPlugin {
 
         var pm = getServer().getPluginManager();
         pm.registerEvents(profiles, this);
-        pm.registerEvents(new ChatListener(ranks, chatTags, lang), this);
+        ChatListener chat = new ChatListener(ranks, chatTags, lang);
+        pm.registerEvents(chat, this);
         pm.registerEvents(new MenuListener(), this);
         pm.registerEvents(prompts, this);
 
@@ -164,6 +191,31 @@ public final class RapidCore extends JavaPlugin {
         pm.registerEvents(new WorldProtection(worlds, buildMode), this);
         StaffCommands staffCommands = new StaffCommands(staffMode, buildMode, lang);
 
+        // Phase 5: cosmetics, levels, quests, achievements, the Season Pass, the Bolt shop.
+        cosmetics = new CosmeticService(this, catalog, database, ranks, redis, settings.serverId(), lang);
+        pm.registerEvents(cosmetics, this);
+        levels = new LevelService(this, database, new us.rapidskies.common.progress.ProgressRepository(database, bolts),
+                progressConfig, profiles, cosmetics, earning, boltsCache, lang);
+        pm.registerEvents(levels, this);
+        quests = new QuestService(this, database, questConfig, serverMode(), profiles, levels, cosmetics, earning, afk,
+                boltsCache, lang);
+        pm.registerEvents(quests, this);
+        pm.registerEvents(new ObjectiveListener(quests), this);
+        quests.start();
+        playtime.onActiveMinute(p -> quests.record(p, "play-minutes", 1));
+        playtime.onInterval(levels::playtimeInterval);
+        boltShop = new BoltShop(this, database, bolts, cosmetics, levels, ranks, redis, boltsCache, lang);
+        daily = new DailyRewards(this, database, bolts, earning, ranks, boltsCache, progressConfig,
+                settings.serverId(), lang);
+        pm.registerEvents(daily, this);
+        daily.start();
+        trails = new Trails(this, cosmetics, staffMode, buildMode, settings.trails());
+        pm.registerEvents(trails, this);
+        trails.start();
+        chat.style(new ProfileCard(cosmetics, levels, ranks, lang));
+        progress = new ProgressCommands(this, database, profileRepository, cosmetics, boltShop, levels, quests, daily,
+                settings.serverId(), lang);
+
         settings.gamemode().ifPresent(mode -> {
             economy = new ModeEconomy(this, mode, modeLedgers.get(mode), redis, settings.serverId());
             pm.registerEvents(economy, this);
@@ -192,6 +244,18 @@ public final class RapidCore extends JavaPlugin {
             event.registrar().register("invsee", "Inspect a player's inventory", List.of(), staffCommands.invsee());
             event.registrar().register("endersee", "Inspect a player's ender chest", List.of("echest"),
                     staffCommands.endersee());
+            event.registrar().register("cosmetics", "Wear your titles, tags, name colors, badges and trails",
+                    List.of("cosmetic", "wardrobe", "cos"), progress.cosmetics());
+            event.registrar().register("boltshop", "Spend Bolts on cosmetics, rank passes and the Season Pass",
+                    List.of("bshop", "boltstore"), progress.shop());
+            event.registrar().register("quests", "Your daily and weekly quests", List.of("quest", "dailies"),
+                    progress.quests());
+            event.registrar().register("achievements", "Your achievements", List.of("achievement", "ach"),
+                    progress.achievements());
+            event.registrar().register("level", "Your network level", List.of("lvl", "networklevel"), progress.level());
+            event.registrar().register("pass", "The Season Pass", List.of("seasonpass", "battlepass"), progress.pass());
+            event.registrar().register("progressadmin", "Grant cosmetics and XP (staff)", List.of("padmin"),
+                    progress.admin());
             // /spawn, /setspawn, /afk and the other everyday commands are rapid-essentials'.
             event.registrar().register("build", "Toggle build mode (change the protected spawn worlds)",
                     List.of("buildmode", "bm"), buildMode.command());
@@ -206,6 +270,11 @@ public final class RapidCore extends JavaPlugin {
         heartbeat.start();
         log.info("rapid-core {} enabled as {} (group {})", getPluginMeta().getVersion(), settings.serverId(),
                 settings.group());
+    }
+
+    /** What quests count as "this server": its gamemode, or {@code hub} on lobbies. */
+    private String serverMode() {
+        return settings.gamemode().map(EconomyMode::id).orElse(settings.group());
     }
 
     /**
@@ -262,6 +331,16 @@ public final class RapidCore extends JavaPlugin {
         }
         if (heartbeat != null) {
             heartbeat.stop();
+        }
+        if (trails != null) {
+            trails.stop();
+        }
+        if (daily != null) {
+            daily.stop();
+        }
+        if (quests != null) {
+            // Writes quest progress still in memory, so it must run before the database closes.
+            quests.stop();
         }
         if (playtime != null) {
             playtime.stop();
@@ -377,6 +456,33 @@ public final class RapidCore extends JavaPlugin {
     /** Who may change the protected spawn worlds right now ({@code /build}). */
     public BuildMode buildMode() {
         return buildMode;
+    }
+
+    /** The cosmetics engine: what players own and wear; {@code grant} for other plugins' rewards. */
+    public CosmeticService cosmetics() {
+        return cosmetics;
+    }
+
+    /** Network XP and levels; {@code award(player, event)} pays event XP from progression.yml. */
+    public LevelService levels() {
+        return levels;
+    }
+
+    /**
+     * Quests and achievements; gamemode plugins count their objectives with
+     * {@code quests().record(player, objective, amount)} (quests.yml lists them).
+     */
+    public QuestService quests() {
+        return quests;
+    }
+
+    public BoltShop boltShop() {
+        return boltShop;
+    }
+
+    /** Opens the phase 5 menus (wardrobe, shop, quests, pass) for other plugins' buttons. */
+    public ProgressCommands progress() {
+        return progress;
     }
 
     /**

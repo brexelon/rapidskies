@@ -68,6 +68,19 @@ public final class Channels {
      */
     public static final String STAFF_ALERT = "staff-alert";
 
+    /**
+     * Cosmetics were granted to a player on another server (a SkyRealms season award, a
+     * level-up, an admin): the server they're on reloads their wardrobe and names what's new.
+     */
+    public static final String COSMETICS = "cosmetics";
+
+    /**
+     * A rank pass was bought with Bolts (rapid-core's Bolt shop): the proxy grants the
+     * pending {@code shop_purchases} rows through {@code /grant}. It also checks for them
+     * every minute, so a lost message only delays the grant.
+     */
+    public static final String RANK_PASS = "rank-pass";
+
     /** Redis key holding "true" while maintenance mode is on. */
     public static final String MAINTENANCE_KEY = "maintenance";
 
@@ -155,6 +168,17 @@ public final class Channels {
      * everyone on it.
      */
     public record ServerStopping(String server, String group, long startedAt, java.util.List<String> players) {
+    }
+
+    /** {@code unlocked} are the cosmetic ids that are new to the player. */
+    public record CosmeticsChanged(String uuid, java.util.List<String> unlocked, String origin) {
+        public UUID player() {
+            return UUID.fromString(uuid);
+        }
+    }
+
+    /** {@code purchaseId} is the {@code shop_purchases} row to deliver. */
+    public record RankPassBought(long purchaseId, String uuid) {
     }
 
     /** {@code target} is a server group ({@code smp}) or a server id ({@code smp-1}). */

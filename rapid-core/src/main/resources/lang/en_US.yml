@@ -14,20 +14,22 @@ rank:
     rapidplus: "<primary>RAPID</primary><plus>+</plus> "
     rapidplusplus: "<primary>RAPID</primary><plus>++</plus> "
     rapidplusplusplus: "<primary><bold>RAPID</bold></primary><plus>+++</plus> "
-  # Red shades are reserved for the team; plus colors can never use them.
+  # Red shades are reserved for the team; plus colors can never use them. Each role has its
+  # own shade (every one still nearest to red or dark red), so roles tell apart at a glance.
   staff:
-    owner: "<dark_red><bold>OWNER</bold></dark_red> "
-    admin: "<dark_red>ADMIN</dark_red> "
-    developer: "<red>DEV</red> "
-    srmod: "<red>SR. MOD</red> "
-    moderator: "<red>MOD</red> "
-    helper: "<red>HELPER</red> "
-    builder: "<red>BUILDER</red> "
+    owner: "<#AA0000><bold>OWNER</bold></#AA0000> "
+    admin: "<#E8212E>ADMIN</#E8212E> "
+    developer: "<#FF4F81>DEV</#FF4F81> "
+    srmod: "<#FF7A33>SR. MOD</#FF7A33> "
+    moderator: "<#FF5555>MOD</#FF5555> "
+    helper: "<#FFA0A0>HELPER</#FFA0A0> "
+    builder: "<#B7410E>BUILDER</#B7410E> "
 
 # Sidebar placeholders (%rapid_rank_name%, %rapid_bolts%, %rapid_tailwind_status%) when
 # there's nothing to show.
 placeholder:
   no-rank: "<muted>Member</muted>"
+  no-title: "<muted>None</muted>"
   no-tailwind: "<muted>None</muted>"
   loading: "<dark>…</dark>"
 
@@ -188,3 +190,277 @@ errors:
   players-only: "<prefix><error>Only players can use this.</error>"
   # RapidCore#connect couldn't reach the proxy (Redis down).
   connect-failed: "<prefix><error>Couldn't reach the network right now; please try again.</error>"
+
+# ------------------------------------------------------------------ phase 5 (PLAN.md §6, §7)
+
+# Hovering a name in chat. <rank> is the prefix with its trailing space.
+profile:
+  card:
+    name: "<rank><text><player></text>"
+    level: "<muted>Network level</muted> <accent><level></accent>"
+    title: "<muted>Title</muted> <title>"
+    badge: "<muted>Badge</muted> <badge>"
+    click: "<dark>Click to send a message</dark>"
+
+# The wardrobe (/cosmetics) and cosmetics everywhere.
+cosmetics:
+  type:
+    title: "Titles"
+    tag: "Chat tags"
+    namecolor: "Name colors"
+    badge: "Badges"
+    trail: "Trails"
+    arrow: "Arrow trails"
+  type-lore:
+    title: "<muted>Shown when your name is hovered in chat</muted>"
+    tag: "<muted>A symbol in front of your name in chat</muted>"
+    namecolor: "<muted>The color of your name in chat</muted>"
+    badge: "<muted>Shown when your name is hovered in chat</muted>"
+    trail: "<muted>Particles at your feet while you walk</muted>"
+    arrow: "<muted>Particles behind your arrows, tridents and snowballs</muted>"
+  rarity:
+    common: "<text>Common</text>"
+    rare: "<aqua>Rare</aqua>"
+    epic: "<light_purple>Epic</light_purple>"
+    legendary: "<gold>Legendary</gold>"
+  item-name:
+    rendered: "<display>"
+    plain: "<name>"
+  lore:
+    kind: "<rarity> <dark>•</dark> <muted><type></muted>"
+    preview-title: "<muted>On your card:</muted> <display>"
+    preview-tag: "<muted>In chat:</muted> <display> <text><player></text>"
+    preview-namecolor: "<muted>In chat:</muted> <name>"
+    preview-badge: "<muted>On your card:</muted> <display>"
+    preview-trail: "<muted>Follows your footsteps</muted>"
+    preview-arrow: "<muted>Follows what you shoot</muted>"
+  how:
+    shop: "<accent>Bolt shop:</accent> <primary>⚡ <price></primary> <muted>(click to open)</muted>"
+    featured-now: "<accent>In this week's Featured Shop:</accent> <primary>⚡ <price></primary> <muted>(click to open)</muted>"
+    featured: "<muted>Sold only when it's in the weekly Featured Shop</muted>"
+    rank: "<muted>Comes with</muted> <primary><rank></primary> <muted>(while you have it)</muted>"
+    level: "<muted>A network level reward</muted>"
+    achievement: "<muted>An achievement reward</muted>"
+    pass: "<muted>A Season Pass reward</muted>"
+    chapter: "<muted>A Horizons Chapter reward</muted>"
+    season: "<muted>A SkyRealms season award</muted>"
+    event: "<muted>Given out at events</muted>"
+  menu:
+    title: "<dark>Cosmetics</dark>"
+    info-name: "<primary>Your cosmetics</primary>"
+    info-lore:
+      - "<muted>Owned:</muted> <accent><owned></accent>"
+      - "<muted>Cosmetics never change gameplay.</muted>"
+    tab-name: "<primary><type></primary>"
+    tab-wearing: "<muted>Wearing:</muted> <text><name></text>"
+    tab-nothing: "<muted>Wearing: nothing</muted>"
+    tab-selected: "<success>✔ Showing</success>"
+    tab-click: "<accent>Click to show</accent>"
+    shop-name: "<primary>⚡ Bolt shop</primary>"
+    shop-lore:
+      - "<muted>More cosmetics, rank passes</muted>"
+      - "<muted>and the Season Pass.</muted>"
+    empty: "<muted>Nothing here yet</muted>"
+    previous: "<accent>Previous page</accent>"
+    next: "<accent>Next page</accent> <muted>(<page>/<pages>)</muted>"
+    take-off: "<error>Take off</error> <muted>(<type>)</muted>"
+    wearing: "<success>✔ Wearing</success> <muted>(click to take off)</muted>"
+    click-wear: "<accent>Click to wear</accent>"
+  locked: "<prefix><error>You don't have <name> yet.</error>"
+  equipped: "<prefix><success>Now wearing <name>.</success>"
+  unlocked: "<prefix><primary>✦ Unlocked:</primary> <text><name></text> <muted>(<type>)</muted> <click:run_command:'/cosmetics'><hover:show_text:'<muted>Open your cosmetics'><accent>[Wear it]</accent></hover></click>"
+  failed: "<prefix><error>Couldn't save that right now; please try again.</error>"
+
+# The Bolt shop (/boltshop, PLAN.md §6.2).
+shop:
+  menu:
+    title: "<dark>Bolt shop</dark>"
+    tab: "<primary><name></primary>"
+    tab-featured: "<primary>Featured</primary> <muted>(this week)</muted>"
+    tab-ranks: "<primary>Rank passes</primary>"
+    tab-pass: "<primary>Season Pass</primary>"
+    tab-selected: "<success>✔ Showing</success>"
+    tab-click: "<accent>Click to show</accent>"
+    balance: "<primary>⚡ <balance> Bolts</primary>"
+    balance-lore:
+      - "<muted>Earn Bolts by playing: daily logins,</muted>"
+      - "<muted>quests, events, levels and achievements.</muted>"
+      - "<muted>Or visit</muted> <primary>store.rapidskies.us</primary>"
+    wardrobe: "<accent>Your cosmetics</accent>"
+    featured-ends: "<muted>New Featured items in</muted> <accent><time></accent>"
+    empty: "<muted>Nothing on sale here right now</muted>"
+    featured-only: "<primary>★ Featured Shop exclusive</primary>"
+    owned: "<success>✔ Owned</success>"
+    price: "<muted>Price:</muted> <primary>⚡ <price></primary>"
+    click-buy: "<accent>Click to buy</accent>"
+  confirm:
+    title: "<dark>Confirm purchase</dark>"
+    buy: "<success>Buy for ⚡ <price> Bolts</success>"
+    buy-lore:
+      - "<muted>You'll own <name> for good.</muted>"
+      - "<muted>Cosmetic only.</muted>"
+    rank-lore:
+      - "<muted><rank> for <days> days, added on top</muted>"
+      - "<muted>of any time you already have.</muted>"
+    pass-lore:
+      - "<muted>The <season> premium track: its rewards</muted>"
+      - "<muted>for tiers you've reached arrive at once.</muted>"
+    cancel: "<error>Cancel</error>"
+  rank:
+    name: "<rankprefix><text>Pass</text> <muted>(<rank>)</muted>"
+    length: "<muted>Length:</muted> <text><days> days</text> <muted>(stacks)</muted>"
+    have-higher: "<muted>You already have a higher rank.</muted>"
+    click-extend: "<accent>Click to add <days> days</accent>"
+    click-buy: "<accent>Click to buy</accent>"
+    info-name: "<primary>Rank passes</primary>"
+    info-lore:
+      - "<muted>Ranks are cosmetic and convenience perks only:</muted>"
+      - "<muted>nothing that changes combat, resources or economies.</muted>"
+      - "<muted>Monthly subscriptions:</muted> <primary>store.rapidskies.us</primary>"
+    perks:
+      rapidplus:
+        - "<text>RAPID+ prefix and 6 plus colors</text>"
+        - "<text>Rapid+ cosmetics set, hub trail</text>"
+        - "<text>100 Bolts a month, parties of 6</text>"
+        - "<text>150 friends, queue priority</text>"
+      rapidplusplus:
+        - "<text>Everything in Rapid+</text>"
+        - "<text>11 plus colors, Rapid++ cosmetics set</text>"
+        - "<text>Hub flight, 250 Bolts a month</text>"
+        - "<text>Parties of 8, 250 friends</text>"
+      rapidplusplusplus:
+        - "<text>Everything in Rapid++</text>"
+        - "<text>All plus colors and gradients</text>"
+        - "<text>Rapid+++ cosmetics set, early drops</text>"
+        - "<text>600 Bolts a month, parties of 12</text>"
+    higher: "<prefix><error>You already have <rank>,</error> <muted>so this pass would run out unseen.</muted>"
+    bought: "<prefix><success>Bought <rank> for <days> days</success> <muted>(⚡ <price>; <balance> left).</muted> <text>It's added in a moment.</text>"
+  pass:
+    name: "<primary><season></primary> <text>premium track</text>"
+    lore:
+      - "<muted>Unlocks the premium rewards on</muted>"
+      - "<muted>all <tiers> tiers of <season>.</muted>"
+      - "<muted>Cosmetics only.</muted>"
+    owned: "<success>✔ You have the premium track</success>"
+    view: "<accent>View the Season Pass</accent>"
+  not-for-sale: "<prefix><error><name> isn't on sale right now.</error>"
+  already-owned: "<prefix><muted>You already have <name>.</muted>"
+  bought: "<prefix><success>Bought <name>!</success> <muted>(⚡ <price>; <balance> left)</muted> <click:run_command:'/cosmetics'><hover:show_text:'<muted>Open your cosmetics'><accent>[Wear it]</accent></hover></click>"
+  insufficient: "<prefix><error>That costs ⚡ <price>; you have <balance>.</error> <muted>You need <missing> more. Earn Bolts by playing or visit</muted> <primary><click:open_url:'https://store.rapidskies.us'><hover:show_text:'<muted>Open the store in your browser'>store.rapidskies.us</hover></click></primary>"
+  failed: "<prefix><error>The purchase didn't go through; nothing was charged. Please try again.</error>"
+
+# Network levels (/level).
+level:
+  up: "<prefix><primary>Level up!</primary> <text>You're now network level</text> <accent><level></accent><text>.</text>"
+  bolts: "<prefix><primary>⚡</primary> <accent>+<amount> Bolts</accent> <muted>for levelling up.</muted>"
+  title: "<primary><bold>LEVEL UP</bold></primary>"
+  subtitle: "<text>Network level</text> <accent><level></accent>"
+  show: "<prefix><text><player>:</text> <primary>level <level></primary> <bar> <muted><into>/<needed> XP to <next></muted>"
+  show-max: "<prefix><text><player>:</text> <primary>level <level></primary> <muted>(the top level!)</muted>"
+  next-reward: "<prefix><muted>Next reward at level <level>:</muted> <text><rewards></text>"
+  not-here: "<prefix><error><player> isn't on this server.</error>"
+
+# Quests (/quests).
+quests:
+  menu:
+    title: "<dark>Quests</dark>"
+    info-name: "<primary>Network level <level></primary>"
+    info-lore:
+      - "<bar> <muted><into>/<needed> XP</muted>"
+      - "<muted>Login streak:</muted> <accent><streak> days</accent>"
+      - ""
+      - "<muted>Dailies stay open for 3 days, so a</muted>"
+      - "<muted>missed day can be caught up.</muted>"
+    none: "<muted>No quests right now</muted>"
+    loading: "<muted>Loading your quests…</muted>"
+    achievements: "<accent>Achievements</accent>"
+    pass: "<accent>Season Pass</accent>"
+    name: "<text><name></text>"
+    name-done: "<success><name></success>"
+    weekly: "<primary>Weekly</primary> <dark>•</dark> <muted>ends in <time></muted>"
+    daily: "<primary>Daily</primary> <dark>•</dark> <muted>open for <time></muted>"
+    daily-banked: "<accent>Banked daily</accent> <dark>•</dark> <muted>open for <time></muted>"
+    retired: "<muted>No longer offered; it can't progress.</muted>"
+    progress: "<bar> <text><progress>/<target></text>"
+    reward: "<muted>Reward:</muted> <primary>⚡ <bolts></primary> <dark>•</dark> <accent><xp> XP</accent>"
+    done: "<success>✔ Done</success>"
+    where:
+      hub: "<muted>Counts in the hub</muted>"
+      horizons: "<muted>Counts on Horizons</muted>"
+      skyrealms: "<muted>Counts on SkyRealms</muted>"
+  completed: "<prefix><success>Quest done:</success> <text><name></text> <muted>(</muted><primary>⚡ <bolts></primary><muted>,</muted> <accent><xp> XP</accent><muted>)</muted>"
+  completed-weekly: "<prefix><primary>Weekly quest done:</primary> <text><name></text> <muted>(</muted><primary>⚡ <bolts></primary><muted>,</muted> <accent><xp> XP</accent><muted>)</muted>"
+  new-day: "<prefix><text>New quests are in.</text> <click:run_command:'/quests'><hover:show_text:'<muted>Open your quests'><accent>[Quests]</accent></hover></click>"
+
+# Achievements (/achievements).
+achievements:
+  menu:
+    title: "<dark>Achievements</dark>"
+    info: "<primary><earned>/<total> achievements</primary>"
+    back: "<accent>Back to quests</accent>"
+    name: "<muted><name></muted>"
+    name-done: "<success><name></success>"
+    description: "<text><description></text>"
+    reward: "<muted>Reward:</muted> <primary>⚡ <bolts></primary> <dark>•</dark> <accent><xp> XP</accent>"
+    cosmetic: "<muted>Unlocks</muted> <text><name></text> <muted>(<type>)</muted>"
+    earned: "<success>✔ Earned</success>"
+  unlocked: "<prefix><primary>★ Achievement:</primary> <text><name></text> <muted>— <description> (</muted><primary>⚡ <bolts></primary><muted>,</muted> <accent><xp> XP</accent><muted>)</muted>"
+
+# Season Pass (/pass).
+pass:
+  menu:
+    title: "<dark>Season Pass</dark>"
+    info-name: "<primary><season></primary>"
+    info-lore:
+      - "<muted>Tier</muted> <accent><tier></accent><muted>/<tiers></muted>"
+      - "<bar> <muted><into>/<per> XP</muted>"
+      - "<muted>Ends in</muted> <text><time></text>"
+      - ""
+      - "<muted>Network XP from anything you do</muted>"
+      - "<muted>also counts toward the pass.</muted>"
+    premium-owned: "<success>✔ Premium track</success>"
+    premium-buy: "<primary>Unlock the premium track</primary>"
+    premium-lore:
+      - "<muted>Price:</muted> <primary>⚡ <price></primary>"
+      - "<muted>Rewards for tiers you've already</muted>"
+      - "<muted>reached arrive at once. Cosmetics only.</muted>"
+      - "<accent>Click to open the shop</accent>"
+    free-row: "<text>Free track</text> <muted>(right)</muted>"
+    tier-row: "<text>Tiers</text> <muted>(right)</muted>"
+    premium-row: "<primary>Premium track</primary> <muted>(right)</muted>"
+    tier: "<muted>Tier <tier></muted>"
+    tier-reached: "<success>Tier <tier> ✔</success>"
+    tier-xp: "<muted>At <xp> season XP</muted>"
+    no-reward: "<dark>No reward</dark>"
+    unlocked: "<success>✔ Unlocked</success>"
+    locked: "<muted>Reach this tier to unlock</muted>"
+    needs-premium: "<muted>Premium track reward</muted>"
+  none-name: "<primary>No season running</primary>"
+  none-lore:
+    - "<muted>The next Season Pass hasn't been announced.</muted>"
+  next-lore:
+    - "<text><season></text> <muted>starts on <date>.</muted>"
+  not-running: "<prefix><error>There's no season running right now.</error>"
+  already-premium: "<prefix><muted>You already have the <season> premium track.</muted>"
+  bought: "<prefix><success>Premium track unlocked for <season>!</success> <muted>(⚡ <price>; <balance> left)</muted>"
+  tier-up: "<prefix><primary>Season Pass:</primary> <text>tier</text> <accent><tier></accent> <muted>of <season>.</muted> <click:run_command:'/pass'><hover:show_text:'<muted>Open the Season Pass'><accent>[Pass]</accent></hover></click>"
+
+streak:
+  paid: "<prefix><primary>⚡</primary> <accent>+<amount> Bolts</accent> <text>for day <days> of your login streak.</text> <muted>Tomorrow:</muted> <primary>⚡ <tomorrow></primary>"
+
+stipend:
+  paid: "<prefix><primary>⚡</primary> <accent>+<amount> Bolts</accent> <text>stipend for your</text> <rank><muted>rank (every <days> days).</muted>"
+
+# /progressadmin (staff).
+progressadmin:
+  usage: "<prefix><text>Usage:</text> <accent>/progressadmin cosmetic give|take|list <player> [id]</accent><muted>,</muted> <accent>xp <player> <amount></accent><muted>,</muted> <accent>featured</accent>"
+  unknown-cosmetic: "<prefix><error>No cosmetic <text><id></text> in the catalog.</error>"
+  bad-amount: "<prefix><error><input> isn't a positive number.</error>"
+  given: "<prefix><success>Gave <id> to <player>.</success>"
+  already-has: "<prefix><muted><player> already has <id>.</muted>"
+  taken: "<prefix><success>Took <id> from <player>.</success>"
+  doesnt-have: "<prefix><muted><player> doesn't have <id>.</muted>"
+  list: "<prefix><text><player> owns <count>:</text> <muted><owned></muted> <dark>•</dark> <text>wearing</text> <muted><equipped></muted>"
+  xp-added: "<prefix><success>Added <amount> XP to <player></success> <muted>(now level <level>).</muted>"
+  featured: "<prefix><text>Featured now:</text> <muted><now></muted> <dark>•</dark> <text>next week:</text> <muted><next></muted>"
+  failed: "<prefix><error>That didn't work; check the console.</error>"

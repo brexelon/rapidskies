@@ -85,8 +85,12 @@ public final class EarnGuard implements Listener {
         return pay(player.getUniqueId(), amount, reason, dailyCap, txnId);
     }
 
-    /** {@link #award} without the AFK and shared-IP checks, for callers that already made them. */
-    CompletableFuture<Long> pay(UUID player, long amount, String reason, long dailyCap, String txnId) {
+    /**
+     * {@link #award} without the AFK and shared-IP checks, for callers that already made them
+     * (a quest finished by activity that was counted only while the player wasn't AFK, paid
+     * after they may have left).
+     */
+    public CompletableFuture<Long> pay(UUID player, long amount, String reason, long dailyCap, String txnId) {
         return db.async(() -> {
             long pay = amount;
             if (dailyCap > 0) {

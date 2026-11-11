@@ -3,11 +3,14 @@ package us.rapidskies.proxy.chat;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.slf4j.Logger;
 import us.rapidskies.common.lang.Lang;
+import us.rapidskies.common.rank.StaffRole;
 import us.rapidskies.common.redis.Channels;
+import us.rapidskies.proxy.rank.ProxyRanks;
 
 /**
  * {@code /staffchat <message>} (alias {@code /sc}): a channel for the team across every
@@ -20,11 +23,13 @@ public final class StaffChatCommand implements SimpleCommand {
 
     private final ProxyServer proxy;
     private final Lang lang;
+    private final ProxyRanks ranks;
     private final Logger logger;
 
-    public StaffChatCommand(ProxyServer proxy, Lang lang, Logger logger) {
+    public StaffChatCommand(ProxyServer proxy, Lang lang, ProxyRanks ranks, Logger logger) {
         this.proxy = proxy;
         this.lang = lang;
+        this.ranks = ranks;
         this.logger = logger;
     }
 
@@ -38,9 +43,17 @@ public final class StaffChatCommand implements SimpleCommand {
         String name = invocation.source() instanceof Player p ? p.getUsername() : "Console";
         String server = invocation.source() instanceof Player p
                 ? p.getCurrentServer().map(c -> c.getServerInfo().getName()).orElse("proxy") : "proxy";
-        broadcast(lang.get("staffchat.format", Placeholder.unparsed("player", name),
+        Optional<StaffRole> role = invocation.source() instanceof Player p ? ranks.of(p).staff() : Optional.empty();
+        broadcast(lang.get("staffchat.format", Placeholder.component("role", role(role)),
+                Placeholder.unparsed("player", name),
                 Placeholder.unparsed("server", server), Placeholder.unparsed("message", message)));
-        logger.info("[Staff] [{}] {}: {}", server, name, message);
+        logger.info("[Staff] [{}] {}{}: {}", server, role.map(r -> r.group() + " ").orElse(""), name, message);
+    }
+
+    /** The role tag in front of a name, in its {@code grant.name} colors, or nothing. */
+    private Component role(Optional<StaffRole> role) {
+        return role.map(r -> lang.get("grant.name." + r.group()).append(Component.space()))
+                .orElse(Component.empty());
     }
 
     /** Sends to everyone on the team (anti-cheat alerts will use this too). */

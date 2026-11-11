@@ -31,6 +31,9 @@ public final class EventRewards {
      * {@code txnBase} identifies this event and player ({@code skyborne:<event>:<uuid>}).
      */
     public void pay(Player player, Rewards rewards, String source, String txnBase) {
+        // Network XP and quests (PLAN.md §7): progression.yml xp.events, quests.yml objectives.
+        plugin.core().levels().award(player, source);
+        plugin.core().quests().record(player, source, 1);
         ModeEconomy economy = plugin.core().economy();
         if (rewards.crowns() > 0 && economy != null) {
             plugin.core().database().async(() -> economy.deposit(player.getUniqueId(), rewards.crowns(), source,

@@ -104,8 +104,11 @@ Re-run `diff` / `apply` whenever a profile changes; both are idempotent.
 - **pvp, allow-nether and spawn-monsters are game rules on 26.x**, not server.properties keys.
   rapid-core sets them per world from the profiles (`worlds.*.game-rules`, see [Worlds](#worlds)).
 - **Staging** mirrors smp by default and shares the LuckPerms database (separate `staging`
-  context). When game plugins with their own databases go on staging, point them at separate
-  schemas so tests never touch production data.
+  context). Its rapid-* data goes to its own database: create one in the panel (staging →
+  Databases) and put the name, user and password it shows in `secrets.env` as
+  `STAGING_RAPID_DB_*`; network.yml maps them onto staging's `RAPID_DB_*` vars. Do the same
+  (a var whose value is `${STAGING_...}`) for other game plugins with their own databases
+  when they go on staging, so tests never touch production data.
 - **DDoS front:** if TCPShield or Spectrum sits in front of Velocity and sends PROXY protocol,
   set `advanced.haproxy-protocol: true` in `profiles/velocity/velocity.toml.patch`.
 - **FAWE** for the build server isn't in `plugins/` yet. Add the jar and a glob to the `build`
@@ -364,6 +367,61 @@ positions live in `profiles/hub/plugins/rapid-hub/config.yml.patch`, like the sp
 - **Perks** come from permissions (`luckperms/bootstrap.txt`): `rapid.hub.trail` (Rapid+) and
   `rapid.hub.fly` (Rapid++), both with `server=hub`.
 
+## Cosmetics, quests and the Bolt shop (rapid-core, phase 5)
+
+Everything here runs on every Paper backend from `rapid-core` (core migration V6); nothing
+needs installing. Players use `/cosmetics`, `/boltshop`, `/quests`, `/achievements`, `/level`
+and `/pass`, and the hub hotbar has items for the shop, cosmetics and quests.
+
+- **The content lives in the jar, not in the server folders:** `cosmetics.yml` (the catalog,
+  the Featured Shop pool, rank passes), `progression.yml` (levels, XP, login streak, rank
+  stipend, Season Pass seasons) and `quests.yml` (quests and achievements) in
+  `rapid-core/src/main/resources/`. Every server reads the same files, so change them there,
+  run the build (its tests check every id, item, particle and reward), then
+  `rsdeploy.py plugins --restart`. A broken file stops rapid-core rather than run half-set-up.
+- **Weekly and monthly work is automatic:** the Featured Shop changes every Monday 00:00 UTC
+  (no repeats week to week), quests are assigned per player per day and week, and a season
+  starts and ends on its dates. `/progressadmin featured` shows this week's and next week's
+  Featured items.
+- **Before launch,** set Season 1's `starts`/`ends` in `progression.yml` to the launch dates
+  (they're placeholders so staging can test it now) and add the next season.
+- **Staff:** `/progressadmin cosmetic give|take|list <player> [id]` and
+  `/progressadmin xp <player> <amount>` (admins, `rapid.admin.progress`; logged to
+  `staff_actions`). Use it for event cosmetics such as `badge:beta-tester` and `title:founder`.
+- **Walking trails** can be switched off per server with `cosmetics.trails: false` in that
+  server's rapid-core profile, if particles ever cost too much on a busy gamemode.
+- **Rank passes bought with Bolts** are charged on the backend and granted by the proxy (a
+  `/grant` with reason "Bolts pass", visible in `/grants`) within a few seconds; if the proxy
+  is down they wait as `PENDING` in `shop_purchases` and are granted when it's back.
+
+## Store (Tebex, store.rapidskies.us)
+
+`tebex-velocity` runs on the proxy (`proxy` plugin set). Store packages run commands on the
+proxy console; every one carries the Tebex transaction id, so a retried delivery never gives
+twice, and deliveries are recorded in `store_transactions`.
+
+1. **Webstore:** create it on Tebex with the custom domain `store.rapidskies.us` (CNAME, plan
+   §3) and the brand theme. State "cosmetic and convenience only" on the front page and in
+   every package, link the refund and privacy policies on `rapidskies.us`, and use no Mojang
+   or Microsoft branding (plan §8).
+2. **Connect the proxy:** `rsdeploy.py plugins --restart`, then once in the Velocity console:
+   `tebex secret <your game server secret key>` (from the Tebex panel → Game Servers). The
+   plugin keeps it in its own config, which `rsdeploy` doesn't touch.
+3. **Packages.** Commands run on purchase with "require the player online" **off**:
+
+| Package | On purchase | On chargeback | On refund |
+|---|---|---|---|
+| Rapid+ / Rapid++ / Rapid+++ (monthly subscriptions) | `grant {id} rapidplus 30d Store purchase txn:{transaction}:rank` (use `rapidplusplus` / `rapidplusplusplus`) | `rapid chargeback {id} {transaction}` | `rapid chargeback {id} {transaction} refund` |
+| 500 / 1,100 / 2,400 / 6,500 Bolts | `rapid bolts add {id} 1100 {transaction}:bolts` | `rapid chargeback {id} {transaction}` | `rapid chargeback {id} {transaction} refund` |
+
+Each renewal of a subscription is a new transaction, so it stacks another 30 days (and
+revoking one only takes the time it had left). No expiry commands are needed: grants are
+timed. `rapid chargeback` revokes every grant and takes back every Bolt that transaction
+delivered (as many as are left), marks it in `store_transactions`, and posts a staff-chat
+alert asking for a review; a shortfall means the Bolts were already spent. Running it twice
+changes nothing. Transaction ids are everything before the first `:`, so keep the `:rank` /
+`:bolts` suffixes when one package runs several commands.
+
 ## Lang overrides
 
 Each rapid plugin copies its bundled `lang/en_US.yml` into its data folder on first start, and
@@ -433,7 +491,10 @@ never re-uploaded. `rsdeploy.py plugins --restart` restarts the servers whose ja
 New schemas for phase 1: **LiteBans** keeps its data in its own `litebans` schema (create it like
 the others; credentials are `LITEBANS_DB_*` in `secrets.env`). Its chat lines, ban/kick screens
 and Discord embed colors are restyled to the brand in `velocity/plugins/litebans/messages.yml.patch`
-(LiteBans reads `&` codes, not MiniMessage). **TAB** runs on Velocity with
+(LiteBans reads `&` codes, not MiniMessage). Staff get its commands by role from
+`luckperms/bootstrap.txt` (helpers warn, kick and mute for up to a day; moderators tempban up to
+30 days; Sr. Mods ban permanently; admins see IP data); the length caps and the rule that staff
+can only be punished by a higher role are in `config.yml.patch`. **TAB** runs on Velocity with
 **VelocityScoreboardAPI** (needed for scoreboard teams); **TAB-Bridge** on every backend passes
 rapid-core's `%rapid_prefix%` and vanish state up to it, so the tab list and nametags match chat.
 TAB also draws the sidebar, one layout per kind of server, chosen by the backend's name

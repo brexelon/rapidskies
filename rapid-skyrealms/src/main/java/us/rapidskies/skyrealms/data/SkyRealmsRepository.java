@@ -618,6 +618,13 @@ public final class SkyRealmsRepository {
                 }
                 ps.executeBatch();
             }
+            // The cosmetics engine owns them from here (PLAN.md §6.1), in the same transaction.
+            for (AwardRow a : awards) {
+                if (a.cosmetic() != null && !a.cosmetic().isBlank()) {
+                    us.rapidskies.common.cosmetic.CosmeticRepository.grantIn(c, a.player(), a.cosmetic(),
+                            "season:" + a.season());
+                }
+            }
             return true;
         });
     }

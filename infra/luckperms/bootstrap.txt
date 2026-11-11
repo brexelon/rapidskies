@@ -265,6 +265,67 @@ lpv group builder permission set rapid.essentials.workstations true server=build
 lpv group builder permission set rapid.command.enderchest true server=build
 lpv group builder permission set rapid.command.disposal true server=build
 
+# Punishments (LiteBans, proxy only; plan §9). Each tier inherits the last:
+#   Helper:    chat moderation: /warn, /kick, /tempmute (up to 1 day), /unwarn and /unmute on
+#              their own; /history, /checkban, /checkmute, /warnings, the mute and warn lists,
+#              /namehistory, and staff notifications (silent punishments included).
+#   Moderator: /tempban and /tempmute up to 30 days, /unban on their own, /banlist, /alts
+#              (/dupeip) with alt-on-join alerts, /lastuuid.
+#   Sr. Mod:   permanent /ban and /mute, any length, IP bans and mutes, lifting anyone's
+#              punishments, /staffhistory (oversight) and /ipreport.
+#   Admin:     /iphistory and /geoip (they show IP data), /lockdown, /prunehistory,
+#              /staffrollback and /litebans (reload, import).
+# Length caps are the litebans.group.* nodes, matched in litebans/config.yml.patch
+# (durations.limits). Staff are exempt from punishment by anyone with a lower LuckPerms weight
+# (exempt.use_group_weights), so a helper can't mute an admin; builders and developers aren't
+# exempt. Everyone sees public broadcasts and their own warnings (plugin defaults).
+lpv group helper permission set litebans.group.helper true server=proxy
+lpv group helper permission set litebans.exempt true server=proxy
+lpv group helper permission set litebans.tabcomplete true server=proxy
+lpv group helper permission set litebans.notify true server=proxy
+lpv group helper permission set litebans.notify.silent true server=proxy
+lpv group helper permission set litebans.warn true server=proxy
+lpv group helper permission set litebans.kick true server=proxy
+lpv group helper permission set litebans.tempmute true server=proxy
+lpv group helper permission set litebans.unwarn.own true server=proxy
+lpv group helper permission set litebans.unmute.own true server=proxy
+lpv group helper permission set litebans.history true server=proxy
+lpv group helper permission set litebans.checkban true server=proxy
+lpv group helper permission set litebans.checkmute true server=proxy
+lpv group helper permission set litebans.checkwarn true server=proxy
+lpv group helper permission set litebans.warnings true server=proxy
+lpv group helper permission set litebans.mutelist true server=proxy
+lpv group helper permission set litebans.warnlist true server=proxy
+lpv group helper permission set litebans.namehistory true server=proxy
+lpv group moderator permission set litebans.group.moderator true server=proxy
+lpv group moderator permission set litebans.tempban true server=proxy
+lpv group moderator permission set litebans.unban.own true server=proxy
+lpv group moderator permission set litebans.banlist true server=proxy
+lpv group moderator permission set litebans.dupeip true server=proxy
+lpv group moderator permission set litebans.notify.dupeip_join true server=proxy
+lpv group moderator permission set litebans.lastuuid true server=proxy
+lpv group srmod permission set litebans.group.unlimited true server=proxy
+lpv group srmod permission set litebans.ban true server=proxy
+lpv group srmod permission set litebans.mute true server=proxy
+lpv group srmod permission set litebans.ipban true server=proxy
+lpv group srmod permission set litebans.ipmute true server=proxy
+lpv group srmod permission set litebans.unban true server=proxy
+lpv group srmod permission set litebans.unmute true server=proxy
+lpv group srmod permission set litebans.unwarn true server=proxy
+lpv group srmod permission set litebans.staffhistory true server=proxy
+lpv group srmod permission set litebans.ipreport true server=proxy
+lpv group admin permission set litebans.iphistory true server=proxy
+lpv group admin permission set litebans.geoip true server=proxy
+lpv group admin permission set litebans.lockdown true server=proxy
+lpv group admin permission set litebans.prunehistory true server=proxy
+lpv group admin permission set litebans.staffrollback true server=proxy
+lpv group admin permission set litebans.admin true server=proxy
+
+# Phase 5 (plan §6, §7): cosmetics, quests, levels, the Season Pass and the Bolt shop are for
+# everyone (plugin defaults). Admins can grant or take cosmetics and network XP
+# (/progressadmin, logged to staff_actions), on every backend.
+lpv group admin permission set rapid.admin.progress true
+
 # Admins manage permissions; the owner has everything.
 lpv group admin permission set luckperms.* true
 lpv group admin permission set spark true

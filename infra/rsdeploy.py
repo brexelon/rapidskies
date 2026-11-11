@@ -20,7 +20,8 @@ rapid-* plugin configs also get the keys their bundled config.yml (in build/dist
 and the live file lacks, so a server that first ran an older version gets new settings and
 sections (see fill_defaults).
 Both may contain ${NAME} placeholders, resolved from infra/secrets.env, the
-server's `vars` in network.yml, SERVER_NAME, and ${addr:<server>}.
+server's `vars` in network.yml, SERVER_NAME, and ${addr:<server>}. A var's value may hold
+placeholders too, so a server can use its own secrets (staging's database credentials).
 
 Usage:
   python infra/rsdeploy.py check                   # offline validation (CI)
@@ -188,11 +189,15 @@ class Resolver:
         return isinstance(v, str) and any(
             ref.startswith("addr:") and ref[5:] in self.skip for ref in PLACEHOLDER.findall(v))
 
-    def lookup(self, name: str) -> str:
+    def lookup(self, name: str, _outer: frozenset[str] = frozenset()) -> str:
         if name.startswith("addr:"):
             return self.addr_lookup(name[5:])
-        if name in self.vars:
-            return self.vars[name]
+        # A var may itself hold placeholders, so network.yml can point a server at its own
+        # secrets (RAPID_DB_PASSWORD: "${STAGING_RAPID_DB_PASSWORD}") without committing them.
+        # Inside its own value a var's name means the secrets.env one, which also stops cycles.
+        if name in self.vars and name not in _outer:
+            inner = _outer | {name}
+            return PLACEHOLDER.sub(lambda m: self.lookup(m.group(1), inner), self.vars[name])
         if name in self.env:
             return self.env[name]
         raise DeployError(f"unresolved placeholder ${{{name}}} (add it to secrets.env or the server's vars)")
@@ -1197,6 +1202,15 @@ def check(inv: dict) -> int:
             problems += 1
         else:
             seen_ids[pid] = name
+        for var, value in srv["vars"].items():
+            for ref in PLACEHOLDER.findall(str(value)):
+                if ref.startswith("addr:"):
+                    ok = ref[5:] in inv["servers"]
+                else:
+                    ok = ref in known or (ref in srv["vars"] and ref != var)
+                if not ok:
+                    print(f"{name}: vars.{var}: unknown placeholder ${{{ref}}}")
+                    problems += 1
         plans = collect_profile_files(srv["profiles"])  # raises on unparsable patches
         for target, plan in plans.items():
             blobs = [json.dumps(plan.patch, ensure_ascii=False)]

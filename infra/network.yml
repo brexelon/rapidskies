@@ -71,11 +71,17 @@ servers:
     # Mirror of a game server for testing updates. Defaults to mirroring smp;
     # swap `smp` for `skyrealms` (profiles and plugin sets: [paper-base, survival, skyrealms])
     # and the world (`skyrealms_spawn: trading-post`) when testing SkyRealms.
-    ptero_id: ""
+    ptero_id: "80b16f87"
     profiles: [paper-base, survival, smp, staging]
     plugins: [paper-base, survival, smp, worldgen]
-    # Own schema for rapid-* data (Bolts, profiles, ...), so tests never touch production.
-    vars: { LP_SERVER: staging, RAPID_DB_NAME: rapidskies_staging }
+    # Own database for rapid-* data (Bolts, profiles, ...), so tests never touch production.
+    # Created in the panel (staging → Databases), which gives it its own user; the
+    # credentials live in secrets.env as STAGING_RAPID_DB_*.
+    vars:
+      LP_SERVER: staging
+      RAPID_DB_NAME: "${STAGING_RAPID_DB_NAME}"
+      RAPID_DB_USER: "${STAGING_RAPID_DB_USER}"
+      RAPID_DB_PASSWORD: "${STAGING_RAPID_DB_PASSWORD}"
     worlds: { heartland/dimensions/rapidskies/spawn: horizons-spawn }
 
 # Pre-built worlds from the repo's worlds/ folder. Only chunk storage (region/, entities/,
@@ -135,7 +141,9 @@ plugin_sets:
     # TAB on Velocity needs it for scoreboard teams (nametag prefixes, tab sorting).
     - "VelocityScoreboardAPI*.jar"
     - "dist/rapid-proxy.jar"
-    # Phase 5: "tebex-velocity-*.jar"
+    # The webstore at store.rapidskies.us (plan §6.3): runs package commands on the proxy
+    # console (`grant`, `rapid bolts add`, `rapid chargeback`). Set up in infra/README.md → Store.
+    - "tebex-velocity-*.jar"
 
   paper-base:
     - "ViaVersion-*.jar"

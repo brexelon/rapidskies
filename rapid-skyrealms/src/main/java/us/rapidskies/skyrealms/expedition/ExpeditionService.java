@@ -542,6 +542,11 @@ public final class ExpeditionService implements Listener {
             if (counts && online != null && cfg().bolts() > 0) {
                 plugin.core().earning().award(online, cfg().bolts(), "expedition", cfg().boltsDailyCap(), txn + ":bolts");
             }
+            if (counts && online != null) {
+                // Network XP and quests (PLAN.md §7).
+                plugin.core().levels().award(online, "expedition");
+                plugin.core().quests().record(online, "expedition", 1);
+            }
             if (counts) {
                 plugin.islands().of(id).filter(i -> islandsCredited.add(i.id()))
                         .ifPresent(i -> plugin.tiers().record(i.id(), TierGoal.Type.EXPEDITION, null, 1));

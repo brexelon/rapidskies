@@ -167,6 +167,10 @@ public final class SeasonService {
             }
             if (closed) {
                 announce(s, ranking);
+                // Tell whoever is online anywhere about their new title or badge.
+                for (AwardRow r : rows) {
+                    plugin.core().cosmetics().changed(r.player(), List.of(r.cosmetic()));
+                }
             }
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> payAwards(s.id()));
         }, null, () -> closing = false);

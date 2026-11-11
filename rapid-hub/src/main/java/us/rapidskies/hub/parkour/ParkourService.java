@@ -308,6 +308,9 @@ public final class ParkourService implements Listener {
         player.playSound(FINISH, Sound.Emitter.self());
         String time = TimeFormat.run(millis);
         lang().send(player, "parkour.finished", course(lang(), course), Placeholder.unparsed("time", time));
+        // Quests, achievements and network XP (PLAN.md §7).
+        hub.core().quests().record(player, "parkour", 1);
+        hub.core().levels().award(player, "parkour");
         player.showTitle(Title.title(lang().get("parkour.finish-title"),
                 lang().get("parkour.finish-subtitle", Placeholder.unparsed("time", time)),
                 Title.Times.times(Duration.ofMillis(150), Duration.ofMillis(2000), Duration.ofMillis(500))));

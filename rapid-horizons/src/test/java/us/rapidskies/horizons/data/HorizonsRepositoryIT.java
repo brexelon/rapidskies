@@ -46,6 +46,8 @@ class HorizonsRepositoryIT {
         db = Database.connect(new DatabaseSettings(mariadb.getHost(), mariadb.getMappedPort(3306),
                 mariadb.getDatabaseName(), mariadb.getUsername(), mariadb.getPassword(), 4), "horizons-test",
                 LoggerFactory.getLogger("horizons-test"));
+        // Core first, as on a server: rapid-core enables (and migrates) before rapid-horizons.
+        db.migrate(HorizonsRepositoryIT.class.getClassLoader(), "core");
         db.migrate(HorizonsRepositoryIT.class.getClassLoader(), "horizons");
         repo = new HorizonsRepository(db);
     }

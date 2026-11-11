@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import us.rapidskies.common.rank.PlusColor;
 import us.rapidskies.common.rank.Rank;
 import us.rapidskies.core.RapidCore;
+import us.rapidskies.core.cosmetic.CosmeticType;
 import us.rapidskies.core.tailwind.TailwindService;
 
 /**
@@ -37,6 +38,17 @@ import us.rapidskies.core.tailwind.TailwindService;
  *       {@code placeholder.loading} while it loads</li>
  *   <li>{@code %rapid_world%}: the player's world by its display name ({@code Spawn},
  *       {@code Heartland}; config {@code world-names}) instead of its folder name</li>
+ * </ul>
+ *
+ * <p>Phase 5 (cosmetics, levels, quests):
+ *
+ * <ul>
+ *   <li>{@code %rapid_level%}: the network level; {@code %rapid_level_progress%}: XP into it
+ *       and needed ({@code 340/800})</li>
+ *   <li>{@code %rapid_title%}, {@code %rapid_tag%}, {@code %rapid_badge%}: the worn cosmetic,
+ *       or empty; {@code %rapid_title_status%}: the title, or lang {@code placeholder.no-title}</li>
+ *   <li>{@code %rapid_quests%}: open quests not yet done; {@code %rapid_pass_tier%}: the
+ *       Season Pass tier, or empty between seasons</li>
  * </ul>
  *
  * <p>Hex brand colors are written as {@code §x§F§F§D§8§0§0}, which TAB reads back as hex.
@@ -113,8 +125,24 @@ public final class RapidPlaceholders extends PlaceholderExpansion {
                 yield left > 0 ? TailwindService.format(left) : text("placeholder.no-tailwind");
             }
             case "world" -> core.worlds().displayName(player.getWorld());
+            case "level" -> Integer.toString(core.levels().level(player));
+            case "level_progress" -> {
+                var p = core.levels().progress(player);
+                yield p.maxed() ? "MAX" : String.format("%,d/%,d", p.into(), p.needed());
+            }
+            case "title" -> worn(player, CosmeticType.TITLE).orElse("");
+            case "title_status" -> worn(player, CosmeticType.TITLE).orElseGet(() -> text("placeholder.no-title"));
+            case "tag" -> worn(player, CosmeticType.TAG).orElse("");
+            case "badge" -> worn(player, CosmeticType.BADGE).orElse("");
+            case "quests" -> Integer.toString(core.quests().openCount(player));
+            case "pass_tier" -> core.levels().season()
+                    .map(s -> Integer.toString(s.tierOf(core.levels().standing(player).xp()))).orElse("");
             default -> null; // unknown placeholder: PlaceholderAPI leaves it as typed
         };
+    }
+
+    private java.util.Optional<String> worn(Player player, CosmeticType type) {
+        return core.cosmetics().worn(player, type).map(c -> LEGACY.serialize(core.cosmetics().render(c)));
     }
 
     private String text(String key) {

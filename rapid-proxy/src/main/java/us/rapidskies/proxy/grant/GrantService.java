@@ -34,6 +34,7 @@ import us.rapidskies.common.grant.GrantTerms.Placement;
 import us.rapidskies.common.grant.GrantTerms.Revocation;
 import us.rapidskies.common.grant.Hold;
 import us.rapidskies.common.lang.Lang;
+import us.rapidskies.common.store.StoreTransactions;
 import us.rapidskies.common.rank.StaffRole;
 import us.rapidskies.common.time.Durations;
 import us.rapidskies.proxy.PlayerLookup;
@@ -67,6 +68,7 @@ public final class GrantService {
     private final Logger logger;
     private final Clock clock;
     private final ConcurrentHashMap<UUID, Object> locks = new ConcurrentHashMap<>();
+    private volatile StoreTransactions store;
 
     GrantService(ProxyServer proxy, Lang lang, GrantRepository grants, PlayerLookup players, LuckPermsHolds holds,
             ProxyRanks ranks, Logger logger, Clock clock) {
@@ -78,6 +80,11 @@ public final class GrantService {
         this.ranks = ranks;
         this.logger = logger;
         this.clock = clock;
+    }
+
+    /** Where store deliveries ({@code txn:} grants from the console) are recorded (PLAN.md §6.3). */
+    public void store(StoreTransactions store) {
+        this.store = store;
     }
 
     public static GrantService create(ProxyServer proxy, Lang lang, GrantRepository grants, PlayerLookup players,
@@ -103,35 +110,80 @@ public final class GrantService {
             if (!allowed(source, target.uuid(), what)) {
                 return;
             }
-            Instant now = now();
-            InsertResult result;
-            synchronized (lock(target.uuid())) {
-                User user = holds.load(target.uuid());
-                Optional<Hold> current = LuckPermsHolds.hold(user, Grant.nodeKey(what.kind(), what.value()));
-                Placement place = GrantTerms.place(current, duration, now);
-                NewGrant row = new NewGrant(target.uuid(), what.kind(), what.value(), uuid(source), name(source),
-                        reason, txn, now, place.start(), place.end());
-                try {
-                    result = grants.insert(row, () -> {
-                        if (!current.equals(Optional.of(place.hold()))) {
-                            holds.set(user, Grant.nodeKey(what.kind(), what.value()), Optional.of(place.hold()));
-                        }
-                    });
-                } catch (SQLException | RuntimeException e) {
-                    refresh(target.uuid());
-                    throw e;
-                }
-            }
+            InsertResult result = insert(source, target.uuid(), what, duration, reason, txn);
             switch (result) {
                 case Duplicate dup -> lang.send(source, "grant.duplicate",
                         Placeholder.unparsed("txn", txn == null ? "" : txn),
                         Placeholder.unparsed("id", Long.toString(dup.existing().id())));
-                case Inserted ins -> announceGrant(source, target, ins.grant());
+                case Inserted ins -> {
+                    announceGrant(source, target, ins.grant());
+                    recordStore(source, target.uuid(), ins.grant(), txn);
+                }
             }
         } catch (SQLException | RuntimeException e) {
             logger.error("Grant of {} {} to {} failed", what.kind().id(), what.value(), playerInput, e);
             lang.send(source, "grant.failed");
         }
+    }
+
+    /** Places the grant against LuckPerms' current time and writes it (serialized per player). */
+    private InsertResult insert(CommandSource source, UUID player, GrantTarget what, Duration duration, String reason,
+            String txn) throws SQLException {
+        Instant now = now();
+        synchronized (lock(player)) {
+            User user = holds.load(player);
+            Optional<Hold> current = LuckPermsHolds.hold(user, Grant.nodeKey(what.kind(), what.value()));
+            Placement place = GrantTerms.place(current, duration, now);
+            NewGrant row = new NewGrant(player, what.kind(), what.value(), uuid(source), name(source),
+                    reason, txn, now, place.start(), place.end());
+            try {
+                return grants.insert(row, () -> {
+                    if (!current.equals(Optional.of(place.hold()))) {
+                        holds.set(user, Grant.nodeKey(what.kind(), what.value()), Optional.of(place.hold()));
+                    }
+                });
+            } catch (SQLException | RuntimeException e) {
+                refresh(player);
+                throw e;
+            }
+        }
+    }
+
+    /**
+     * A grant the network makes itself (a rank pass bought with Bolts, PLAN.md §6.1): granted
+     * as the console, announced like any grant (the player, staff, the log). {@code txn} makes
+     * a retry find the first grant instead of granting twice. Blocking; throws on failure.
+     */
+    public Grant grantSystem(UUID player, GrantTarget what, Duration duration, String reason, String txn)
+            throws SQLException {
+        CommandSource console = proxy.getConsoleCommandSource();
+        InsertResult result = insert(console, player, what, duration, reason, txn);
+        return switch (result) {
+            case Duplicate dup -> dup.existing();
+            case Inserted ins -> {
+                Found target = players.find(player.toString()).orElse(new Found(player, player.toString()));
+                announceGrant(console, target, ins.grant());
+                yield ins.grant();
+            }
+        };
+    }
+
+    /** Store deliveries: a console grant with a store transaction id gets a store_transactions row. */
+    private void recordStore(CommandSource source, UUID player, Grant g, String txn) {
+        StoreTransactions s = store;
+        if (s == null || txn == null || source instanceof Player) {
+            return;
+        }
+        try {
+            s.delivered(txn, player, "rank:" + g.value() + ":" + (g.permanent() ? "permanent" : Durations.format(g.length())));
+        } catch (SQLException | RuntimeException e) {
+            logger.warn("Couldn't record store transaction {}: {}", txn, e.getMessage());
+        }
+    }
+
+    /** Grants from one store transaction ({@code txn} and {@code txn:*}), for chargebacks. */
+    public List<Grant> byStoreTransaction(String txn) throws SQLException {
+        return grants.byTxnPrefix(txn);
     }
 
     public void revoke(CommandSource source, long id, String reason) {

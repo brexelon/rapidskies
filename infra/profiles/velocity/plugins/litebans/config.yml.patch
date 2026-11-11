@@ -10,6 +10,32 @@ sql.database: "${LITEBANS_DB_NAME}"
 sql.username: "${LITEBANS_DB_USER}"
 sql.password: "${LITEBANS_DB_PASSWORD}"
 sql.options: "useSSL=false&serverTimezone=UTC"
+# Punishment length caps per staff tier (the litebans.group.* nodes in
+# infra/luckperms/bootstrap.txt; the highest match wins, longer lengths are cut to the cap).
+# Sr. Mods and up have litebans.group.unlimited. "other" keeps LiteBans' default cooldowns.
+durations.limits:
+  moderator:
+    permission: litebans.group.moderator
+    tempban: 30 days
+    tempmute: 30 days
+  helper:
+    permission: litebans.group.helper
+    tempban: 1 day
+    tempmute: 1 day
+  other:
+    permission: none
+    tempban: 1 day
+    tempmute: 1 day
+    cooldown_ban: 20 seconds
+    cooldown_kick: 20 seconds
+    cooldown_mute: 20 seconds
+    cooldown_warn: 20 seconds
+    cooldown_redo: 1 second
+    require_template: false
+# Staff (litebans.exempt) can only be punished, or have their punishments lifted, by someone
+# with a higher LuckPerms group weight (helper 100 ... owner 500).
+exempt.enable: true
+exempt.use_group_weights: true
 # Muted players can't use these. LiteBans' defaults plus rapid-proxy's private and
 # party chat (/msg and /r aliases are already covered by the defaults).
 mutes.command_blacklist:

@@ -21,12 +21,15 @@ import org.junit.jupiter.api.Test;
 import us.rapidskies.common.lang.Lang;
 import us.rapidskies.common.rank.Rank;
 import us.rapidskies.common.rank.StaffRole;
+import us.rapidskies.core.cosmetic.Cosmetic;
+import us.rapidskies.core.cosmetic.CosmeticType;
 
 /** Every message key rapid-core's code names exists in its bundled lang file. */
 class LangKeysTest {
 
     private static final Pattern KEY = Pattern.compile(
-            "\"((?:afk|bolts|build|chat|errors|login|placeholder|plus|rank|rewards|staff|tailwind)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
+            "\"((?:achievements|afk|bolts|build|chat|cosmetics|errors|level|login|pass|placeholder|plus|profile|progressadmin"
+                    + "|quests|rank|rewards|shop|staff|stipend|streak|tailwind)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
 
     @Test
     void everyKeyInTheCodeIsInTheBundle() throws IOException {
@@ -45,6 +48,33 @@ class LangKeysTest {
         for (String tool : new String[] {"random", "inspect", "freeze", "players", "vanish-on", "vanish-off", "exit"}) {
             keys.add("staff.tool." + tool + "-name");
             keys.add("staff.tool." + tool + "-lore");
+        }
+        // Phase 5 keys built from enums and ids.
+        for (CosmeticType t : CosmeticType.values()) {
+            keys.add("cosmetics.type." + t.id());
+            keys.add("cosmetics.type-lore." + t.id());
+            if (t != CosmeticType.NAME_COLOR) {
+                keys.add("cosmetics.lore.preview-" + t.id());
+            }
+        }
+        for (Cosmetic.Rarity r : Cosmetic.Rarity.values()) {
+            keys.add("cosmetics.rarity." + r.id());
+        }
+        for (Cosmetic.Obtain o : Cosmetic.Obtain.values()) {
+            if (o != Cosmetic.Obtain.SHOP && o != Cosmetic.Obtain.FEATURED && o != Cosmetic.Obtain.RANK) {
+                keys.add("cosmetics.how." + o.id());
+            }
+        }
+        for (String tab : new String[] {"featured", "ranks", "pass"}) {
+            keys.add("shop.menu.tab-" + tab);
+        }
+        for (Rank r : Rank.values()) {
+            if (r != Rank.DEFAULT) {
+                keys.add("shop.rank.perks." + r.group());
+            }
+        }
+        for (String mode : new String[] {"hub", "horizons", "skyrealms"}) {
+            keys.add("quests.menu.where." + mode);
         }
         Set<String> missing = new TreeSet<>();
         for (String key : keys) {
@@ -102,7 +132,8 @@ class LangKeysTest {
         try (Stream<Path> files = Files.walk(src)) {
             // CoreSettings and WorldConfig read config.yml paths (afk.idle-seconds, spawn.on-join...),
             // which share prefixes with lang keys.
-            Set<String> configReaders = Set.of("CoreSettings.java", "WorldConfig.java");
+            Set<String> configReaders = Set.of("CoreSettings.java", "WorldConfig.java", "Catalog.java",
+                    "ProgressConfig.java", "QuestConfig.java");
             for (Path f : files.filter(p -> p.toString().endsWith(".java"))
                     .filter(p -> !configReaders.contains(p.getFileName().toString())).toList()) {
                 Matcher m = KEY.matcher(Files.readString(f));

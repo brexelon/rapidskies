@@ -28,6 +28,18 @@ item:
   selector-name: "<primary><bold>Game Menu</bold></primary> <muted>(<key:key.use>)</muted>"
   selector-lore:
     - "<muted>Pick a game to play.</muted>"
+  shop-name: "<primary><bold>Bolt Shop</bold></primary> <muted>(<key:key.use>)</muted>"
+  shop-lore:
+    - "<muted>Cosmetics, the weekly Featured Shop,</muted>"
+    - "<muted>rank passes and the Season Pass.</muted>"
+  cosmetics-name: "<accent><bold>Cosmetics</bold></accent> <muted>(<key:key.use>)</muted>"
+  cosmetics-lore:
+    - "<muted>Titles, chat tags, name colors,</muted>"
+    - "<muted>badges and trails.</muted>"
+  quests-name: "<accent><bold>Quests</bold></accent> <muted>(<key:key.use>)</muted>"
+  quests-lore:
+    - "<muted>Daily and weekly quests, achievements</muted>"
+    - "<muted>and your network level.</muted>"
   parkour-name: "<accent><bold>Sky Parkour</bold></accent> <muted>(<key:key.use>)</muted>"
   parkour-lore:
     - "<muted>A fresh random course every run,</muted>"

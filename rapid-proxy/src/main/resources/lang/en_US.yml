@@ -61,6 +61,7 @@ admin:
     <text>/rapid bolts add \<player|uuid> \<amount> [txn-id]</text>
     <text>/rapid bolts remove \<player|uuid> \<amount> [txn-id]</text>
     <text>/rapid bolts balance \<player|uuid></text>
+    <text>/rapid chargeback \<player|uuid> \<txn-id> [refund]</text>
   unknown-player: "<prefix><error>No player <text><player></text> has ever joined.</error>"
   bad-amount: "<prefix><error><amount> isn't a positive whole number.</error>"
   bolts-applied: "<prefix><text><player></text> <muted>now has</muted> <accent><balance> ⚡</accent> <muted>(<delta>).</muted>"
@@ -68,6 +69,11 @@ admin:
   bolts-insufficient: "<prefix><error><player> only has <balance> ⚡.</error>"
   bolts-balance: "<prefix><text><player></text> <muted>has</muted> <accent><balance> ⚡</accent>"
   failed: "<prefix><error>Database error; nothing changed. See the proxy console.</error>"
+  chargeback-done: "<prefix><text><kind> <txn> for <player>:</text> <muted><revoked> grants revoked, <taken> ⚡ taken back, <short> ⚡ short.</muted>"
+  chargeback-repeat: "<prefix><muted><txn> was already handled for <player>; nothing changed.</muted>"
+  # Shown in staff chat (MiniMessage, brand tags allowed).
+  chargeback-alert: "<error>Store <kind></error> <text><txn></text> <muted>for</muted> <text><player></text><muted>: <revoked> grants revoked, <taken> ⚡ taken back. Please review.</muted>"
+  chargeback-alert-short: "<error>Store <kind></error> <text><txn></text> <muted>for</muted> <text><player></text><muted>: <revoked> grants revoked, <taken> ⚡ taken back,</muted> <error><short> ⚡ already spent</error><muted>. Please review the account.</muted>"
 
 # Sent to the player when Bolts arrive (store purchase or staff grant).
 bolts:
@@ -211,9 +217,11 @@ freeze:
   logged-out: "<red>Staff</red> <dark>»</dark> <error><player> logged out while frozen.</error>"
 
 # Staff chat (/sc). Red is reserved for the team.
+# <role> is the sender's team role as grant.name shows it plus a space, or nothing (console,
+# or someone with the permission but no team role).
 staffchat:
   usage: "<red>Staff</red> <dark>»</dark> <muted>Usage:</muted> <text>/sc \\<message></text>"
-  format: "<red>Staff</red> <dark>»</dark> <muted>[<server>]</muted> <text><player></text><dark>:</dark> <text><message></text>"
+  format: "<red>Staff</red> <dark>»</dark> <muted>[<server>]</muted> <role><text><player></text><dark>:</dark> <text><message></text>"
   # An automatic alert from a backend (rapid-market's suspicious-trade check). <message> is the backend's text.
   alert: "<red>Staff</red> <dark>»</dark> <muted>[<server>]</muted> <error>⚠</error> <message>"
 
@@ -261,13 +269,13 @@ grant:
     rapidplus: "<primary>RAPID</primary><yellow>+</yellow>"
     rapidplusplus: "<primary>RAPID</primary><yellow>++</yellow>"
     rapidplusplusplus: "<primary><bold>RAPID</bold></primary><yellow>+++</yellow>"
-    owner: "<dark_red><bold>OWNER</bold></dark_red>"
-    admin: "<dark_red>ADMIN</dark_red>"
-    developer: "<red>DEV</red>"
-    srmod: "<red>SR. MOD</red>"
-    moderator: "<red>MOD</red>"
-    helper: "<red>HELPER</red>"
-    builder: "<red>BUILDER</red>"
+    owner: "<#AA0000><bold>OWNER</bold></#AA0000>"
+    admin: "<#E8212E>ADMIN</#E8212E>"
+    developer: "<#FF4F81>DEV</#FF4F81>"
+    srmod: "<#FF7A33>SR. MOD</#FF7A33>"
+    moderator: "<#FF5555>MOD</#FF5555>"
+    helper: "<#FFA0A0>HELPER</#FFA0A0>"
+    builder: "<#B7410E>BUILDER</#B7410E>"
     permission: "<accent><node></accent>"
   revoke:
     usage: "<red>Grants</red> <dark>»</dark> <muted>Usage:</muted> <text>/grants revoke \\<id> [reason]</text> <muted>(ids are in</muted> <text>/grants \\<player></text><muted>)</muted>"

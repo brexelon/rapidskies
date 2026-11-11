@@ -1,0 +1,168 @@
+# The cosmetics catalog and the Bolt shop (PLAN.md §6.1, §6.2). Read from the rapid-core jar
+# on every server, never copied to disk, so every server sells and shows the same things:
+# change it here, rebuild and deploy (`rsdeploy.py plugins --restart`).
+#
+# Ids are <type>:<name>. Each type fills one slot, so a player wears one of each:
+#   title      on the profile card (hover a name in chat), the hub sidebar and %rapid_title%
+#   tag        a symbol in front of the name in chat (%rapid_tag%)
+#   namecolor  the name's color in chat: a named chat color, never red or dark_red (staff)
+#   badge      on the profile card and %rapid_badge%
+#   trail      particles at the feet while walking (servers with cosmetics.trails on)
+#   arrow      particles behind arrows, tridents, snowballs and eggs the player shoots
+#
+# An entry:
+#   name     the plain name in menus
+#   display  what it renders. title/tag/badge: MiniMessage text. namecolor: a color name.
+#            trail/arrow: a particle (1.20 has every one listed here), or "dust #RRGGBB"
+#   rarity   common | rare | epic | legendary (only the menu color)
+#   obtain   shop      bought with Bolts in the Bolt shop (price)
+#            featured  bought with Bolts only in a week it's in the Featured Shop (price)
+#            rank      worn while the player has `rank` or higher (the rank sets, §6.1);
+#                      never stored, so it comes and goes with the rank
+#            level | achievement | pass | chapter | season | event   granted by that system
+#   price    Bolts (shop, featured)
+#   rank     rapidplus | rapidplusplus | rapidplusplusplus (obtain: rank)
+#   icon     the menu item
+#   hint     for a locked item: how to get it (MiniMessage)
+# A name may contain <n> (title:season-<n>-champion): it stands for any number, which the
+# display and name show in its place.
+#
+# Nothing here changes gameplay (§6.1 "not sold" list), and the shop refuses to sell
+# anything that isn't tagged COSMETIC or CONVENIENCE (§8).
+
+cosmetics:
+  title:
+    # Bolt shop
+    wanderer: { name: "Wanderer", display: "<#C9D6DF>Wanderer", rarity: common, obtain: shop, price: 150, icon: LEATHER_BOOTS }
+    stargazer: { name: "Stargazer", display: "<#9AB8FF>Stargazer", rarity: rare, obtain: shop, price: 300, icon: SPYGLASS }
+    cloudwalker: { name: "Cloudwalker", display: "<#E3F2FD>Cloud<#90CAF9>walker", rarity: rare, obtain: shop, price: 300, icon: WHITE_WOOL }
+    skyborn: { name: "Skyborn", display: "<gradient:#FFD800:#55FFFF>Skyborn</gradient>", rarity: epic, obtain: shop, price: 600, icon: ELYTRA }
+    tempest: { name: "Tempest", display: "<gradient:#5555FF:#55FFFF:#FFFFFF>Tempest</gradient>", rarity: legendary, obtain: shop, price: 1200, icon: TRIDENT }
+    # Rank sets (§6.1 cosmetic catalog access)
+    swift: { name: "Swift", display: "<#FFD800>Swift", rarity: rare, obtain: rank, rank: rapidplus, icon: FEATHER }
+    storm: { name: "Storm", display: "<gradient:#FFD800:#FFAA00>Storm</gradient>", rarity: epic, obtain: rank, rank: rapidplusplus, icon: LIGHTNING_ROD }
+    stormcaller: { name: "Stormcaller", display: "<gradient:#FFD800:#FFFFFF:#55FFFF>Stormcaller</gradient>", rarity: legendary, obtain: rank, rank: rapidplusplusplus, icon: NETHER_STAR }
+    # Network levels
+    regular: { name: "Regular", display: "<#B0BEC5>Regular", rarity: common, obtain: level, icon: OAK_SIGN, hint: "<muted>Reach network level 10</muted>" }
+    seasoned: { name: "Seasoned", display: "<#80CBC4>Seasoned", rarity: rare, obtain: level, icon: COMPASS, hint: "<muted>Reach network level 25</muted>" }
+    veteran: { name: "Veteran", display: "<gradient:#FFAA00:#FFD800>Veteran</gradient>", rarity: epic, obtain: level, icon: SHIELD, hint: "<muted>Reach network level 50</muted>" }
+    paragon: { name: "Paragon", display: "<gradient:#FFD800:#FF55FF:#55FFFF>Paragon</gradient>", rarity: legendary, obtain: level, icon: BEACON, hint: "<muted>Reach network level 100</muted>" }
+    # Achievements
+    excavator: { name: "Excavator", display: "<#BCAAA4>Excavator", rarity: rare, obtain: achievement, icon: DIAMOND_PICKAXE, hint: "<muted>Achievement: break 10,000 natural blocks</muted>" }
+    angler: { name: "Angler", display: "<#4FC3F7>Angler", rarity: rare, obtain: achievement, icon: FISHING_ROD, hint: "<muted>Achievement: catch 500 fish</muted>" }
+    monster-hunter: { name: "Monster Hunter", display: "<#A5D6A7>Monster Hunter", rarity: rare, obtain: achievement, icon: IRON_SWORD, hint: "<muted>Achievement: defeat 2,500 monsters</muted>" }
+    green-thumb: { name: "Green Thumb", display: "<#7CB342>Green Thumb", rarity: rare, obtain: achievement, icon: WHEAT, hint: "<muted>Achievement: harvest 5,000 crops</muted>" }
+    explorer: { name: "Explorer", display: "<#FFB74D>Explorer", rarity: epic, obtain: achievement, icon: MAP, hint: "<muted>Achievement: take part in 50 Expeditions</muted>" }
+    skyguard: { name: "Skyguard", display: "<#FFD54F>Skyguard", rarity: epic, obtain: achievement, icon: GOLDEN_SWORD, hint: "<muted>Achievement: win 25 Skyborne fights</muted>" }
+    questmaster: { name: "Questmaster", display: "<gradient:#FFD800:#FFAA00>Questmaster</gradient>", rarity: epic, obtain: achievement, icon: WRITABLE_BOOK, hint: "<muted>Achievement: finish 250 quests</muted>" }
+    merchant: { name: "Merchant", display: "<#FFCA28>Merchant", rarity: rare, obtain: achievement, icon: EMERALD, hint: "<muted>Achievement: earn 100,000 Coins at the SkyRealms shop</muted>" }
+    # Horizons Chapters and SkyRealms seasons (granted by rapid-horizons / rapid-skyrealms)
+    pathfinder: { name: "Pathfinder", display: "<gradient:#7FD8BE:#3FA7D6>Pathfinder</gradient>", rarity: epic, obtain: chapter, icon: FILLED_MAP, hint: "<muted>Finish Chapter 1 on Horizons (<accent>/chapter</accent>)</muted>" }
+    season-<n>-champion: { name: "Season <n> Champion", display: "<gradient:#FFD800:#FFAA00>Season <n> Champion</gradient>", rarity: legendary, obtain: season, icon: GOLDEN_HELMET, hint: "<muted>Top island of a SkyRealms season</muted>" }
+    season-<n>-podium: { name: "Season <n> Podium", display: "<#FFD800>Season <n> Podium", rarity: epic, obtain: season, icon: GOLD_INGOT, hint: "<muted>A top-3 island of a SkyRealms season</muted>" }
+    # Season Pass 1, "First Light" (pass.yml)
+    first-light: { name: "First Light", display: "<#FFE082>First Light", rarity: common, obtain: pass, icon: TORCH, hint: "<muted>Season Pass: First Light, tier 5</muted>" }
+    daybreak: { name: "Daybreak", display: "<gradient:#FFAA00:#FFE082>Daybreak</gradient>", rarity: rare, obtain: pass, icon: SUNFLOWER, hint: "<muted>Season Pass: First Light premium, tier 6</muted>" }
+    lightbringer: { name: "Lightbringer", display: "<gradient:#FFFFFF:#FFD800>Lightbringer</gradient>", rarity: epic, obtain: pass, icon: LANTERN, hint: "<muted>Season Pass: First Light premium, tier 14</muted>" }
+    solar: { name: "Solar", display: "<gradient:#FFD800:#FFAA00:#FFD800>Solar</gradient>", rarity: epic, obtain: pass, icon: GLOWSTONE, hint: "<muted>Season Pass: First Light premium, tier 26</muted>" }
+    horizon-chaser: { name: "Horizon Chaser", display: "<gradient:#FFAA00:#55FFFF>Horizon Chaser</gradient>", rarity: epic, obtain: pass, icon: RECOVERY_COMPASS, hint: "<muted>Season Pass: First Light, tier 30</muted>" }
+    dawnbringer: { name: "Dawnbringer", display: "<gradient:#FFFFFF:#FFD800:#FFAA00>Dawnbringer</gradient>", rarity: legendary, obtain: pass, icon: END_CRYSTAL, hint: "<muted>Season Pass: First Light premium, tier 30</muted>" }
+    # Featured Shop only
+    night-owl: { name: "Night Owl", display: "<#7E57C2>Night Owl", rarity: rare, obtain: featured, price: 350, icon: BLACK_CANDLE }
+    daydreamer: { name: "Daydreamer", display: "<#F8BBD0>Daydreamer", rarity: rare, obtain: featured, price: 350, icon: PINK_PETALS }
+    lucky: { name: "Lucky", display: "<#66BB6A>Lucky", rarity: rare, obtain: featured, price: 350, icon: RABBIT_FOOT }
+    # Events
+    founder: { name: "Founder", display: "<gradient:#FFD800:#FFFFFF>Founder</gradient>", rarity: legendary, obtain: event, icon: CAKE, hint: "<muted>Played in the RapidSkies beta</muted>" }
+
+  tag:
+    star: { name: "Star", display: "<#FFD800>★", rarity: common, obtain: shop, price: 150, icon: NETHER_STAR }
+    heart: { name: "Heart", display: "<#FF77A9>♥", rarity: common, obtain: shop, price: 150, icon: PINK_DYE }
+    note: { name: "Note", display: "<#55FFFF>♪", rarity: common, obtain: shop, price: 150, icon: NOTE_BLOCK }
+    clover: { name: "Clover", display: "<#55FF55>☘", rarity: rare, obtain: shop, price: 300, icon: FERN }
+    snowflake: { name: "Snowflake", display: "<#B3E5FC>❄", rarity: rare, obtain: shop, price: 300, icon: SNOWBALL }
+    anchor: { name: "Anchor", display: "<#90A4AE>⚓", rarity: rare, obtain: shop, price: 300, icon: IRON_BARS }
+    crown: { name: "Crown", display: "<gradient:#FFD800:#FFAA00>♛</gradient>", rarity: epic, obtain: shop, price: 600, icon: GOLDEN_HELMET }
+    spark: { name: "Spark", display: "<#FFD800>✦", rarity: rare, obtain: rank, rank: rapidplus, icon: GLOWSTONE_DUST }
+    twinkle: { name: "Twinkle", display: "<#FFFFFF>✧", rarity: epic, obtain: rank, rank: rapidplusplus, icon: AMETHYST_SHARD }
+    supernova: { name: "Supernova", display: "<gradient:#FFD800:#55FFFF>✪</gradient>", rarity: legendary, obtain: rank, rank: rapidplusplusplus, icon: END_CRYSTAL }
+    sprout: { name: "Sprout", display: "<#9CCC65>❀", rarity: common, obtain: level, icon: OAK_SAPLING, hint: "<muted>Reach network level 5</muted>" }
+    flag: { name: "Flag", display: "<#FFD800>⚑", rarity: rare, obtain: achievement, icon: WHITE_BANNER, hint: "<muted>Achievement: finish 100 parkour runs</muted>" }
+    sunrise: { name: "Sunrise", display: "<#FFB300>☼", rarity: common, obtain: pass, icon: ORANGE_DYE, hint: "<muted>Season Pass: First Light, tier 10</muted>" }
+    dawnstar: { name: "Dawnstar", display: "<gradient:#FFAA00:#FFFFFF>✹</gradient>", rarity: rare, obtain: pass, icon: GOLD_NUGGET, hint: "<muted>Season Pass: First Light premium, tier 2</muted>" }
+    halo: { name: "Halo", display: "<#FFF59D>☀", rarity: epic, obtain: pass, icon: GOLDEN_CARROT, hint: "<muted>Season Pass: First Light premium, tier 16</muted>" }
+    sun: { name: "Sun", display: "<#FFEB3B>☀", rarity: rare, obtain: featured, price: 300, icon: SUNFLOWER }
+    umbrella: { name: "Umbrella", display: "<#4FC3F7>☂", rarity: rare, obtain: featured, price: 300, icon: LIGHT_BLUE_DYE }
+    snowman: { name: "Snowman", display: "<#FFFFFF>☃", rarity: rare, obtain: featured, price: 300, icon: CARVED_PUMPKIN }
+    balance: { name: "Balance", display: "<#E0E0E0>☯", rarity: rare, obtain: featured, price: 300, icon: QUARTZ_BLOCK }
+    plane: { name: "Plane", display: "<#81D4FA>✈", rarity: rare, obtain: featured, price: 300, icon: PHANTOM_MEMBRANE }
+    hourglass: { name: "Hourglass", display: "<#FFCC80>⌛", rarity: rare, obtain: featured, price: 300, icon: CLOCK }
+
+  namecolor:
+    aqua: { name: "Aqua", display: "aqua", rarity: common, obtain: shop, price: 300, icon: LIGHT_BLUE_WOOL }
+    green: { name: "Green", display: "green", rarity: common, obtain: shop, price: 300, icon: LIME_WOOL }
+    yellow: { name: "Yellow", display: "yellow", rarity: common, obtain: shop, price: 300, icon: YELLOW_WOOL }
+    blue: { name: "Blue", display: "blue", rarity: common, obtain: shop, price: 300, icon: BLUE_WOOL }
+    light-purple: { name: "Light Purple", display: "light_purple", rarity: rare, obtain: shop, price: 600, icon: MAGENTA_WOOL }
+    gold: { name: "Gold", display: "gold", rarity: rare, obtain: shop, price: 600, icon: ORANGE_WOOL }
+    dark-aqua: { name: "Dark Aqua", display: "dark_aqua", rarity: rare, obtain: rank, rank: rapidplusplus, icon: CYAN_WOOL }
+    dark-purple: { name: "Dark Purple", display: "dark_purple", rarity: epic, obtain: rank, rank: rapidplusplusplus, icon: PURPLE_WOOL }
+    dark-green: { name: "Dark Green", display: "dark_green", rarity: rare, obtain: level, icon: GREEN_WOOL, hint: "<muted>Reach network level 30</muted>" }
+
+  badge:
+    committed: { name: "Committed", display: "<#80DEEA>◆ Committed", rarity: rare, obtain: level, icon: IRON_INGOT, hint: "<muted>Reach network level 20</muted>" }
+    unstoppable: { name: "Unstoppable", display: "<gradient:#FFAA00:#FFD800>◆ Unstoppable</gradient>", rarity: epic, obtain: level, icon: GOLD_BLOCK, hint: "<muted>Reach network level 75</muted>" }
+    dedicated: { name: "Dedicated", display: "<#AED581>◆ Dedicated", rarity: epic, obtain: achievement, icon: CLOCK, hint: "<muted>Achievement: 100 hours of active play</muted>" }
+    bargain-hunter: { name: "Bargain Hunter", display: "<#FFCA28>◆ Bargain Hunter", rarity: rare, obtain: achievement, icon: GOLD_NUGGET, hint: "<muted>Achievement: buy 25 auction house listings</muted>" }
+    season-1: { name: "Season 1", display: "<#FFE082>◆ Season 1", rarity: common, obtain: pass, icon: PAPER, hint: "<muted>Season Pass: First Light, tier 15</muted>" }
+    dawnwatch: { name: "Dawnwatch", display: "<gradient:#FFAA00:#FFE082>◆ Dawnwatch</gradient>", rarity: epic, obtain: pass, icon: BELL, hint: "<muted>Season Pass: First Light premium, tier 22</muted>" }
+    season-<n>-top10: { name: "Season <n> Top 10", display: "<#FFD800>◆ Season <n> Top 10", rarity: rare, obtain: season, icon: GOLD_NUGGET, hint: "<muted>A top-10 island of a SkyRealms season</muted>" }
+    moonlit: { name: "Moonlit", display: "<#B39DDB>◆ Moonlit", rarity: rare, obtain: featured, price: 300, icon: ENDER_PEARL }
+    sunlit: { name: "Sunlit", display: "<#FFE082>◆ Sunlit", rarity: rare, obtain: featured, price: 300, icon: HONEYCOMB }
+    beta-tester: { name: "Beta Tester", display: "<gradient:#55FFFF:#FFD800>◆ Beta Tester</gradient>", rarity: legendary, obtain: event, icon: COMMAND_BLOCK, hint: "<muted>Helped test RapidSkies before launch</muted>" }
+
+  trail:
+    notes: { name: "Notes", display: "NOTE", rarity: common, obtain: shop, price: 300, icon: JUKEBOX }
+    enchanted: { name: "Enchanted", display: "ENCHANT", rarity: common, obtain: shop, price: 300, icon: ENCHANTING_TABLE }
+    hearts: { name: "Hearts", display: "HEART", rarity: rare, obtain: shop, price: 600, icon: RED_DYE }
+    flames: { name: "Flames", display: "FLAME", rarity: rare, obtain: shop, price: 600, icon: BLAZE_POWDER }
+    sparks: { name: "Sparks", display: "ELECTRIC_SPARK", rarity: rare, obtain: shop, price: 600, icon: LIGHTNING_ROD }
+    frost: { name: "Frost", display: "SNOWFLAKE", rarity: rare, obtain: shop, price: 600, icon: PACKED_ICE }
+    blossom: { name: "Blossom", display: "CHERRY_LEAVES", rarity: epic, obtain: shop, price: 900, icon: CHERRY_LEAVES }
+    sunbeam: { name: "Sunbeam", display: "dust #FFD800", rarity: rare, obtain: rank, rank: rapidplus, icon: YELLOW_DYE }
+    starlight: { name: "Starlight", display: "END_ROD", rarity: epic, obtain: rank, rank: rapidplusplus, icon: END_ROD }
+    rapid-storm: { name: "Rapid Storm", display: "TOTEM_OF_UNDYING", rarity: legendary, obtain: rank, rank: rapidplusplusplus, icon: TOTEM_OF_UNDYING }
+    spirit: { name: "Spirit", display: "SOUL_FIRE_FLAME", rarity: epic, obtain: level, icon: SOUL_LANTERN, hint: "<muted>Reach network level 40</muted>" }
+    embers: { name: "Embers", display: "dust #FFAA00", rarity: common, obtain: pass, icon: CAMPFIRE, hint: "<muted>Season Pass: First Light, tier 25</muted>" }
+    goldleaf: { name: "Goldleaf", display: "WAX_ON", rarity: rare, obtain: pass, icon: HONEYCOMB, hint: "<muted>Season Pass: First Light premium, tier 4</muted>" }
+    glimmer: { name: "Glimmer", display: "GLOW", rarity: epic, obtain: pass, icon: GLOW_INK_SAC, hint: "<muted>Season Pass: First Light premium, tier 20</muted>" }
+    solar-flare: { name: "Solar Flare", display: "dust #FFFFFF", rarity: legendary, obtain: pass, icon: SHROOMLIGHT, hint: "<muted>Season Pass: First Light premium, tier 28</muted>" }
+    hex: { name: "Hex", display: "WITCH", rarity: rare, obtain: featured, price: 600, icon: CAULDRON }
+    rift: { name: "Rift", display: "PORTAL", rarity: rare, obtain: featured, price: 600, icon: OBSIDIAN }
+    bloom: { name: "Bloom", display: "HAPPY_VILLAGER", rarity: rare, obtain: featured, price: 600, icon: EMERALD }
+    tides: { name: "Tides", display: "NAUTILUS", rarity: rare, obtain: featured, price: 600, icon: NAUTILUS_SHELL }
+
+  arrow:
+    sharpshot: { name: "Sharpshot", display: "CRIT", rarity: common, obtain: shop, price: 200, icon: ARROW }
+    firebolt: { name: "Firebolt", display: "FLAME", rarity: rare, obtain: shop, price: 400, icon: FIRE_CHARGE }
+    cupid: { name: "Cupid", display: "HEART", rarity: rare, obtain: shop, price: 400, icon: PINK_TULIP }
+    sparkler: { name: "Sparkler", display: "FIREWORK", rarity: epic, obtain: shop, price: 800, icon: FIREWORK_ROCKET }
+    comet: { name: "Comet", display: "END_ROD", rarity: epic, obtain: rank, rank: rapidplusplus, icon: SPECTRAL_ARROW }
+    arcane: { name: "Arcane", display: "ENCHANTED_HIT", rarity: rare, obtain: achievement, icon: ENCHANTED_BOOK, hint: "<muted>Achievement: defeat 250 monsters</muted>" }
+    dawn: { name: "Dawn", display: "dust #FFAA00", rarity: common, obtain: pass, icon: ORANGE_CANDLE, hint: "<muted>Season Pass: First Light, tier 20</muted>" }
+    sunspark: { name: "Sunspark", display: "ELECTRIC_SPARK", rarity: rare, obtain: pass, icon: COPPER_INGOT, hint: "<muted>Season Pass: First Light premium, tier 8</muted>" }
+    prism: { name: "Prism", display: "dust #55FFFF", rarity: epic, obtain: pass, icon: PRISMARINE_CRYSTALS, hint: "<muted>Season Pass: First Light premium, tier 18</muted>" }
+    wisp: { name: "Wisp", display: "SOUL", rarity: rare, obtain: featured, price: 400, icon: SOUL_TORCH }
+
+# The weekly Featured Shop (§6.2, §12): `size` featured-only items on show at a time, changing
+# every Monday 00:00 UTC. Each comes round before any repeats, and none shows two weeks
+# running while there are at least 3 × size of them. Every cosmetic with obtain: featured is
+# in the rotation.
+featured:
+  size: 4
+
+# 30-day rank passes bought with Bolts (§6.1). They stack with store subscriptions and each
+# other; the proxy grants them through /grant, so they show up in /grants like any rank.
+rank-passes:
+  rapidplus: { price: 1000, days: 30, icon: GOLD_NUGGET }
+  rapidplusplus: { price: 2000, days: 30, icon: GOLD_INGOT }
+  rapidplusplusplus: { price: 4000, days: 30, icon: GOLD_BLOCK }

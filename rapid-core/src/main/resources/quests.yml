@@ -1,0 +1,80 @@
+# Quests and achievements (PLAN.md §7). Read from the rapid-core jar on every server, like
+# cosmetics.yml: change it here, rebuild and deploy.
+#
+# Every player gets 3 daily quests a UTC day and 2 weekly quests an ISO week. Dailies bank:
+# the last `bank-days` days' quests stay open, so a missed day can be caught up. Each slot
+# draws from the pool for its mode (any = quests with mode any or hub), so the dailies and
+# weeklies alternate between both gamemodes and encourage trying both. The pick is fixed per
+# player, period and slot; a finished quest pays at once (Bolts under the anti-farm rules).
+#
+# Objectives (what counts, and where: a quest only counts on servers of its mode):
+#   break-blocks   natural blocks broken (blocks: [...] to limit it; placed ones never count)
+#   harvest-crops  fully grown crops broken (blocks: [...] to limit it)
+#   kill-mobs      mobs killed, never spawner mobs (mobs: [...] to limit it)
+#   catch-fish     fish caught with a rod
+#   play-minutes   active (not AFK) minutes
+#   Counted by the gamemode plugins:
+#   parkour        hub parkour runs finished (rapid-hub)
+#   expedition     Expeditions taken part in (rapid-skyrealms)
+#   shop-sell      Coins earned selling to the SkyRealms server shop (rapid-skyrealms)
+#   skyborne       Skyborne fortresses beaten, as a rewarded fighter (rapid-horizons)
+#   ah-buy         auction house listings bought (rapid-market)
+# mode: any | hub | horizons | skyrealms. name and icon are for the menu.
+
+daily:
+  slots: [any, horizons, skyrealms]
+  bank-days: 3
+  reward: { bolts: 10, xp: 60 }
+
+weekly:
+  slots: [horizons, skyrealms]
+  reward: { bolts: 75, xp: 350 }
+
+quests:
+  daily:
+    play-30: { mode: any, objective: play-minutes, target: 30, name: "Play for 30 active minutes", icon: CLOCK }
+    fish-8: { mode: any, objective: catch-fish, target: 8, name: "Catch 8 fish", icon: FISHING_ROD }
+    zombies-15: { mode: any, objective: kill-mobs, target: 15, mobs: [ZOMBIE, HUSK, DROWNED, ZOMBIE_VILLAGER], name: "Defeat 15 zombies", icon: ROTTEN_FLESH }
+    parkour-1: { mode: hub, objective: parkour, target: 1, name: "Finish a hub parkour run", icon: FEATHER }
+    h-ores-24: { mode: horizons, objective: break-blocks, target: 24, blocks: [COAL_ORE, DEEPSLATE_COAL_ORE, IRON_ORE, DEEPSLATE_IRON_ORE, COPPER_ORE, DEEPSLATE_COPPER_ORE, GOLD_ORE, DEEPSLATE_GOLD_ORE, REDSTONE_ORE, DEEPSLATE_REDSTONE_ORE, LAPIS_ORE, DEEPSLATE_LAPIS_ORE, DIAMOND_ORE, DEEPSLATE_DIAMOND_ORE, EMERALD_ORE, DEEPSLATE_EMERALD_ORE], name: "Mine 24 ores on Horizons", icon: IRON_PICKAXE }
+    h-logs-64: { mode: horizons, objective: break-blocks, target: 64, blocks: [OAK_LOG, SPRUCE_LOG, BIRCH_LOG, JUNGLE_LOG, ACACIA_LOG, DARK_OAK_LOG, MANGROVE_LOG, CHERRY_LOG], name: "Chop 64 logs on Horizons", icon: IRON_AXE }
+    h-hostiles-20: { mode: horizons, objective: kill-mobs, target: 20, mobs: [ZOMBIE, HUSK, DROWNED, SKELETON, STRAY, SPIDER, CAVE_SPIDER, CREEPER, WITCH, ENDERMAN, SLIME, ZOMBIE_VILLAGER], name: "Defeat 20 monsters on Horizons", icon: IRON_SWORD }
+    h-crops-64: { mode: horizons, objective: harvest-crops, target: 64, name: "Harvest 64 crops on Horizons", icon: WHEAT }
+    s-cobble-256: { mode: skyrealms, objective: break-blocks, target: 256, blocks: [COBBLESTONE, STONE, COBBLED_DEEPSLATE], name: "Mine 256 generator stone", icon: STONE_PICKAXE }
+    s-crops-96: { mode: skyrealms, objective: harvest-crops, target: 96, name: "Harvest 96 crops on your island", icon: CARROT }
+    s-sell-2000: { mode: skyrealms, objective: shop-sell, target: 2000, name: "Earn 2,000 Coins at the shop", icon: GOLD_INGOT }
+    s-fish-6: { mode: skyrealms, objective: catch-fish, target: 6, name: "Catch 6 fish on SkyRealms", icon: COD }
+  weekly:
+    h-skyborne-1: { mode: horizons, objective: skyborne, target: 1, name: "Beat a Skyborne fortress", icon: GOLDEN_SWORD }
+    h-hostiles-150: { mode: horizons, objective: kill-mobs, target: 150, mobs: [ZOMBIE, HUSK, DROWNED, SKELETON, STRAY, SPIDER, CAVE_SPIDER, CREEPER, WITCH, ENDERMAN, SLIME, ZOMBIE_VILLAGER, PILLAGER, PHANTOM], name: "Defeat 150 monsters on Horizons", icon: DIAMOND_SWORD }
+    h-diamonds-8: { mode: horizons, objective: break-blocks, target: 8, blocks: [DIAMOND_ORE, DEEPSLATE_DIAMOND_ORE], name: "Mine 8 diamond ores", icon: DIAMOND }
+    h-ah-3: { mode: horizons, objective: ah-buy, target: 3, name: "Buy 3 auction house listings on Horizons", icon: EMERALD }
+    s-expedition-2: { mode: skyrealms, objective: expedition, target: 2, name: "Take part in 2 Expeditions", icon: MAP }
+    s-sell-25000: { mode: skyrealms, objective: shop-sell, target: 25000, name: "Earn 25,000 Coins at the shop", icon: GOLD_BLOCK }
+    s-crops-600: { mode: skyrealms, objective: harvest-crops, target: 600, name: "Harvest 600 crops on your island", icon: HAY_BLOCK }
+    s-ah-3: { mode: skyrealms, objective: ah-buy, target: 3, name: "Buy 3 auction house listings on SkyRealms", icon: EMERALD }
+
+# Achievements: lifetime totals of the objectives above, counted everywhere (`quests` counts
+# finished quests). Each pays once: Bolts (§6.2: 10–250, anti-farm rules), XP and an
+# optional cosmetic from cosmetics.yml.
+achievements:
+  groundbreaker: { stat: break-blocks, target: 1000, name: "Groundbreaker", description: "Break 1,000 natural blocks", bolts: 10, xp: 100, icon: STONE_PICKAXE }
+  excavator: { stat: break-blocks, target: 10000, name: "Excavator", description: "Break 10,000 natural blocks", bolts: 100, xp: 600, cosmetic: "title:excavator", icon: DIAMOND_PICKAXE }
+  first-catch: { stat: catch-fish, target: 50, name: "Reeling In", description: "Catch 50 fish", bolts: 10, xp: 100, icon: COD }
+  angler: { stat: catch-fish, target: 500, name: "Angler", description: "Catch 500 fish", bolts: 100, xp: 600, cosmetic: "title:angler", icon: FISHING_ROD }
+  hunter: { stat: kill-mobs, target: 250, name: "Hunter", description: "Defeat 250 monsters", bolts: 25, xp: 150, cosmetic: "arrow:arcane", icon: BOW }
+  monster-hunter: { stat: kill-mobs, target: 2500, name: "Monster Hunter", description: "Defeat 2,500 monsters", bolts: 100, xp: 600, cosmetic: "title:monster-hunter", icon: IRON_SWORD }
+  farmer: { stat: harvest-crops, target: 500, name: "Farmhand", description: "Harvest 500 crops", bolts: 10, xp: 100, icon: WHEAT_SEEDS }
+  green-thumb: { stat: harvest-crops, target: 5000, name: "Green Thumb", description: "Harvest 5,000 crops", bolts: 100, xp: 600, cosmetic: "title:green-thumb", icon: WHEAT }
+  regular-play: { stat: play-minutes, target: 600, name: "Settling In", description: "10 hours of active play", bolts: 25, xp: 200, icon: CLOCK }
+  dedicated: { stat: play-minutes, target: 6000, name: "Dedicated", description: "100 hours of active play", bolts: 250, xp: 1000, cosmetic: "badge:dedicated", icon: RECOVERY_COMPASS }
+  voyager: { stat: expedition, target: 5, name: "Voyager", description: "Take part in 5 Expeditions", bolts: 25, xp: 200, icon: OAK_BOAT }
+  explorer: { stat: expedition, target: 50, name: "Explorer", description: "Take part in 50 Expeditions", bolts: 150, xp: 800, cosmetic: "title:explorer", icon: MAP }
+  defender: { stat: skyborne, target: 5, name: "Defender", description: "Beat 5 Skyborne fortresses", bolts: 25, xp: 200, icon: SHIELD }
+  skyguard: { stat: skyborne, target: 25, name: "Skyguard", description: "Beat 25 Skyborne fortresses", bolts: 150, xp: 800, cosmetic: "title:skyguard", icon: GOLDEN_SWORD }
+  runner: { stat: parkour, target: 10, name: "Runner", description: "Finish 10 parkour runs", bolts: 10, xp: 100, icon: LEATHER_BOOTS }
+  parkour-ace: { stat: parkour, target: 100, name: "Parkour Ace", description: "Finish 100 parkour runs", bolts: 100, xp: 500, cosmetic: "tag:flag", icon: FEATHER }
+  questing: { stat: quests, target: 25, name: "Questing", description: "Finish 25 quests", bolts: 25, xp: 200, icon: BOOK }
+  questmaster: { stat: quests, target: 250, name: "Questmaster", description: "Finish 250 quests", bolts: 250, xp: 1000, cosmetic: "title:questmaster", icon: WRITABLE_BOOK }
+  bargain-hunter: { stat: ah-buy, target: 25, name: "Bargain Hunter", description: "Buy 25 auction house listings", bolts: 50, xp: 300, cosmetic: "badge:bargain-hunter", icon: GOLD_NUGGET }
+  merchant: { stat: shop-sell, target: 100000, name: "Merchant", description: "Earn 100,000 Coins at the SkyRealms shop", bolts: 100, xp: 600, cosmetic: "title:merchant", icon: EMERALD }

@@ -32,8 +32,9 @@ import us.rapidskies.core.RapidCore;
 import us.rapidskies.core.gui.Icons;
 
 /**
- * The hub hotbar: the game menu, a fresh parkour course, the player visibility toggle and,
- * during a parkour run, back-to-checkpoint, restart and leave. Hub items can't be moved, dropped or swapped, and
+ * The hub hotbar: the game menu, the Bolt shop, cosmetics and quests (rapid-core's menus), a
+ * fresh parkour course, the player visibility toggle and, during a parkour run,
+ * back-to-checkpoint, restart and leave. Hub items can't be moved, dropped or swapped, and
  * the hub hands out nothing else, so every join starts from a clean inventory. Staff mode
  * keeps its own tools: nothing here touches a player in it, and leaving it gives back the
  * hotbar it saved.
@@ -45,6 +46,9 @@ import us.rapidskies.core.gui.Icons;
 public final class HubHotbar implements Listener {
 
     public static final int SELECTOR_SLOT = 0;
+    public static final int SHOP_SLOT = 1;
+    public static final int COSMETICS_SLOT = 2;
+    public static final int QUESTS_SLOT = 6;
     public static final int PARKOUR_SLOT = 4;
     public static final int CHECKPOINT_SLOT = 3;
     public static final int RESTART_SLOT = 4;
@@ -57,6 +61,9 @@ public final class HubHotbar implements Listener {
     /** What a hub item does; stored on the item so it survives renames and relogs. */
     enum Tool {
         SELECTOR(Material.COMPASS, "selector"),
+        SHOP(Material.EMERALD, "shop"),
+        COSMETICS(Material.ARMOR_STAND, "cosmetics"),
+        QUESTS(Material.WRITABLE_BOOK, "quests"),
         PARKOUR(Material.FEATHER, "parkour"),
         PLAYERS_SHOWN(Material.LIME_DYE, "players-shown"),
         PLAYERS_HIDDEN(Material.GRAY_DYE, "players-hidden"),
@@ -128,6 +135,10 @@ public final class HubHotbar implements Listener {
         inv.clear();
         player.setItemOnCursor(null);
         inv.setItem(SELECTOR_SLOT, item(Tool.SELECTOR));
+        // rapid-core's phase 5 menus (PLAN.md §6.2, §7), here so the hub is where they're found.
+        inv.setItem(SHOP_SLOT, item(Tool.SHOP));
+        inv.setItem(COSMETICS_SLOT, item(Tool.COSMETICS));
+        inv.setItem(QUESTS_SLOT, item(Tool.QUESTS));
         if (hub.parkour().firstOpen().isPresent()) {
             inv.setItem(PARKOUR_SLOT, item(Tool.PARKOUR));
         }
@@ -270,6 +281,9 @@ public final class HubHotbar implements Listener {
         lastClick.put(player.getUniqueId(), now);
         switch (tool) {
             case SELECTOR -> hub.selector().open(player);
+            case SHOP -> RapidCore.get().progress().openShop(player);
+            case COSMETICS -> RapidCore.get().progress().openWardrobe(player);
+            case QUESTS -> RapidCore.get().progress().openQuests(player);
             case PARKOUR -> hub.parkour().firstOpen().ifPresentOrElse(c -> hub.parkour().join(player, c),
                     () -> hub.lang().send(player, "parkour.closed"));
             case PLAYERS_SHOWN, PLAYERS_HIDDEN -> toggleVisibility(player);

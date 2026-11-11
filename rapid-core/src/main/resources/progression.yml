@@ -1,0 +1,94 @@
+# Network levels, the Season Pass, login streaks and the rank stipend (PLAN.md §6.1, §6.2, §7).
+# Read from the rapid-core jar on every server, like cosmetics.yml: change it here, rebuild
+# and deploy. Every cosmetic named here must be in cosmetics.yml (checked at startup and by
+# the build's tests).
+
+# Network level (§7). Going from level L to L+1 takes base + step × (L − 1) XP, never more
+# than cap. Every level-up pays bolts-per-level (once per level, ever); the levels listed
+# under rewards also unlock cosmetics.
+levels:
+  base: 250
+  step: 50
+  cap: 1500
+  max-level: 100
+  bolts-per-level: 25
+  rewards:
+    5: ["tag:sprout"]
+    10: ["title:regular"]
+    20: ["badge:committed"]
+    25: ["title:seasoned"]
+    30: ["namecolor:dark-green"]
+    40: ["trail:spirit"]
+    50: ["title:veteran"]
+    75: ["badge:unstoppable"]
+    100: ["title:paragon"]
+
+# Network XP. Quests and achievements give their own (quests.yml). Playtime gives `amount`
+# every interval of active (not AFK) play that rapid-core's playtime Bolts count (15
+# minutes), for the first `daily-intervals` of a UTC day, so long sessions don't outpace
+# steady ones (§5.3). Events are paid by the gamemode plugins when a player takes part:
+# they name the event and the amount comes from here.
+xp:
+  playtime:
+    amount: 10
+    daily-intervals: 12
+  events:
+    expedition: 75
+    skyborne: 75
+    dragon: 100
+    chapter: 500
+    realm-tier: 300
+    parkour: 15
+
+# Daily login streak (§6.2): Bolts for the first login of each UTC day, by how many days in a
+# row; days past the end of the list pay the last amount. Missing a day starts again at 1.
+# Paid `delay-seconds` after joining, under the anti-farm rules (no Bolts for accounts
+# sharing an IP).
+streak:
+  rewards: [5, 10, 15, 20, 20, 20, 25]
+  delay-seconds: 20
+
+# Monthly Bolts stipend for ranks (§6.1): paid when a player with the rank is online and
+# hasn't had one in `every-days` days; an upgrade within that time tops it up to the higher
+# amount.
+stipend:
+  every-days: 30
+  amounts:
+    rapidplus: 100
+    rapidplusplus: 250
+    rapidplusplusplus: 600
+
+# Season Pass (§7): about 8 weeks, aligned with Horizons Chapters. Season XP is the network XP
+# earned while the season runs; a tier every xp-per-tier. The free track is everyone's; the
+# premium track is bought with Bolts (premium-price) and its rewards for tiers already
+# reached arrive at once. Cosmetics only, on both tracks. A season runs from `starts` to
+# `ends` (dates, 00:00 UTC); between seasons /pass shows the next one.
+pass:
+  seasons:
+    - id: s1
+      name: "First Light"
+      starts: "2026-11-16"
+      ends: "2027-01-11"
+      tiers: 30
+      xp-per-tier: 550
+      premium-price: 900
+      free:
+        5: ["title:first-light"]
+        10: ["tag:sunrise"]
+        15: ["badge:season-1"]
+        20: ["arrow:dawn"]
+        25: ["trail:embers"]
+        30: ["title:horizon-chaser"]
+      premium:
+        2: ["tag:dawnstar"]
+        4: ["trail:goldleaf"]
+        6: ["title:daybreak"]
+        8: ["arrow:sunspark"]
+        14: ["title:lightbringer"]
+        16: ["tag:halo"]
+        18: ["arrow:prism"]
+        20: ["trail:glimmer"]
+        22: ["badge:dawnwatch"]
+        26: ["title:solar"]
+        28: ["trail:solar-flare"]
+        30: ["title:dawnbringer"]

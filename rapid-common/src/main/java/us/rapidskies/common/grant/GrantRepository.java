@@ -142,6 +142,22 @@ public final class GrantRepository {
         return db.withConnection(c -> findByTxn(c, txn));
     }
 
+    /**
+     * Grants whose transaction id is {@code prefix} or starts with {@code prefix + ":"}
+     * ({@code tbx-1:rank}), oldest first: what one store transaction granted, for chargebacks.
+     */
+    public List<Grant> byTxnPrefix(String prefix) throws SQLException {
+        String like = prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + ":%";
+        return db.withConnection(c -> {
+            try (PreparedStatement ps = c.prepareStatement(
+                    "SELECT " + COLUMNS + " FROM grants WHERE txn_id = ? OR txn_id LIKE ? ORDER BY id")) {
+                ps.setString(1, prefix);
+                ps.setString(2, like);
+                return all(ps);
+            }
+        });
+    }
+
     /** A player's grants, newest first. */
     public List<Grant> history(UUID player, int limit, int offset) throws SQLException {
         return db.withConnection(c -> {

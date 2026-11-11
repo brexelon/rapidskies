@@ -34,6 +34,9 @@ import us.rapidskies.proxy.friend.FriendService;
 import us.rapidskies.proxy.friend.FriendSettings;
 import us.rapidskies.proxy.grant.GrantCommand;
 import us.rapidskies.proxy.grant.GrantService;
+import us.rapidskies.proxy.grant.RankPassDelivery;
+import us.rapidskies.common.shop.ShopRepository;
+import us.rapidskies.common.store.StoreTransactions;
 import us.rapidskies.proxy.grant.GrantsCommand;
 import us.rapidskies.proxy.party.PartyChatCommand;
 import us.rapidskies.proxy.party.PartyCommand;
@@ -163,7 +166,6 @@ public final class RapidProxy {
         events.register(this, new FrozenPlayers(proxy, lang, redis, logger));
 
         register("maintenance", new MaintenanceCommand(proxy, lang, redis, directory, logger));
-        register("rapid", new AdminCommand(proxy, lang, Ledger.bolts(database), profiles, logger));
         register("play", new PlayCommand(lang, queue, parties));
         register("hub", PlayCommand.hub(lang, queue, settings.hubGroup()), "lobby");
         register("leavequeue", PlayCommand.leave(lang, queue), "lq");
@@ -173,8 +175,14 @@ public final class RapidProxy {
         // The usual /msg aliases, so muscle memory works and LiteBans' mute list covers them.
         register("msg", messages.msgCommand(), "tell", "w", "whisper", "m", "t", "pm", "message");
         register("r", messages.replyCommand(), "reply");
-        StaffChatCommand staffChat = new StaffChatCommand(proxy, lang, logger);
+        StaffChatCommand staffChat = new StaffChatCommand(proxy, lang, ranks, logger);
         register("staffchat", staffChat, "sc");
+        // Store deliveries and chargebacks (PLAN.md §6.3), rank passes bought with Bolts (§6.1).
+        StoreTransactions store = new StoreTransactions(database);
+        grants.store(store);
+        Ledger bolts = Ledger.bolts(database);
+        register("rapid", new AdminCommand(proxy, lang, bolts, profiles, store, grants, staffChat, logger));
+        new RankPassDelivery(proxy, new ShopRepository(database, bolts), grants, logger).start(this, redis);
         // Alerts from the backends (rapid-market's suspicious-trade check), shown in staff chat.
         redis.subscribeJson(Channels.STAFF_ALERT, Channels.StaffAlert.class, staffChat::alert);
         register("grant", new GrantCommand(proxy, lang, grants));

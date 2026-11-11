@@ -1,2 +1,3 @@
 # Applied in version order. Add new scripts at the end; never edit or remove a shipped one.
 V1__skyrealms.sql
+V2__season_cosmetics.sql
