@@ -22,6 +22,7 @@ import us.rapidskies.common.profile.ModeFirstJoins;
 import us.rapidskies.common.profile.ProfileRepository;
 import us.rapidskies.common.redis.Channels;
 import us.rapidskies.common.redis.RedisBus;
+import us.rapidskies.core.afk.AfkBroadcast;
 import us.rapidskies.core.afk.AfkTracker;
 import us.rapidskies.core.chat.ChatListener;
 import us.rapidskies.core.chat.ChatTags;
@@ -162,6 +163,8 @@ public final class RapidCore extends JavaPlugin {
         afk = new AfkTracker(this, settings.afk(), lang);
         pm.registerEvents(afk, this);
         afk.start();
+        // The proxy parks players who stay AFK on the Limbo server.
+        pm.registerEvents(new AfkBroadcast(this, afk, redis, settings.serverId()), this);
         tailwind = new TailwindService(this, database, profiles, afk, settings, lang);
         pm.registerEvents(tailwind, this);
         tailwind.start();

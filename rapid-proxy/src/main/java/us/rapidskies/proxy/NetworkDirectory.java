@@ -119,6 +119,11 @@ final class NetworkDirectory {
         return maintenance;
     }
 
+    /** False while the registry can't be read: the snapshot is stale, so "no hub up" can't be trusted. */
+    boolean registryHealthy() {
+        return registryHealthy;
+    }
+
     void setMaintenanceLocally(boolean on) {
         maintenance = on;
     }

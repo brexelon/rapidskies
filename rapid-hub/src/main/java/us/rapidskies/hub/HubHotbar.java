@@ -63,7 +63,9 @@ public final class HubHotbar implements Listener {
         SELECTOR(Material.COMPASS, "selector"),
         SHOP(Material.EMERALD, "shop"),
         COSMETICS(Material.ARMOR_STAND, "cosmetics"),
-        QUESTS(Material.WRITABLE_BOOK, "quests"),
+        // A plain book drawn as a book and quill: the client opens the book editor for a real
+        // writable book the moment it's used, before the server can cancel anything.
+        QUESTS(Material.BOOK, Material.WRITABLE_BOOK, "quests"),
         PARKOUR(Material.FEATHER, "parkour"),
         PLAYERS_SHOWN(Material.LIME_DYE, "players-shown"),
         PLAYERS_HIDDEN(Material.GRAY_DYE, "players-hidden"),
@@ -72,10 +74,17 @@ public final class HubHotbar implements Listener {
         LEAVE(Material.BARRIER, "leave");
 
         final Material material;
+        /** The item model to show instead of {@link #material}'s own, or null. */
+        final Material look;
         final String key;
 
         Tool(Material material, String key) {
+            this(material, null, key);
+        }
+
+        Tool(Material material, Material look, String key) {
             this.material = material;
+            this.look = look;
             this.key = key;
         }
     }
@@ -103,7 +112,12 @@ public final class HubHotbar implements Listener {
         Lang lang = hub.lang();
         ItemStack item = Icons.icon(tool.material, lang.get("item." + tool.key + "-name"),
                 lang.list("item." + tool.key + "-lore"));
-        item.editMeta(meta -> meta.getPersistentDataContainer().set(toolKey, PersistentDataType.STRING, tool.name()));
+        item.editMeta(meta -> {
+            meta.getPersistentDataContainer().set(toolKey, PersistentDataType.STRING, tool.name());
+            if (tool.look != null) {
+                meta.setItemModel(tool.look.getKey());
+            }
+        });
         return item;
     }
 

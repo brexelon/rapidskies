@@ -1,0 +1,5 @@
+name: rapid-limbo
+main: us.rapidskies.limbo.RapidLimbo
+version: "${version}"
+author: RapidSkies
+description: "Tells rapid-proxy when a player parked in limbo is back at the keyboard, and catches players who fall off the island, and lets clients before 26.2 in through ViaLimbo."

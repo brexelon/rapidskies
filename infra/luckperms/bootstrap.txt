@@ -85,6 +85,10 @@ lpv group moderator permission set rapid.command.bolts.others true
 lpv group helper permission set rapid.staffchat true server=proxy
 lpv group builder permission set rapid.staffchat true server=proxy
 lpv group developer permission set rapid.staffchat true server=proxy
+# Staff idling on purpose (watching a player, vanished) aren't moved to limbo when AFK.
+lpv group helper permission set rapid.limbo.afk-exempt true server=proxy
+lpv group builder permission set rapid.limbo.afk-exempt true server=proxy
+lpv group developer permission set rapid.limbo.afk-exempt true server=proxy
 
 # Grants (/grant and /grants on the proxy; plan §9). Moderators can read grant history;
 # Sr. Mods hand out and revoke paid ranks (comps, giveaways); admins also grant team roles

@@ -75,6 +75,12 @@ public final class AfkTracker implements Listener {
         return isAfk(player.getUniqueId());
     }
 
+    /** When the player last turned their view, chatted or ran a command (epoch millis), or now if unknown. */
+    public long lastActive(UUID player) {
+        State s = states.get(player);
+        return s == null ? System.currentTimeMillis() : s.lastActive;
+    }
+
     /** Marks a player AFK now ({@code /afk}); any deliberate input brings them back. */
     public void setAfk(Player player) {
         State s = states.get(player.getUniqueId());

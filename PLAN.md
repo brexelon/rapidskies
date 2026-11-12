@@ -748,6 +748,16 @@ Next:
 - [x] Set the first warps on Horizons (`/setwarp`)
 - [ ] Later: `/tpa` across servers (through the proxy, once Horizons has a second instance), `/ignore` with `/msg` on the proxy, and `/nick` for Rapid+++ (§6.1, staff-audited)
 
+### Limbo (`rapid-limbo`, rapid-proxy)
+
+A LOOHP Limbo server (`limbo`, not Paper) where players wait instead of being disconnected or holding a slot:
+
+- [x] No lobby up: players joining, or kicked off a server, go to limbo and wait in the lobby queue (action bar, sent the moment a hub is up; `/play` still works). Velocity's `try` order is only used while the registry can't be read
+- [x] AFK: rapid-core reports AFK changes over Redis `rapid:afk`; after `limbo.afk.minutes` (15) without input the proxy moves the player to limbo and out of any queue. A view turn (rapid-limbo, plugin channel `rapidskies:activity`), chat or a command there queues them back to their server at return priority, or a lobby if it isn't back in time. Exempt: `rapid.limbo.afk-exempt` (staff), frozen players, `limbo.afk.exempt-groups`
+- [x] Players in limbo count in the server-list total; Limbo is never a queue, party-follow or `/friend join` target
+- [x] Limbo 2026.0.3-ALPHA (26.3) with ViaLimbo 2026.1.3 (ViaLimbo fails on Limbo 0.7.5) starts on JDK 25 with rapid-limbo and the spawn build (its `chain` renamed to `iron_chain` for 26.3)
+- [ ] Create the server in the panel and run the checks in infra/README.md → Limbo on 1.20.1 and 26.3: Velocity modern forwarding through ViaLimbo, landing on the medallion, the lobby wait, an AFK round trip
+
 **Recommended launch strategy:** launch both modes together. With only two modes, launching one at a time would feel thin. Run Horizons as the first closed beta, though, since it relies more on premade plugins and will stress-test the core platform early. Don't wipe beta progress on SkyRealms or Horizons at launch.
 
 ### Test matrix (every release)

@@ -1,0 +1,3 @@
+# Limbo's default permission.yml makes its author's account (LOOHP) an admin: /stop, /kick,
+# /say and /gamemode on our server. Nobody gets those here; use the panel console instead.
+players: {}

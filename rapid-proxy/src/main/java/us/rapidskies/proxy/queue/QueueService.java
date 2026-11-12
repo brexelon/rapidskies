@@ -11,7 +11,9 @@ import com.velocitypowered.api.scheduler.ScheduledTask;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import net.kyori.adventure.text.Component;
@@ -45,6 +47,8 @@ public final class QueueService {
     private final String hubGroup;
     private final Logger logger;
     private final JoinQueue queue = new JoinQueue();
+    /** Taken off a line and being connected right now. */
+    private final Set<UUID> sending = ConcurrentHashMap.newKeySet();
     private ScheduledTask task;
     private long ticks;
 
@@ -109,9 +113,13 @@ public final class QueueService {
 
     /** Puts the player in line with their own priority, or sends them straight away if there's room. */
     public void join(Player player, QueueTarget target) {
+        join(player, target, priority(player), true);
+    }
+
+    /** The player's own place-in-line priority, from their rank or team role. */
+    public int priority(Player player) {
         ProxyRanks.Standing standing = ranks.of(player);
-        int priority = standing.staff().isPresent() ? settings.staffPriority() : settings.priority().get(standing.rank());
-        join(player, target, priority, true);
+        return standing.staff().isPresent() ? settings.staffPriority() : settings.priority().get(standing.rank());
     }
 
     /**
@@ -119,13 +127,19 @@ public final class QueueService {
      * joins pass their own messages and use false.
      */
     public void join(Player player, QueueTarget target, int priority, boolean announce) {
+        join(player, target, priority, announce, Long.MAX_VALUE);
+    }
+
+    /** Like {@link #join(Player, QueueTarget, int, boolean)}, leaving the line at {@code expiresAt} if still waiting. */
+    public void join(Player player, QueueTarget target, int priority, boolean announce, long expiresAt) {
         Optional<String> current = player.getCurrentServer().map(c -> c.getServerInfo().getName());
         if (current.isPresent() && servers.get().stream()
                 .anyMatch(s -> s.id().equals(current.get()) && target.matches(s))) {
             lang.send(player, "queue.already-there", name(target));
             return;
         }
-        JoinQueue.Position pos = queue.join(player.getUniqueId(), target, priority, System.currentTimeMillis());
+        JoinQueue.Position pos = queue.join(player.getUniqueId(), target, priority, System.currentTimeMillis(),
+                expiresAt);
         boolean sent = dispatch().stream().anyMatch(d -> d.entry().player().equals(player.getUniqueId()));
         if (sent || !announce) {
             return;
@@ -147,9 +161,15 @@ public final class QueueService {
         return queue.position(player);
     }
 
+    /** In a line, or being sent somewhere by the queue right now. */
+    public boolean waiting(UUID player) {
+        return sending.contains(player) || queue.position(player).isPresent();
+    }
+
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
         queue.remove(event.getPlayer().getUniqueId());
+        sending.remove(event.getPlayer().getUniqueId());
     }
 
     /** Got there another way (/server, a kick to the hub they queued for, ...): stop waiting. */
@@ -253,26 +273,37 @@ public final class QueueService {
 
     private void connect(Player player, RegisteredServer server, JoinQueue.Entry entry) {
         lang.send(player, "queue.sending", name(entry.target()));
+        sending.add(player.getUniqueId());
         player.createConnectionRequest(server).connect().whenComplete((result, error) -> {
-            if (error == null && (result.isSuccessful()
-                    || result.getStatus() == ConnectionRequestBuilder.Status.ALREADY_CONNECTED)) {
-                return;
-            }
-            if (!player.isActive()) {
-                return;
-            }
-            if (error == null && result.getStatus() == ConnectionRequestBuilder.Status.CONNECTION_CANCELLED) {
-                return; // another plugin (or the player) cancelled it on purpose
-            }
-            Component reason = error != null ? Component.text(error.getClass().getSimpleName())
-                    : result.getReasonComponent().orElse(Component.empty());
-            if (entry.attempts() + 1 < MAX_ATTEMPTS) {
-                queue.retry(entry);
-                lang.send(player, "queue.retrying", name(entry.target()), Placeholder.component("reason", reason));
-            } else {
-                lang.send(player, "queue.failed", name(entry.target()), Placeholder.component("reason", reason));
+            try {
+                connected(player, entry, result, error);
+            } finally {
+                // After a retry is back in line, so the player never looks like they're waiting for nothing.
+                sending.remove(player.getUniqueId());
             }
         });
+    }
+
+    private void connected(Player player, JoinQueue.Entry entry, ConnectionRequestBuilder.Result result,
+                           Throwable error) {
+        if (error == null && (result.isSuccessful()
+                || result.getStatus() == ConnectionRequestBuilder.Status.ALREADY_CONNECTED)) {
+            return;
+        }
+        if (!player.isActive()) {
+            return;
+        }
+        if (error == null && result.getStatus() == ConnectionRequestBuilder.Status.CONNECTION_CANCELLED) {
+            return; // another plugin (or the player) cancelled it on purpose
+        }
+        Component reason = error != null ? Component.text(error.getClass().getSimpleName())
+                : result.getReasonComponent().orElse(Component.empty());
+        if (entry.attempts() + 1 < MAX_ATTEMPTS) {
+            queue.retry(entry);
+            lang.send(player, "queue.retrying", name(entry.target()), Placeholder.component("reason", reason));
+        } else {
+            lang.send(player, "queue.failed", name(entry.target()), Placeholder.component("reason", reason));
+        }
     }
 
     private void showPositions() {

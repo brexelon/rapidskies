@@ -81,6 +81,12 @@ public final class Channels {
      */
     public static final String RANK_PASS = "rank-pass";
 
+    /**
+     * A player became AFK or came back on a backend (rapid-core's AFK tracker). The proxy
+     * moves players who stay AFK long enough to the Limbo server.
+     */
+    public static final String AFK = "afk";
+
     /** Redis key holding "true" while maintenance mode is on. */
     public static final String MAINTENANCE_KEY = "maintenance";
 
@@ -179,6 +185,17 @@ public final class Channels {
 
     /** {@code purchaseId} is the {@code shop_purchases} row to deliver. */
     public record RankPassBought(long purchaseId, String uuid) {
+    }
+
+    /**
+     * {@code server} is where it happened, so the proxy can drop a late message from a server
+     * the player has already left. {@code idleSince} is when they last gave input (epoch
+     * millis); only meaningful when {@code afk} is true.
+     */
+    public record AfkChanged(String uuid, String server, boolean afk, long idleSince) {
+        public UUID player() {
+            return UUID.fromString(uuid);
+        }
     }
 
     /** {@code target} is a server group ({@code smp}) or a server id ({@code smp-1}). */

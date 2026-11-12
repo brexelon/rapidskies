@@ -53,7 +53,23 @@ queue:
     staff: 3
   # Players moved to a lobby because their game server restarted are queued to go back
   # (ahead of new arrivals) and wait this long for it before leaving the line. 0 = off.
+  # Also how long a player back from AFK in limbo waits for their server (at least 1).
   return-after-restart-minutes: 5
+
+# The Limbo server (LOOHP's Limbo with ViaLimbo and rapid-limbo; infra/README.md → Limbo).
+# When every lobby is down, players joining or kicked off a server wait there in the lobby
+# queue instead of being disconnected. AFK players are parked there too.
+limbo:
+  # Its name in velocity.toml. If it isn't there, all of this is off.
+  server: limbo
+  afk:
+    # Minutes without input (turning the view, chat, commands: rapid-core's AFK rules,
+    # counted from the last input) before a player is moved to limbo. They're sent back to
+    # the server they were on as soon as they do any of those in limbo. 0 = off.
+    # Players with rapid.limbo.afk-exempt (staff) are never moved.
+    minutes: 15
+    # Server groups whose AFK players stay put (e.g. [skyrealms] to allow AFK farms).
+    exempt-groups: []
 
 parties:
   # Max members by the leader's rank, leader included (PLAN.md §6.1).

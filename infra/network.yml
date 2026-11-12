@@ -36,7 +36,7 @@ servers:
     worlds: { hub: hub }
 
   hub-2:
-    ptero_id: ""
+    ptero_id: "5215deec"
     profiles: [paper-base, hub]
     plugins: [paper-base, hub]
     schedules: [daily-backup]
@@ -59,6 +59,14 @@ servers:
     vars: { LP_SERVER: smp }
     # The spawn is its own world next to the Heartland (rapid-core loads it as rapidskies:spawn).
     worlds: { heartland/dimensions/rapidskies/spawn: horizons-spawn }
+
+  # LOOHP's Limbo, not Paper (infra/README.md -> Limbo): rapid-proxy parks AFK players here,
+  # and everyone waits here while no hub is up. No rapid-core, so it sends no heartbeat:
+  # the proxy finds it by name (rapid-proxy config limbo.server). Nothing to back up.
+  limbo:
+    ptero_id: "2dd4a148"
+    profiles: [limbo]
+    plugins: [limbo]
 
   build:
     ptero_id: ""
@@ -208,3 +216,13 @@ plugin_sets:
   worldgen:
     - "Chunky-Paper-*.jar"
     - "ChunkyBorder-Paper-*.jar"
+
+  # The Limbo server. Limbo-*.jar itself is the server jar, uploaded once by hand
+  # (infra/README.md -> Limbo); these go in its plugins/ folder.
+  limbo:
+    # ViaVersion for Limbo: lets 1.20 - 26.2 clients into Limbo's 26.3. Must be built for the
+    # Limbo version the server runs (infra/README.md -> Limbo).
+    - "ViaLimbo-*.jar"
+    # Tells rapid-proxy when an AFK player turns their view, to send them back, and
+    # patches ViaLimbo so clients before 26.2 can join (infra/README.md -> Limbo).
+    - "dist/rapid-limbo.jar"

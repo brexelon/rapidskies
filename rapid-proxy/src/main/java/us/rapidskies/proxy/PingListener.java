@@ -8,6 +8,7 @@ import java.util.List;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import us.rapidskies.common.lang.Lang;
+import us.rapidskies.proxy.limbo.LimboService;
 
 /**
  * Server list entry (PLAN.md §2): branded line 1, rotating line 2, network-wide player
@@ -18,11 +19,13 @@ final class PingListener {
     private final Lang lang;
     private final NetworkDirectory directory;
     private final ProxySettings settings;
+    private final LimboService limbo;
 
-    PingListener(Lang lang, NetworkDirectory directory, ProxySettings settings) {
+    PingListener(Lang lang, NetworkDirectory directory, ProxySettings settings, LimboService limbo) {
         this.lang = lang;
         this.directory = directory;
         this.settings = settings;
+        this.limbo = limbo;
     }
 
     @Subscribe
@@ -46,11 +49,11 @@ final class PingListener {
         }
         ping.description(lang.get("motd.line1").append(Component.newline()).append(line2));
 
-        // Heartbeat totals cover every backend; fall back to this proxy's count if the
-        // registry is empty (Redis trouble).
+        // Heartbeat totals cover every backend but Limbo (it sends none); fall back to this
+        // proxy's count if the registry is empty (Redis trouble, or every backend down).
         int online = directory.networkOnline();
         if (online > 0) {
-            ping.onlinePlayers(online);
+            ping.onlinePlayers(online + limbo.online());
         }
         event.setPing(ping.build());
     }

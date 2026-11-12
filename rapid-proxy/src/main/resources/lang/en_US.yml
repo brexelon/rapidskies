@@ -45,6 +45,8 @@ kick:
     <muted><reason></muted>
   # <reason> is the backend's own kick message.
   redirected: "<prefix><muted>You were moved to a lobby:</muted> <reason>"
+  # Kicked while no lobby is up: they wait in limbo (limbo.no-lobby follows).
+  to-limbo: "<prefix><muted>You were moved to limbo:</muted> <reason>"
 
 maintenance:
   usage: '<prefix><muted>Usage:</muted> <text>/maintenance \<on|off|status></text>'
@@ -104,6 +106,20 @@ queue:
   # The server the player was on is restarting; they're queued to go back.
   returning: "<accent>Queue</accent> <dark>»</dark> <accent><target></accent> <text>is restarting. You'll be sent back as soon as it's up.</text> <muted>/leavequeue to stay in the lobby.</muted>"
   return-expired: "<accent>Queue</accent> <dark>»</dark> <accent><target></accent> <muted>didn't come back in time, so you left the queue. Try</muted> <text>/play</text> <muted>later.</muted>"
+
+# The Limbo server: where players wait while every lobby is down, and where AFK players are
+# parked (config limbo.afk.minutes). The queue's own messages and action bar show the wait.
+limbo:
+  # Arrived because no lobby is up; they're in the lobby queue.
+  no-lobby: "<primary>Limbo</primary> <dark>»</dark> <text>Every lobby is offline right now, so you're waiting here.</text> <muted>You'll be sent to one the moment it's back, or use</muted> <text>/play</text> <muted>to join a mode that's up.</muted>"
+  # <target> is the server they were AFK on.
+  afk: "<primary>Limbo</primary> <dark>»</dark> <text>You were AFK, so you've been moved to limbo.</text> <muted>Move your mouse or type anything to go back to</muted> <accent><target></accent><muted>.</muted>"
+  afk-left-queue: "<primary>Limbo</primary> <dark>»</dark> <muted>You also left the queue for <target>.</muted>"
+  afk-actionbar: "<primary>Limbo</primary> <dark>»</dark> <muted>AFK</muted> <dark>•</dark> <text>Move your mouse to go back to</text> <accent><target></accent>"
+  back: "<primary>Limbo</primary> <dark>»</dark> <text>Welcome back!</text>"
+  # Their server is full or not up yet; they wait ahead of new arrivals (the action bar shows where).
+  back-queued: "<primary>Limbo</primary> <dark>»</dark> <text>You're in line to go back to</text> <accent><target></accent><text>.</text>"
+  chat-off: "<primary>Limbo</primary> <dark>»</dark> <muted>Chat is off in limbo, but</muted> <text>/msg</text><muted>,</muted> <text>/pc</text> <muted>and</muted> <text>/friend</text> <muted>still work.</muted>"
 
 # Parties (PLAN.md §7). Size depends on the leader's rank.
 party:

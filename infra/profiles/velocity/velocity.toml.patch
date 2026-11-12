@@ -30,6 +30,8 @@ servers:
   # back to a hub. /server is also denied to non-staff in LuckPerms (luckperms/bootstrap.txt).
   build: "${addr:build}"
   staging: "${addr:staging}"
+  # Not in `try`: rapid-proxy sends players here itself when no hub is up, and AFK players.
+  limbo: "${addr:limbo}"
   try: ["hub-1", "hub-2"]
 
 # No forced hosts: rapidskies.us and mc.rapidskies.us both land on a hub via `try`.

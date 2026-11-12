@@ -22,7 +22,7 @@ The panel and the game node are separate machines.
 |---|---|---|
 | **Your PC / CI** | `rsdeploy.py` | Everything except `host/`. Nothing is installed on either server. |
 | **Panel server** | Pterodactyl Panel and its own database | `host/backup-db.sh` for the panel's database, if that's the only MariaDB there (see Backups) |
-| **Game node** | Wings and every game container (Velocity, hubs, skyrealms, smp, build, staging) | `host/backup-db.sh` for the game databases and Wings backups |
+| **Game node** | Wings and every game container (Velocity, hubs, skyrealms, smp, build, staging, limbo) | `host/backup-db.sh` for the game databases and Wings backups |
 
 How `rsdeploy` reaches them:
 
@@ -438,6 +438,57 @@ delivered (as many as are left), marks it in `store_transactions`, and posts a s
 alert asking for a review; a shortfall means the Bolts were already spent. Running it twice
 changes nothing. Transaction ids are everything before the first `:`, so keep the `:rank` /
 `:bolts` suffixes when one package runs several commands.
+
+## Limbo (rapid-limbo, rapid-proxy)
+
+`limbo` runs **LOOHP's Limbo** (2026.0.3, Minecraft 26.3), a tiny standalone server (not
+Paper) holding one small build, `profiles/limbo/rapid-limbo-spawn.schem`. That's
+`worlds/revamped/rapid-limbo-spawn.schem` (a 1.20.1 export) with its one `minecraft:chain`
+renamed to `minecraft:iron_chain`, the 1.21.9 name and the only one Limbo 26.3 doesn't know.
+After changing the build, export it for 26.x or apply the same rename to the new copy; a block
+Limbo doesn't know is left out of the world. rapid-proxy uses it two ways:
+
+- **No lobby up.** A player joining, or kicked off a server, while every hub is down lands in
+  limbo instead of being disconnected. They wait in the lobby queue (the usual queue action
+  bar) and are sent to a hub the moment one is up; `/play` still takes them to a mode that's up.
+- **AFK.** After `limbo.afk.minutes` (rapid-proxy config, default 15) without turning their
+  view, chatting or running a command (rapid-core's AFK rules, reported over Redis
+  `rapid:afk`), a player is moved to limbo and leaves any queue they were in. Turning their
+  view (rapid-limbo tells the proxy), chatting or any command there queues them back to the
+  server they were on, ahead of new arrivals; if it isn't up within
+  `queue.return-after-restart-minutes`, they go to a lobby. `limbo.afk.exempt-groups` leaves
+  whole groups alone (e.g. `[skyrealms]` for AFK farms), and `rapid.limbo.afk-exempt` (staff,
+  `luckperms/bootstrap.txt`) exempts a player. Frozen players are never moved.
+
+Limbo sends no heartbeat, so the proxy finds it by name (`limbo.server`, default `limbo`) and
+never treats it as a queue, party-follow or `/friend join` target. Without a `limbo` entry in
+`velocity.toml` all of this is off and the proxy behaves as before.
+
+**Setting it up:**
+
+1. **Jars.** Limbo and ViaLimbo (which lets clients older than Limbo's 26.3 in) must be built
+   for each other: ViaLimbo names the Limbo version it was built against in its jar
+   (`META-INF/maven/com.loohp/ViaLimbo/pom.xml`; ViaLimbo 2026.1.3 needs Limbo 2026.0.3-ALPHA).
+   A mismatch fails at startup with a `NoSuchMethodError`, and the public port never opens:
+   ViaLimbo's ViaProxy owns it and runs Limbo on an internal port behind it.
+   rapid-limbo also patches ViaLimbo's ViaBackwards (`via/InfiniburnFix`): Limbo's dimension
+   types list their `infiniburn` blocks inline (the 26.2+ format), which clients before 26.2
+   can't decode, so they're disconnected on joining with the whole registry as the reason.
+   rapid-limbo is compiled against the ViaLimbo jar in `plugins/`; after updating ViaLimbo,
+   rebuild it and check the limbo console for `Couldn't patch ViaLimbo's ViaBackwards`.
+2. **Panel.** Create a small server (256 MB is plenty) with an allocation on `172.18.0.1`.
+   The Paper egg works: its config parser sets `server-ip`/`server-port` in `server.properties`,
+   which Limbo reads with the same keys. Upload the Limbo jar through the file manager and set
+   `SERVER_JARFILE` to its name. Startup: `java -Xms256M -Xmx256M -jar {{SERVER_JARFILE}} --nogui`
+   (Java 21 or newer; checked on JDK 25.0.5). The panel may keep showing it as starting:
+   Limbo doesn't print Paper's "Done" line. Players aren't affected.
+3. **Deploy.** Put its `ptero_id` in `network.yml`, then `rsdeploy.py plugins limbo`, start it
+   once and stop it, `rsdeploy.py apply limbo --restart`, and `rsdeploy.py apply velocity
+   --restart` to add it to `velocity.toml`.
+4. **Verify.** With both hubs stopped, join: you land on the gold medallion facing the sign, with
+   the `limbo.no-lobby` line and the queue action bar; start a hub and you're moved within a few
+   seconds. For AFK, set `limbo.afk.minutes` to 1 on the proxy for a test (rapid-core marks you
+   AFK after its own `afk.idle-seconds` first), then turn your view in limbo to go back.
 
 ## Lang overrides
 

@@ -31,7 +31,7 @@ import us.rapidskies.proxy.party.Parties;
 class LangKeysTest {
 
     private static final Pattern KEY = Pattern.compile(
-            "\"((?:admin|bolts|errors|freeze|friend|grant|kick|maintenance|motd|msg|party|queue|staffchat)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
+            "\"((?:admin|bolts|errors|freeze|friend|grant|kick|limbo|maintenance|motd|msg|party|queue|staffchat)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
 
     @Test
     void everyKeyInTheCodeIsInTheBundle() throws IOException {
@@ -116,7 +116,8 @@ class LangKeysTest {
         }
         // Prefixes the code completes at runtime, and config paths that share a key's shape.
         keys.removeIf(k -> List.of("party.fail", "grant.name", "queue.groups", "queue.priority", "queue.priority.staff",
-                "queue.return-after-restart-minutes", "motd.rotate-seconds").contains(k));
+                "queue.return-after-restart-minutes", "motd.rotate-seconds", "limbo.server", "limbo.afk.minutes",
+                "limbo.afk.exempt-groups").contains(k));
         return keys;
     }
 }

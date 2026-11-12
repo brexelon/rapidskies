@@ -39,6 +39,8 @@ import us.rapidskies.proxy.grant.RankPassDelivery;
 import us.rapidskies.common.shop.ShopRepository;
 import us.rapidskies.common.store.StoreTransactions;
 import us.rapidskies.proxy.grant.GrantsCommand;
+import us.rapidskies.proxy.limbo.LimboService;
+import us.rapidskies.proxy.limbo.LimboSettings;
 import us.rapidskies.proxy.party.PartyChatCommand;
 import us.rapidskies.proxy.party.PartyCommand;
 import us.rapidskies.proxy.party.PartyService;
@@ -90,6 +92,7 @@ public final class RapidProxy {
     private RedisBus redis;
     private NetworkDirectory directory;
     private QueueService queue;
+    private LimboService limbo;
     private PartyService parties;
     private SharedIps sharedIps;
 
@@ -147,6 +150,10 @@ public final class RapidProxy {
         queue = new QueueService(proxy, lang, QueueSettings.from(config), ranks, directory::servers,
                 settings.hubGroup(), logger);
         queue.start(this, redis);
+        FrozenPlayers frozen = new FrozenPlayers(proxy, lang, redis, logger);
+        limbo = new LimboService(proxy, lang, LimboSettings.from(config), queue, settings.hubGroup(),
+                frozen::isFrozen, logger);
+        limbo.start(this, redis);
         parties = new PartyService(proxy, lang, PartySettings.from(config), ranks, queue);
         parties.start(this);
         FriendService friends = new FriendService(proxy, lang, FriendSettings.from(config), ranks, queue, database,
@@ -156,15 +163,16 @@ public final class RapidProxy {
                 new PlayerLookup(proxy, profiles), luckPerms, ranks, logger);
 
         var events = proxy.getEventManager();
-        events.register(this, new ConnectionListener(lang, directory, settings));
-        events.register(this, new PingListener(lang, directory, settings));
+        events.register(this, new ConnectionListener(lang, directory, settings, limbo));
+        events.register(this, new PingListener(lang, directory, settings, limbo));
         events.register(this, queue);
+        events.register(this, limbo);
         events.register(this, parties);
         events.register(this, friends);
         events.register(this, messages);
         events.register(this, new TailwindSessions(proxy, database, settings.tailwind(), logger));
         events.register(this, sharedIps);
-        events.register(this, new FrozenPlayers(proxy, lang, redis, logger));
+        events.register(this, frozen);
         events.register(this, new StaffPresence(proxy, lang, ranks, vanish));
 
         register("maintenance", new MaintenanceCommand(proxy, lang, redis, directory, logger));
@@ -207,6 +215,10 @@ public final class RapidProxy {
     }
 
     private void closeServices() {
+        if (limbo != null) {
+            limbo.stop();
+            limbo = null;
+        }
         if (queue != null) {
             queue.stop();
             queue = null;

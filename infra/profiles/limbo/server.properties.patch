@@ -1,0 +1,30 @@
+# LOOHP's Limbo 2026.0.x (Minecraft 26.3; ViaLimbo lets older clients in). Not Paper: its
+# server.properties has its own keys. server-ip and server-port are left alone: the
+# Pterodactyl egg manages them, as on the Paper servers (infra/README.md → Limbo).
+
+# Behind Velocity with modern forwarding, like every backend.
+bungeecord: "false"
+velocity-modern: "true"
+bungee-guard: "false"
+forwarding-secrets: "${VELOCITY_SECRET}"
+
+# The build: worlds/revamped/rapid-limbo-spawn.schem (Sponge v2, exported for 1.20.1), shipped
+# next to this patch with `chain` renamed to `iron_chain` (1.21.9), the one block Limbo 26.3
+# doesn't know by its old name. Limbo places it at the world origin, ignoring its offset.
+level-name: "world;rapid-limbo-spawn.schem"
+level-dimension: "minecraft:overworld"
+# On the gold medallion under the hanging lantern, facing the sign (south).
+world-spawn: "world;22.5;14;21.5;0;0"
+default-gamemode: "adventure"
+allow-flight: "false"
+# Off: rapid-proxy sees chat itself (an AFK player who chats is back) and tells players
+# what still works (/msg, /pc). Limbo would only show it to whoever else is here.
+allow-chat: "false"
+max-players: "-1"
+# The build is 44 × 43 blocks.
+view-distance: "4"
+handshake-verbose: "false"
+# Velocity already logs addresses.
+log-player-ip-addresses: "false"
+motd: '{"text":"RapidSkies limbo"}'
+version: "RapidSkies"

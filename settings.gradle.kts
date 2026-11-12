@@ -27,5 +27,6 @@ include(
     "rapid-horizons",   // smp
     "rapid-claims",     // smp
     "rapid-market",     // smp + skyrealms
+    "rapid-limbo",      // the Limbo server (LOOHP Limbo, not Paper)
     // "rapid-minigame" is deferred until gamemode 3 is chosen (PLAN.md §5.4).
 )
