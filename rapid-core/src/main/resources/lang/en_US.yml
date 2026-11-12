@@ -39,6 +39,18 @@ chat:
   ranked: "<rank><text><player></text><dark>:</dark> <text><message></text>"
   staff: "<rank><text><player></text><dark>:</dark> <text><message></text>"
 
+# Minecraft's own join/quit lines are off (config.yml join-messages); these welcome a
+# player's first visit to a gamemode. <mode> is join.mode.<gamemode>.
+join:
+  mode:
+    skyrealms: "<primary><bold>SkyRealms</bold></primary>"
+    horizons: "<primary><bold>Horizons SMP</bold></primary>"
+  first:
+    # To the newcomer.
+    welcome: "<prefix><text>Welcome to</text> <mode><text>, <player>! Have fun out there.</text>"
+    # To everyone else on the server.
+    announce: "<accent>✦</accent> <accent><player></accent> <text>joined</text> <mode> <text>for the first time. Say hi!</text>"
+
 login:
   # Shown on the disconnect screen if the profile can't be loaded (database trouble).
   profile-failed: |-

@@ -224,6 +224,13 @@ staffchat:
   format: "<red>Staff</red> <dark>»</dark> <muted>[<server>]</muted> <role><text><player></text><dark>:</dark> <text><message></text>"
   # An automatic alert from a backend (rapid-market's suspicious-trade check). <message> is the backend's text.
   alert: "<red>Staff</red> <dark>»</dark> <muted>[<server>]</muted> <error>⚠</error> <message>"
+  # A team member connecting, switching servers or leaving (StaffPresence). <role> as above;
+  # <from>/<server> are server names; <vanished> is presence.vanished or nothing.
+  presence:
+    connected: "<red>Staff</red> <dark>»</dark> <role><text><player></text> <success>joined the network</success> <muted>on <server>.</muted><vanished>"
+    switched: "<red>Staff</red> <dark>»</dark> <role><text><player></text> <muted>switched from <from> to</muted> <text><server></text><muted>.</muted><vanished>"
+    left: "<red>Staff</red> <dark>»</dark> <role><text><player></text> <error>left the network</error> <muted>from <server>.</muted><vanished>"
+    vanished: " <dark>(vanished)</dark>"
 
 # Grants (/grant, /grants; PLAN.md §6.3, §9). Staff-facing except grant.received.
 # <what> is a grant.name entry, <term> a grant.term entry, times are UTC.

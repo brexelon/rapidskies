@@ -18,12 +18,14 @@ import us.rapidskies.common.db.Database;
 import us.rapidskies.common.economy.EconomyMode;
 import us.rapidskies.common.economy.Ledger;
 import us.rapidskies.common.lang.Lang;
+import us.rapidskies.common.profile.ModeFirstJoins;
 import us.rapidskies.common.profile.ProfileRepository;
 import us.rapidskies.common.redis.Channels;
 import us.rapidskies.common.redis.RedisBus;
 import us.rapidskies.core.afk.AfkTracker;
 import us.rapidskies.core.chat.ChatListener;
 import us.rapidskies.core.chat.ChatTags;
+import us.rapidskies.core.chat.JoinMessages;
 import us.rapidskies.core.command.ProgressCommands;
 import us.rapidskies.core.cosmetic.Catalog;
 import us.rapidskies.core.cosmetic.CosmeticService;
@@ -182,6 +184,8 @@ public final class RapidCore extends JavaPlugin {
         freeze.start();
         vanish.restoreOnline();
         freeze.restoreOnline();
+        pm.registerEvents(new JoinMessages(this, new ModeFirstJoins(database), settings.joinMessages(),
+                settings.gamemode().orElse(null), vanish, lang), this);
 
         worlds = new WorldService(this, worldConfig);
         worlds.start();

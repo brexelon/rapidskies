@@ -18,6 +18,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.KeybindComponent;
 import net.kyori.adventure.text.TextComponent;
 import org.junit.jupiter.api.Test;
+import us.rapidskies.common.economy.EconomyMode;
 import us.rapidskies.common.lang.Lang;
 import us.rapidskies.common.rank.Rank;
 import us.rapidskies.common.rank.StaffRole;
@@ -28,7 +29,7 @@ import us.rapidskies.core.cosmetic.CosmeticType;
 class LangKeysTest {
 
     private static final Pattern KEY = Pattern.compile(
-            "\"((?:achievements|afk|bolts|build|chat|cosmetics|errors|level|login|pass|placeholder|plus|profile|progressadmin"
+            "\"((?:achievements|afk|bolts|build|chat|cosmetics|errors|join|level|login|pass|placeholder|plus|profile|progressadmin"
                     + "|quests|rank|rewards|shop|staff|stipend|streak|tailwind)\\.[a-z0-9.\\-_]*[a-z0-9])\"");
 
     @Test
@@ -75,6 +76,9 @@ class LangKeysTest {
         }
         for (String mode : new String[] {"hub", "horizons", "skyrealms"}) {
             keys.add("quests.menu.where." + mode);
+        }
+        for (EconomyMode mode : EconomyMode.values()) {
+            keys.add("join.mode." + mode.id());
         }
         Set<String> missing = new TreeSet<>();
         for (String key : keys) {

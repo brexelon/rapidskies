@@ -427,6 +427,8 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 
 **Grants** (`rapid-proxy`): staff give ranks, team roles and permissions with `/grant <player> <rank> <duration|permanent> [reason]` or `/grant <player> perm <node> ...`, never with LuckPerms commands. Every grant is a `grants` row (who, what, how long, why), shown with hover details by `/grants <player>` and revoked with `/grants revoke <id> [reason]`; LuckPerms holds the result, so TAB, chat prefixes and other plugins need nothing extra. Timed grants stack, and revoking one takes away only the time it had left. Nobody grants to themselves, team roles only go to roles below your own, and permissions only if you hold them.
 
+**Staff presence** (`rapid-proxy`): staff chat hears when a team member joins the network, switches servers or leaves (with their role; the member sees their own join and switch notices too; a vanished member's notices only reach the member and staff who can see vanished staff). Minecraft's own join/quit lines are off on every backend (`rapid-core`, `join-messages.vanilla`).
+
 **Staff mode** (`rapid-core`): vanish, freeze (with a chest-menu notice), inventory/ender chest inspect, teleport to player, random teleport to players, CPS/reach view from the anti-cheat, X-ray ore-ratio view, and a punishment GUI that shortcuts LiteBans templates.
 
 **Survival-specific tools:** CoreProtect lookups and rollbacks, `/claimadmin` and island admin overrides, `/ah admin` and shop transaction lookups, and economy anomaly alerts for sudden large gains or suspicious auction patterns.
@@ -457,6 +459,7 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 - `essentials_homes` (scope, uuid, name, world, x, y, z, yaw, pitch; PK scope+uuid+name) and `essentials_warps` (scope, name, position, created_by): `scope` is the server group, so a Horizons home is only offered on Horizons; `world` is the world key. Migration module `essentials`
 - `reports`, `staff_actions` (staff, action, target, server, detail: freezes, inspections, vanish and staff-mode toggles), `chat_log`
 - `grants` (uuid, kind [rank/permission], value, granted_by, reason, txn_id UNIQUE, created_at, starts_at, expires_at, revoked_at/by/reason): the record behind `/grant`; LuckPerms holds the effective nodes
+- `mode_first_joins` (uuid, mode, first_join; PK uuid+mode; core V7): each player's first visit to SkyRealms and Horizons, network-wide, for the first-join welcome on gamemode servers. Backfilled from `mode_economy_ledger`; rapid-core also skips the welcome for anyone the server's own player data already knows
 - `parkour_times` (course, period, uuid, time_ms, achieved_at; PK course+period+uuid): each player's best per hub parkour course, all time (`period` = `all`) and per ISO week (`2026-W46`, UTC), for the hub leaderboards and `/parkour top`
 - `store_transactions` (txn_id: the Tebex transaction, the part before any `:`; uuid, package, status [DELIVERED/CHARGEBACK/REFUNDED], note, timestamps): written by the proxy for console deliveries with a transaction id and marked by `rapid chargeback`
 

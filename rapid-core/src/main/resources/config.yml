@@ -59,6 +59,15 @@ cosmetics:
   # everything else are unaffected.
   trails: true
 
+# Join and quit lines in chat.
+join-messages:
+  # Minecraft's "<player> joined the game" / "left the game". Off by default: every server
+  # switch would print both. The proxy tells the team when staff connect, switch or leave.
+  vanilla: false
+  # On gamemode servers: welcome players on their first visit to the gamemode (on any of its
+  # servers) and tell everyone there. Texts: join.first.* in lang/en_US.yml.
+  first-join-welcome: true
+
 # Staff mode (PLAN.md §9).
 staff:
   # /staff also vanishes you (if you may vanish); leaving staff mode reappears you.

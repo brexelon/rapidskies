@@ -7,7 +7,8 @@ import us.rapidskies.common.economy.EconomyMode;
 
 /** rapid-core's non-connection settings. */
 public record CoreSettings(String serverId, String group, String advertiseAddress, Optional<EconomyMode> gamemode,
-                           Afk afk, Tailwind tailwind, Playtime playtime, Staff staff, boolean trails) {
+                           Afk afk, Tailwind tailwind, Playtime playtime, Staff staff, boolean trails,
+                           JoinMessages joinMessages) {
 
     /** AFK detection (PLAN.md §6.2 anti-farm, §5.3). */
     public record Afk(int idleSeconds) {
@@ -22,6 +23,10 @@ public record CoreSettings(String serverId, String group, String advertiseAddres
     }
 
     public record Staff(boolean vanishOnStaffMode, int freezeReminderSeconds) {
+    }
+
+    /** Minecraft's join/quit lines, and the welcome for first visits to a gamemode. */
+    public record JoinMessages(boolean vanilla, boolean firstJoinWelcome) {
     }
 
     static CoreSettings from(ConfigView c, int port, Logger log) {
@@ -55,6 +60,8 @@ public record CoreSettings(String serverId, String group, String advertiseAddres
                         Math.max(0, c.integer("rewards.playtime.daily-cap", 20))),
                 new Staff(c.bool("staff.vanish-on-staff-mode", true),
                         Math.max(5, c.integer("staff.freeze-reminder-seconds", 15))),
-                c.bool("cosmetics.trails", true));
+                c.bool("cosmetics.trails", true),
+                new JoinMessages(c.bool("join-messages.vanilla", false),
+                        c.bool("join-messages.first-join-welcome", true)));
     }
 }

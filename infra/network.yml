@@ -71,7 +71,7 @@ servers:
     # Mirror of a game server for testing updates. Defaults to mirroring smp;
     # swap `smp` for `skyrealms` (profiles and plugin sets: [paper-base, survival, skyrealms])
     # and the world (`skyrealms_spawn: trading-post`) when testing SkyRealms.
-    ptero_id: "80b16f87"
+    ptero_id: ""
     profiles: [paper-base, survival, smp, staging]
     plugins: [paper-base, survival, smp, worldgen]
     # Own database for rapid-* data (Bolts, profiles, ...), so tests never touch production.

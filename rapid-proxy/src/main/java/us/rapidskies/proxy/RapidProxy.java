@@ -29,6 +29,7 @@ import us.rapidskies.common.redis.RedisBus;
 import us.rapidskies.common.registry.ServerRegistry;
 import us.rapidskies.proxy.chat.PrivateMessages;
 import us.rapidskies.proxy.chat.StaffChatCommand;
+import us.rapidskies.proxy.chat.StaffPresence;
 import us.rapidskies.proxy.friend.FriendCommand;
 import us.rapidskies.proxy.friend.FriendService;
 import us.rapidskies.proxy.friend.FriendSettings;
@@ -164,6 +165,7 @@ public final class RapidProxy {
         events.register(this, new TailwindSessions(proxy, database, settings.tailwind(), logger));
         events.register(this, sharedIps);
         events.register(this, new FrozenPlayers(proxy, lang, redis, logger));
+        events.register(this, new StaffPresence(proxy, lang, ranks, vanish));
 
         register("maintenance", new MaintenanceCommand(proxy, lang, redis, directory, logger));
         register("play", new PlayCommand(lang, queue, parties));
