@@ -49,11 +49,6 @@ public final class PlusCommand implements BasicCommand {
             choice.save(player, rank, null, () -> { });
             return;
         }
-        String key = input.toLowerCase(Locale.ROOT).replace(' ', '_');
-        if (key.equals("red") || key.equals("dark_red")) {
-            lang.send(player, "plus.reserved");
-            return;
-        }
         Optional<PlusColor> color = PlusColor.byId(input);
         if (color.isEmpty()) {
             lang.send(player, "plus.unknown", Placeholder.unparsed("input", input));

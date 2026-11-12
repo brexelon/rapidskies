@@ -115,6 +115,27 @@ lpv group builder permission set rapid.staff.freeze.exempt true
 lpv group developer permission set rapid.staff.vanish.see true
 lpv group developer permission set rapid.staff.freeze.exempt true
 
+# Anticheat (Grim, every backend; infra/README.md → Anticheat). Each tier inherits the last:
+#   Helper:    alerts (on from joining), which also show flags from the other backends tagged
+#              with the server, and /grim history <player> (every server's sessions, shared
+#              database), /grim profile.
+#   Moderator: /grim verbose (every flag, below alert thresholds too; for watching a suspect).
+#   Admin:     /grim reload, performance, debug, dump, and /grim log (uploads a prediction log
+#              to paste.grim.ac for Grim's developers).
+# Never grim.* : it includes grim.exempt, grim.disabled and grim.nosetback. (The owner's `*`
+# does too, so Grim doesn't check the owner account.)
+lpv group helper permission set grim.help true
+lpv group helper permission set grim.alerts true
+lpv group helper permission set grim.alerts.enable-on-join true
+lpv group helper permission set grim.history true
+lpv group helper permission set grim.profile true
+lpv group moderator permission set grim.verbose true
+lpv group admin permission set grim.reload true
+lpv group admin permission set grim.performance true
+lpv group admin permission set grim.debug true
+lpv group admin permission set grim.dump true
+lpv group admin permission set grim.log true
+
 # Builders: full control on the build server only. (Add FAWE to the build server's
 # plugin set in network.yml; it isn't in plugins/ yet.)
 lpv group builder permission set worldedit.* true server=build

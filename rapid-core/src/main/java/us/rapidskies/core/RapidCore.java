@@ -23,6 +23,7 @@ import us.rapidskies.common.profile.ProfileRepository;
 import us.rapidskies.common.redis.Channels;
 import us.rapidskies.common.redis.RedisBus;
 import us.rapidskies.core.afk.AfkBroadcast;
+import us.rapidskies.core.anticheat.OlderClientGrace;
 import us.rapidskies.core.afk.AfkTracker;
 import us.rapidskies.core.chat.ChatListener;
 import us.rapidskies.core.chat.ChatTags;
@@ -107,6 +108,7 @@ public final class RapidCore extends JavaPlugin {
     private WorldService worlds;
     private BuildMode buildMode;
     private boolean vaultRegistered;
+    private us.rapidskies.core.anticheat.GrimBridge grimBridge;
     private Catalog catalog;
     private ProgressConfig progressConfig;
     private QuestConfig questConfig;
@@ -273,6 +275,13 @@ public final class RapidCore extends JavaPlugin {
             new RapidPlaceholders(this).register();
         }
 
+        OlderClientGrace grace = new OlderClientGrace(settings.anticheat().olderClientGraceTicks(),
+                settings.anticheat().olderClientGraceChecks());
+        if (pm.getPlugin("GrimAC") != null && grace.enabled()) {
+            // Its own class, so Grim's (and ViaVersion's) types are only loaded when it's installed.
+            grimBridge = us.rapidskies.core.anticheat.GrimBridge.register(this, grace);
+        }
+
         heartbeat = new Heartbeat(this, redis, settings);
         heartbeat.start();
         log.info("rapid-core {} enabled as {} (group {})", getPluginMeta().getVersion(), settings.serverId(),
@@ -335,6 +344,9 @@ public final class RapidCore extends JavaPlugin {
         }
         if (vaultRegistered) {
             us.rapidskies.core.economy.VaultEconomy.unregister(this);
+        }
+        if (grimBridge != null) {
+            grimBridge.unregister();
         }
         if (heartbeat != null) {
             heartbeat.stop();

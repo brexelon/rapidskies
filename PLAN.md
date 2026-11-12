@@ -203,7 +203,7 @@ Building on `rapid-common` keeps one source of truth.
 - **Town roles:** Mayor → Assistant → Resident → Recruit, with configurable permissions per role. Mayors can assign **plots** (town chunks owned by a resident) using the same trust system.
 - **Town bank:** in Crowns. It pays **daily upkeep** scaled by chunk count, which is an economy sink. The chunk cap scales with resident count and completed Projects.
 - **Town Projects** (§5.2) are part of this module: donation tracking, completion, and unlocking upgrades (town warp, shared vault, market stall, cosmetics).
-- **Display:** a town tag in chat and tab, with colors from a limited palette of named chat colors (red is still reserved for staff). Also town chat and a town level based on completed Projects.
+- **Display:** a town tag in chat and tab, with colors from a limited palette of named chat colors (every one but black). Also town chat and a town level based on completed Projects.
 - **Inactivity:** personal claims of players inactive for 90+ days, and towns that miss upkeep for 14 days, become **ruins**. Ruins stay protected for another 7 days, during which the owner can reclaim by logging in or paying upkeep. After that they're unclaimed, and the builds stay in the world.
 
 **Engineering**
@@ -304,7 +304,7 @@ The architecture reserves a server slot, and `rapid-minigame` is deferred until 
 
 Ranks are sold as **Tebex subscriptions** at `store.rapidskies.us` and are also available as **30-day passes bought with Bolts**. Higher tiers include all perks of lower tiers. Prices are starting points to tune in beta.
 
-**Prefix format:** no brackets, just the rank name and its colors. The word `RAPID` always uses the brand color (`#FFD800`), and the pluses use the player's chosen **plus color**. Team prefixes follow the same style (`OWNER`, `MOD`, …) in the reserved reds:
+**Prefix format:** no brackets, just the rank name and its colors. The word `RAPID` always uses the brand color (`#FFD800`), and the pluses use the player's chosen **plus color**. Team prefixes follow the same style (`OWNER`, `MOD`, …), each role in its own color: Owner dark red (bold), Admin red, Developer dark purple, Sr. Mod dark green, Mod green, Helper blue, Builder dark aqua.
 
 ```
 RAPID+ Steve: hello            ← "+"   in chosen color
@@ -318,12 +318,12 @@ RAPID+++ Notch: hello          ← "+++" in chosen color, RAPID in bold
 
 | Tier | Available plus colors |
 |---|---|
-| Rapid+ | White, Yellow, Gold, Aqua, Green, Light Purple (6) |
-| Rapid++ | + Blue, Dark Blue, Dark Aqua, Dark Green, Dark Purple (11) |
-| Rapid+++ | + Gray, Dark Gray, Black (all 14 non-reserved colors), plus **gradients** |
+| Rapid+ | White, Yellow, Gold, Aqua, Green, Light Purple, Red (7) |
+| Rapid++ | + Blue, Dark Blue, Dark Aqua, Dark Green, Dark Purple, Dark Red (13) |
+| Rapid+++ | + Gray (14), plus **gradients** |
 
-- **Rapid+++ gradients** (each with its own name in `/plus`, shown on their own row): Sunset (yellow → gold → pink), Ocean (aqua → dark blue), Aurora (green → aqua → pink), Frost (white → aqua), Citrus (yellow → green), Twilight (blue → pink), Silver (white → dark gray). `+++` is three characters, so a gradient's first, middle and last colors are what shows; none of them may be close to red.
-- **Red and Dark Red are reserved** for staff prefixes, to prevent impersonation.
+- **Rapid+++ gradients** (each with its own name in `/plus`, shown on their own row): Sunset (yellow → gold → pink), Ocean (aqua → dark blue), Aurora (green → aqua → pink), Frost (white → aqua), Citrus (yellow → green), Twilight (blue → pink), Silver (white → dark gray), Crimson (dark red → red), Inferno (yellow → gold → dark red), Rose (red → pink), Peppermint (red → white), Berry (red → dark purple), Firework (red → white → blue), Volcano (dark gray → dark red → gold). `+++` is three characters, so a gradient's first, middle and last colors are what shows, and no two choices may look the same.
+- **Red and Dark Red are open to ranks.** A rank prefix always reads `RAPID+`, so a red plus can't pass for the `ADMIN` or `OWNER` prefix.
 - Extra plus colors and gradients can be earned as achievement or Chapter rewards, but only players with an active rank can equip them.
 - If a rank lapses, the color is remembered and restored when the rank returns.
 
@@ -423,7 +423,7 @@ Before launch, re-read the current [Minecraft Usage Guidelines](https://www.mine
 
 ## 9. Staff & moderation
 
-**LuckPerms staff track:** Helper → Moderator → Sr. Moderator → Admin → Owner, with Builder and Developer as separate groups. Staff prefixes use the reserved red shades, a different one per role (Owner #AA0000 bold, Admin #E8212E, Developer #FF4F81, Sr. Mod #FF7A33, Moderator #FF5555, Helper #FFA0A0, Builder #B7410E; each still nearest to red or dark red), and staff chat shows the sender's role before their name.
+**LuckPerms staff track:** Helper → Moderator → Sr. Moderator → Admin → Owner, with Builder and Developer as separate groups. Staff prefixes use a different color per role (Owner #AA0000 bold, Admin #E8212E, Developer dark purple, Sr. Mod dark green, Moderator green, Helper blue, Builder dark aqua), and staff chat shows the sender's role before their name.
 
 **Grants** (`rapid-proxy`): staff give ranks, team roles and permissions with `/grant <player> <rank> <duration|permanent> [reason]` or `/grant <player> perm <node> ...`, never with LuckPerms commands. Every grant is a `grants` row (who, what, how long, why), shown with hover details by `/grants <player>` and revoked with `/grants revoke <id> [reason]`; LuckPerms holds the result, so TAB, chat prefixes and other plugins need nothing extra. Timed grants stack, and revoking one takes away only the time it had left. Nobody grants to themselves, team roles only go to roles below your own, and permissions only if you hold them.
 
@@ -699,7 +699,7 @@ Next:
 
 **Monetization & retention**: code complete, with 48 new tests. 32 are unit tests (the bundled catalog, quests and progression files load, and every id, item, particle, mob, slot and reward in them is real; the §8 compliance rules; the Featured Shop rotation never repeats week to week; the level curve; quest periods, banking and picks; login streaks); 16 run against MariaDB, including parallel clicks buying a cosmetic once, a rank pass delivered once, a level-up paying once, and two servers finishing the same quest paying once:
 
-- [x] Cosmetics engine (`rapid-core`): six slots, one worn per slot: titles and badges (on the profile card shown when a name is hovered in chat, and `%rapid_title%` / `%rapid_badge%`), chat tags (a symbol after the rank prefix), name colors (named chat colors, never the staff reds), walking trails (particles at the feet, only for players who can see the wearer, never in vanish, staff or build mode; `cosmetics.trails` per server) and arrow trails (arrows, tridents, snowballs, eggs). Owned cosmetics in `cosmetics_owned`, rank sets worn while the rank lasts, the worn one remembered while unusable. `CosmeticService.grant` works for players offline or on another server (Redis `cosmetics`). `/cosmetics`: a tab per slot, owned first, locked ones with how to get them
+- [x] Cosmetics engine (`rapid-core`): six slots, one worn per slot: titles and badges (on the profile card shown when a name is hovered in chat, and `%rapid_title%` / `%rapid_badge%`), chat tags (a symbol after the rank prefix), name colors (named chat colors), walking trails (particles at the feet, only for players who can see the wearer, never in vanish, staff or build mode; `cosmetics.trails` per server) and arrow trails (arrows, tridents, snowballs, eggs). Owned cosmetics in `cosmetics_owned`, rank sets worn while the rank lasts, the worn one remembered while unusable. `CosmeticService.grant` works for players offline or on another server (Redis `cosmetics`). `/cosmetics`: a tab per slot, owned first, locked ones with how to get them
 - [x] Launch catalog (`cosmetics.yml`, in the jar so every server agrees): 102 cosmetics: shop items (150–1,200 Bolts), rank sets for Rapid+, Rapid++ and Rapid+++, level, achievement, Season Pass, Chapter (`title:pathfinder`), SkyRealms season (`title:season-<n>-champion`, `-podium`, `badge:season-<n>-top10`, numbered for any season) and event cosmetics (`title:founder`, `badge:beta-tester`), and 16 Featured-only ones. Every particle used exists on 1.20, and the tests check every particle and item name is real
 - [x] Bolt shop (`/boltshop`, hub hotbar emerald): tabs for the Featured Shop, each cosmetic type, rank passes and the Season Pass; every purchase goes through a confirm screen and is one transaction (balance row locked, ownership checked, guarded debit, purchase row, delivery), so double clicks or two servers never charge twice. Everything sold is tagged `COSMETIC` or `CONVENIENCE` (§8)
 - [x] Featured Shop: 4 Featured-only items a week, changing Monday 00:00 UTC, worked out from the week alone (nothing stored), each item coming round before any repeats and none two weeks running

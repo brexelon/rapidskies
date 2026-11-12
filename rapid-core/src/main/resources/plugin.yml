@@ -9,7 +9,9 @@ website: https://rapidskies.us
 depend: [LuckPerms]
 # %rapid_prefix% and friends for TAB, scoreboards and holograms, when it's installed.
 # Vault (VaultUnlocked) on gamemode servers, where rapid-core provides the Coins/Crowns economy.
-softdepend: [PlaceholderAPI, Vault]
+# GrimAC (the anticheat, every backend) and ViaVersion: older clients get a settling window
+# after joining (us.rapidskies.core.anticheat.GrimBridge).
+softdepend: [PlaceholderAPI, Vault, GrimAC, ViaVersion]
 
 permissions:
   rapid.command.bolts.others:

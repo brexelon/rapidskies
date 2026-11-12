@@ -13,9 +13,9 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 /**
  * The color of the pluses in a rank prefix, chosen with {@code /plus} (PLAN.md §6.1).
  *
- * <p>Plain colors are the 16 named chat colors, so each choice has a clear name. Red and dark
- * red are reserved for staff and are not listed here. Rapid+++ also gets named
- * <b>gradients</b>, whose stops stay clear of the staff reds.
+ * <p>Plain colors are named chat colors, so each choice has a clear name; dark gray and black
+ * are left out as too hard to read. Rapid+++ also gets named <b>gradients</b>. Red shades are open to everyone: a rank prefix always reads
+ * {@code RAPID+}, so it can't pass for the red {@code ADMIN} and {@code OWNER} prefixes.
  */
 public enum PlusColor {
     WHITE(NamedTextColor.WHITE, Rank.RAPID_PLUS),
@@ -24,26 +24,33 @@ public enum PlusColor {
     AQUA(NamedTextColor.AQUA, Rank.RAPID_PLUS),
     GREEN(NamedTextColor.GREEN, Rank.RAPID_PLUS),
     LIGHT_PURPLE(NamedTextColor.LIGHT_PURPLE, Rank.RAPID_PLUS),
+    RED(NamedTextColor.RED, Rank.RAPID_PLUS),
 
     BLUE(NamedTextColor.BLUE, Rank.RAPID_PLUS_PLUS),
     DARK_BLUE(NamedTextColor.DARK_BLUE, Rank.RAPID_PLUS_PLUS),
     DARK_AQUA(NamedTextColor.DARK_AQUA, Rank.RAPID_PLUS_PLUS),
     DARK_GREEN(NamedTextColor.DARK_GREEN, Rank.RAPID_PLUS_PLUS),
     DARK_PURPLE(NamedTextColor.DARK_PURPLE, Rank.RAPID_PLUS_PLUS),
+    DARK_RED(NamedTextColor.DARK_RED, Rank.RAPID_PLUS_PLUS),
 
     GRAY(NamedTextColor.GRAY, Rank.RAPID_PLUS_PLUS_PLUS),
-    DARK_GRAY(NamedTextColor.DARK_GRAY, Rank.RAPID_PLUS_PLUS_PLUS),
-    BLACK(NamedTextColor.BLACK, Rank.RAPID_PLUS_PLUS_PLUS),
 
     // Gradients (Rapid+++). "+++" is three characters, so the first, middle and last colors
-    // are what shows in a prefix; keep them readable and away from red.
+    // are what shows in a prefix; keep them readable.
     SUNSET(Rank.RAPID_PLUS_PLUS_PLUS, 0xFFFF55, 0xFFAA00, 0xFF55FF),
     OCEAN(Rank.RAPID_PLUS_PLUS_PLUS, 0x55FFFF, 0x0000AA),
     AURORA(Rank.RAPID_PLUS_PLUS_PLUS, 0x55FF55, 0x55FFFF, 0xFF55FF),
     FROST(Rank.RAPID_PLUS_PLUS_PLUS, 0xFFFFFF, 0x55FFFF),
     CITRUS(Rank.RAPID_PLUS_PLUS_PLUS, 0xFFFF55, 0x55FF55),
     TWILIGHT(Rank.RAPID_PLUS_PLUS_PLUS, 0x5555FF, 0xFF55FF),
-    SILVER(Rank.RAPID_PLUS_PLUS_PLUS, 0xFFFFFF, 0x555555);
+    SILVER(Rank.RAPID_PLUS_PLUS_PLUS, 0xFFFFFF, 0x555555),
+    CRIMSON(Rank.RAPID_PLUS_PLUS_PLUS, 0xAA0000, 0xFF5555),
+    INFERNO(Rank.RAPID_PLUS_PLUS_PLUS, 0xFFFF55, 0xFFAA00, 0xAA0000),
+    ROSE(Rank.RAPID_PLUS_PLUS_PLUS, 0xFF5555, 0xFF55FF),
+    PEPPERMINT(Rank.RAPID_PLUS_PLUS_PLUS, 0xFF5555, 0xFFFFFF),
+    BERRY(Rank.RAPID_PLUS_PLUS_PLUS, 0xFF5555, 0xAA00AA),
+    FIREWORK(Rank.RAPID_PLUS_PLUS_PLUS, 0xFF5555, 0xFFFFFF, 0x5555FF),
+    VOLCANO(Rank.RAPID_PLUS_PLUS_PLUS, 0x555555, 0xAA0000, 0xFFAA00);
 
     /** Shown when nothing is chosen, or the choice needs a higher rank than the player has now. */
     public static final PlusColor DEFAULT = YELLOW;

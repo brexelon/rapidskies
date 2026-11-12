@@ -1,0 +1,9 @@
+# Grim (every Paper backend; infra/README.md → Anticheat).
+check-for-updates: false
+# Alerts reach staff on every backend. A flagged player's server forwards its alert lines
+# ([proxy] in punishments.yml) through Velocity's BungeeCord channel
+# (velocity.toml advanced.bungee-plugin-message-channel, already on) to the other backends,
+# which show them to whoever has alerts on there. Velocity drops BungeeCord messages that
+# come from clients, so players can't forge these.
+alerts.proxy.send: true
+alerts.proxy.receive: true

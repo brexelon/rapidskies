@@ -75,6 +75,20 @@ staff:
   # How often a frozen player is reminded (chat + title).
   freeze-reminder-seconds: 15
 
+# Grim, the anticheat (infra/README.md → Anticheat).
+anticheat:
+  # Clients older than the server (1.20 - 26.2 on a 26.3 backend) go through ViaBackwards,
+  # which Grim doesn't support on 1.21.2+ servers: for the first ticks after joining,
+  # respawning or changing worlds it mispredicts them (a 1.20.1 player fails Simulation and
+  # AimModulo360 on joining, and is pulled back). While a player on an older client settles
+  # in, these checks' flags are dropped; newer clients and every other check are unaffected.
+  older-client-grace:
+    # How long, in movement ticks Grim has simulated (20 a second), not wall time, so a slow
+    # loading screen doesn't use it up. 0 turns it off.
+    ticks: 40
+    # Grim check names.
+    checks: [Simulation, GroundSpoof, AimModulo360]
+
 # Spawn (WorldService). The profiles in infra/ set this per server.
 spawn:
   # "world, x, y, z, yaw, pitch". world is a key: minecraft:overworld is the main world

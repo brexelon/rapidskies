@@ -5,8 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -17,14 +18,12 @@ import org.junit.jupiter.api.Test;
 
 class PlusColorTest {
 
-    private static final Set<NamedTextColor> STAFF_REDS = Set.of(NamedTextColor.RED, NamedTextColor.DARK_RED);
-
     @Test
     void paletteWidensWithTier() {
-        // PLAN.md §6.1: 6 / 11 / 14 colors, plus gradients for Rapid+++ only.
+        // PLAN.md §6.1: 7 / 13 / 14 colors, plus gradients for Rapid+++ only.
         assertEquals(0, PlusColor.availableFor(Rank.DEFAULT).size());
-        assertEquals(6, PlusColor.availableFor(Rank.RAPID_PLUS).size());
-        assertEquals(11, PlusColor.availableFor(Rank.RAPID_PLUS_PLUS).size());
+        assertEquals(7, PlusColor.availableFor(Rank.RAPID_PLUS).size());
+        assertEquals(13, PlusColor.availableFor(Rank.RAPID_PLUS_PLUS).size());
         List<PlusColor> top = PlusColor.availableFor(Rank.RAPID_PLUS_PLUS_PLUS);
         assertEquals(14, top.stream().filter(c -> !c.gradient()).count());
         assertFalse(top.stream().filter(PlusColor::gradient).toList().isEmpty());
@@ -38,23 +37,21 @@ class PlusColorTest {
     }
 
     @Test
-    void redShadesAreReservedForStaff() {
-        for (PlusColor c : PlusColor.values()) {
-            assertFalse(STAFF_REDS.contains(NamedTextColor.nearestTo(c.color())), c.name());
-        }
-        assertTrue(PlusColor.byId("red").isEmpty());
-        assertTrue(PlusColor.byId("dark_red").isEmpty());
+    void redsAreOpenToRanks() {
+        assertEquals(PlusColor.RED, PlusColor.byId("red").orElseThrow());
+        assertTrue(PlusColor.RED.availableTo(Rank.RAPID_PLUS));
+        assertEquals(PlusColor.DARK_RED, PlusColor.byId("Dark Red").orElseThrow());
+        assertFalse(PlusColor.DARK_RED.availableTo(Rank.RAPID_PLUS));
+        assertTrue(PlusColor.DARK_RED.availableTo(Rank.RAPID_PLUS_PLUS));
     }
 
     @Test
-    void gradientsStayClearOfStaffRedsInAPrefix() {
-        // "+++" shows three colors: check each, not just the stops.
+    void everyChoiceLooksDifferentInAPrefix() {
+        // "+++" shows three colors, so two gradients that differ only between them would look the same.
+        Map<List<TextColor>, PlusColor> seen = new HashMap<>();
         for (PlusColor c : PlusColor.values()) {
-            if (c.gradient()) {
-                for (TextColor shown : colors(render(c, "+++"))) {
-                    assertFalse(STAFF_REDS.contains(NamedTextColor.nearestTo(shown)), c.name() + " shows " + shown);
-                }
-            }
+            PlusColor clash = seen.put(colors(render(c, "+++")), c);
+            assertTrue(clash == null, c.name() + " looks the same as " + clash);
         }
     }
 
@@ -102,8 +99,8 @@ class PlusColorTest {
 
     @Test
     void lapsedChoiceFallsBackWithoutBeingLost() {
-        PlusColor stored = PlusColor.BLACK; // a Rapid+++ color
-        assertEquals(PlusColor.BLACK, PlusColor.effective(stored, Rank.RAPID_PLUS_PLUS_PLUS));
+        PlusColor stored = PlusColor.GRAY; // a Rapid+++ color
+        assertEquals(PlusColor.GRAY, PlusColor.effective(stored, Rank.RAPID_PLUS_PLUS_PLUS));
         assertEquals(PlusColor.DEFAULT, PlusColor.effective(stored, Rank.RAPID_PLUS));
         assertEquals(PlusColor.DEFAULT, PlusColor.effective(null, Rank.RAPID_PLUS_PLUS));
     }
@@ -114,6 +111,9 @@ class PlusColorTest {
         assertEquals(PlusColor.DARK_AQUA, PlusColor.byId(" dark aqua ").orElseThrow());
         assertTrue(PlusColor.byId(null).isEmpty());
         assertTrue(PlusColor.byId("rainbow").isEmpty());
+        // Removed colors: a stored choice of one of these loads as no choice (the default).
+        assertTrue(PlusColor.byId("dark_gray").isEmpty());
+        assertTrue(PlusColor.byId("black").isEmpty());
         assertEquals(PlusColor.TWILIGHT, PlusColor.byId("Twilight").orElseThrow());
     }
 

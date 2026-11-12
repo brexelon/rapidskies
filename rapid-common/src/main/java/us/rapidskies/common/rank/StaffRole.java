@@ -4,8 +4,8 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
- * Team groups (PLAN.md §9), highest display priority first. Their chat prefixes use the
- * red shades that plus colors may never use, so a rank can't impersonate staff.
+ * Team groups (PLAN.md §9), highest display priority first. Each has its own prefix color
+ * ({@code rank.staff.*}): reds for Owner and Admin, a named chat color for the rest.
  */
 public enum StaffRole {
     OWNER("owner"),

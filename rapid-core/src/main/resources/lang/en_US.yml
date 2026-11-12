@@ -14,16 +14,16 @@ rank:
     rapidplus: "<primary>RAPID</primary><plus>+</plus> "
     rapidplusplus: "<primary>RAPID</primary><plus>++</plus> "
     rapidplusplusplus: "<primary><bold>RAPID</bold></primary><plus>+++</plus> "
-  # Red shades are reserved for the team; plus colors can never use them. Each role has its
-  # own shade (every one still nearest to red or dark red), so roles tell apart at a glance.
+  # Each role has its own color so roles tell apart at a glance: the reds for Owner and Admin,
+  # named chat colors for the rest.
   staff:
     owner: "<#AA0000><bold>OWNER</bold></#AA0000> "
     admin: "<#E8212E>ADMIN</#E8212E> "
-    developer: "<#FF4F81>DEV</#FF4F81> "
-    srmod: "<#FF7A33>SR. MOD</#FF7A33> "
-    moderator: "<#FF5555>MOD</#FF5555> "
-    helper: "<#FFA0A0>HELPER</#FFA0A0> "
-    builder: "<#B7410E>BUILDER</#B7410E> "
+    developer: "<dark_purple>DEV</dark_purple> "
+    srmod: "<dark_green>SR. MOD</dark_green> "
+    moderator: "<green>MOD</green> "
+    helper: "<blue>HELPER</blue> "
+    builder: "<dark_aqua>BUILDER</dark_aqua> "
 
 # Sidebar placeholders (%rapid_rank_name%, %rapid_bolts%, %rapid_tailwind_status%) when
 # there's nothing to show.
@@ -78,7 +78,6 @@ plus:
   needs-rank: "<prefix><error>Plus colors are a Rapid+ perk.</error> <muted>See</muted> <primary><click:open_url:'https://store.rapidskies.us'><hover:show_text:'<muted>Open the store in your browser'>store.rapidskies.us</hover></click></primary>"
   locked: "<prefix><error><name> needs <rank> or higher.</error>"
   unknown: "<prefix><error>There's no color called <text><input></text>.</error> <muted>Type</muted> <click:run_command:'/plus'><hover:show_text:'<muted>Open the color menu'><text>/plus</text></hover></click> <muted>to see your options.</muted>"
-  reserved: "<prefix><error>Red shades are reserved for staff.</error>"
   failed: "<prefix><error>Couldn't save that right now; please try again.</error>"
 
 bolts:

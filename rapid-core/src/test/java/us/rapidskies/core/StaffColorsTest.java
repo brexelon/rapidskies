@@ -1,12 +1,12 @@
 package us.rapidskies.core;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -17,22 +17,28 @@ import us.rapidskies.common.lang.Lang;
 import us.rapidskies.common.rank.StaffRole;
 
 /**
- * Team prefixes ({@code rank.staff.*}) each look different, and every one stays a red shade
- * (nearest named color red or dark red), the colors plus colors and name colors can't use.
+ * Team prefixes ({@code rank.staff.*}) each look different: Owner and Admin in the reds,
+ * every other role in its own named chat color.
  */
 class StaffColorsTest {
 
-    private static final Set<NamedTextColor> STAFF_REDS = Set.of(NamedTextColor.RED, NamedTextColor.DARK_RED);
+    private static final Map<StaffRole, NamedTextColor> COLORS = Map.of(
+            StaffRole.OWNER, NamedTextColor.DARK_RED,
+            StaffRole.ADMIN, NamedTextColor.RED,
+            StaffRole.DEVELOPER, NamedTextColor.DARK_PURPLE,
+            StaffRole.SR_MOD, NamedTextColor.DARK_GREEN,
+            StaffRole.MODERATOR, NamedTextColor.GREEN,
+            StaffRole.HELPER, NamedTextColor.BLUE,
+            StaffRole.BUILDER, NamedTextColor.DARK_AQUA);
 
     @Test
-    void everyRoleHasItsOwnRedShade() throws IOException {
+    void everyRoleHasItsOwnColor() throws IOException {
         Lang lang = Lang.fromResource(getClass().getClassLoader(), Lang.DEFAULT_RESOURCE, null);
         Map<String, StaffRole> seen = new HashMap<>();
         for (StaffRole role : StaffRole.values()) {
             Style style = firstStyle(lang.get("rank.staff." + role.group()), Style.empty());
             assertNotNull(style, role.name() + " has no colored text");
-            assertTrue(STAFF_REDS.contains(NamedTextColor.nearestTo(style.color())),
-                    role.name() + " " + style.color() + " isn't a staff red");
+            assertEquals(COLORS.get(role), NamedTextColor.nearestTo(style.color()), role.name() + " " + style.color());
             String look = style.color().asHexString() + (style.hasDecoration(TextDecoration.BOLD) ? " bold" : "");
             StaffRole clash = seen.put(look, role);
             assertTrue(clash == null, role.name() + " looks the same as " + clash);

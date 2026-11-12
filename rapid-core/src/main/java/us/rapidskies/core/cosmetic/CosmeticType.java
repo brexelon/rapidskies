@@ -8,7 +8,7 @@ public enum CosmeticType {
     TITLE("title"),
     /** A symbol in front of the name in chat. */
     TAG("tag"),
-    /** The name's color in chat; named colors only, never the staff reds. */
+    /** The name's color in chat; named colors only. */
     NAME_COLOR("namecolor"),
     /** On the profile card and {@code %rapid_badge%}. */
     BADGE("badge"),

@@ -5,7 +5,7 @@
 # Ids are <type>:<name>. Each type fills one slot, so a player wears one of each:
 #   title      on the profile card (hover a name in chat), the hub sidebar and %rapid_title%
 #   tag        a symbol in front of the name in chat (%rapid_tag%)
-#   namecolor  the name's color in chat: a named chat color, never red or dark_red (staff)
+#   namecolor  the name's color in chat: a named chat color
 #   badge      on the profile card and %rapid_badge%
 #   trail      particles at the feet while walking (servers with cosmetics.trails on)
 #   arrow      particles behind arrows, tridents, snowballs and eggs the player shoots
@@ -104,6 +104,8 @@ cosmetics:
     blue: { name: "Blue", display: "blue", rarity: common, obtain: shop, price: 300, icon: BLUE_WOOL }
     light-purple: { name: "Light Purple", display: "light_purple", rarity: rare, obtain: shop, price: 600, icon: MAGENTA_WOOL }
     gold: { name: "Gold", display: "gold", rarity: rare, obtain: shop, price: 600, icon: ORANGE_WOOL }
+    red: { name: "Red", display: "red", rarity: common, obtain: shop, price: 300, icon: RED_WOOL }
+    dark-red: { name: "Dark Red", display: "dark_red", rarity: rare, obtain: shop, price: 600, icon: NETHER_WART_BLOCK }
     dark-aqua: { name: "Dark Aqua", display: "dark_aqua", rarity: rare, obtain: rank, rank: rapidplusplus, icon: CYAN_WOOL }
     dark-purple: { name: "Dark Purple", display: "dark_purple", rarity: epic, obtain: rank, rank: rapidplusplusplus, icon: PURPLE_WOOL }
     dark-green: { name: "Dark Green", display: "dark_green", rarity: rare, obtain: level, icon: GREEN_WOOL, hint: "<muted>Reach network level 30</muted>" }

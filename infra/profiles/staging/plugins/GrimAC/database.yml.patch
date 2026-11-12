@@ -1,0 +1,5 @@
+# Staging keeps its test flags in its own SQLite file, out of the network's shared history.
+database.routing.violation: sqlite
+database.routing.session: sqlite
+database.routing.player-identity: sqlite
+database.routing.setting: sqlite

@@ -232,7 +232,7 @@ freeze:
   no-commands: "<prefix><error>You can't use commands while frozen.</error> <muted>You can still /msg and /r.</muted>"
   logged-out: "<red>Staff</red> <dark>»</dark> <error><player> logged out while frozen.</error>"
 
-# Staff chat (/sc). Red is reserved for the team.
+# Staff chat (/sc).
 # <role> is the sender's team role as grant.name shows it plus a space, or nothing (console,
 # or someone with the permission but no team role).
 staffchat:
@@ -294,11 +294,11 @@ grant:
     rapidplusplusplus: "<primary><bold>RAPID</bold></primary><yellow>+++</yellow>"
     owner: "<#AA0000><bold>OWNER</bold></#AA0000>"
     admin: "<#E8212E>ADMIN</#E8212E>"
-    developer: "<#FF4F81>DEV</#FF4F81>"
-    srmod: "<#FF7A33>SR. MOD</#FF7A33>"
-    moderator: "<#FF5555>MOD</#FF5555>"
-    helper: "<#FFA0A0>HELPER</#FFA0A0>"
-    builder: "<#B7410E>BUILDER</#B7410E>"
+    developer: "<dark_purple>DEV</dark_purple>"
+    srmod: "<dark_green>SR. MOD</dark_green>"
+    moderator: "<green>MOD</green>"
+    helper: "<blue>HELPER</blue>"
+    builder: "<dark_aqua>BUILDER</dark_aqua>"
     permission: "<accent><node></accent>"
   revoke:
     usage: "<red>Grants</red> <dark>»</dark> <muted>Usage:</muted> <text>/grants revoke \\<id> [reason]</text> <muted>(ids are in</muted> <text>/grants \\<player></text><muted>)</muted>"

@@ -5,8 +5,7 @@ import java.util.Optional;
 
 /**
  * The colors a town tag may use (PLAN.md §4.1: a limited palette of named chat colors).
- * Red and dark red are reserved for staff prefixes, and black is unreadable on the chat
- * background, so none of them is here.
+ * Black is unreadable on the chat background, so it isn't here.
  */
 public enum TagColor {
     WHITE,
@@ -15,11 +14,13 @@ public enum TagColor {
     AQUA,
     GREEN,
     LIGHT_PURPLE,
+    RED,
     BLUE,
     DARK_BLUE,
     DARK_AQUA,
     DARK_GREEN,
     DARK_PURPLE,
+    DARK_RED,
     GRAY,
     DARK_GRAY;
 

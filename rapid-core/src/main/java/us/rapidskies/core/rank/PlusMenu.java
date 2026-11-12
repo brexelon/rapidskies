@@ -1,6 +1,7 @@
 package us.rapidskies.core.rank;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -20,14 +21,15 @@ import us.rapidskies.core.gui.Menu;
  * {@code /plus}: one block per plus color and gradient with a live preview of the prefix in
  * its lore (PLAN.md §6.1). Colors above the player's rank are shown locked, previewed on the
  * player's own rank so they see what they'd get. Gradients are Rapid+++ only and a single
- * "+" can't show one, so locked gradients are previewed on {@code RAPID+++}. Five rows:
+ * "+" can't show one, so locked gradients are previewed on {@code RAPID+++}. Six rows:
  *
  * <pre>
  *   row 0  . . . . [current prefix] . . . .
  *   row 1  . [7 colors]               .
  *   row 2  . [7 colors]               .
  *   row 3  . [7 gradients]            .
- *   row 4  . . . . [reset]          . . . .
+ *   row 4  . [7 gradients]            .
+ *   row 5  . . . . [reset]          . . . .
  * </pre>
  */
 public final class PlusMenu extends Menu {
@@ -40,40 +42,51 @@ public final class PlusMenu extends Menu {
             Map.entry(PlusColor.AQUA, Material.LIGHT_BLUE_WOOL),
             Map.entry(PlusColor.GREEN, Material.LIME_WOOL),
             Map.entry(PlusColor.LIGHT_PURPLE, Material.MAGENTA_WOOL),
+            Map.entry(PlusColor.RED, Material.RED_WOOL),
             Map.entry(PlusColor.BLUE, Material.BLUE_WOOL),
             Map.entry(PlusColor.DARK_BLUE, Material.LAPIS_BLOCK),
             Map.entry(PlusColor.DARK_AQUA, Material.CYAN_WOOL),
             Map.entry(PlusColor.DARK_GREEN, Material.GREEN_WOOL),
             Map.entry(PlusColor.DARK_PURPLE, Material.PURPLE_WOOL),
+            Map.entry(PlusColor.DARK_RED, Material.NETHER_WART_BLOCK),
             Map.entry(PlusColor.GRAY, Material.LIGHT_GRAY_WOOL),
-            Map.entry(PlusColor.DARK_GRAY, Material.GRAY_WOOL),
-            Map.entry(PlusColor.BLACK, Material.BLACK_WOOL),
             Map.entry(PlusColor.SUNSET, Material.ORANGE_GLAZED_TERRACOTTA),
             Map.entry(PlusColor.OCEAN, Material.PRISMARINE),
             Map.entry(PlusColor.AURORA, Material.AMETHYST_BLOCK),
             Map.entry(PlusColor.FROST, Material.PACKED_ICE),
             Map.entry(PlusColor.CITRUS, Material.YELLOW_GLAZED_TERRACOTTA),
             Map.entry(PlusColor.TWILIGHT, Material.CRYING_OBSIDIAN),
-            Map.entry(PlusColor.SILVER, Material.IRON_BLOCK)));
+            Map.entry(PlusColor.SILVER, Material.IRON_BLOCK),
+            Map.entry(PlusColor.CRIMSON, Material.CRIMSON_NYLIUM),
+            Map.entry(PlusColor.INFERNO, Material.FIRE_CHARGE),
+            Map.entry(PlusColor.ROSE, Material.ROSE_BUSH),
+            Map.entry(PlusColor.PEPPERMINT, Material.RED_GLAZED_TERRACOTTA),
+            Map.entry(PlusColor.BERRY, Material.SWEET_BERRIES),
+            Map.entry(PlusColor.FIREWORK, Material.FIREWORK_ROCKET),
+            Map.entry(PlusColor.VOLCANO, Material.MAGMA_BLOCK)));
 
-    private static final int[] COLOR_SLOTS = {
+    private static final int[] PLAIN_SLOTS = {
         10, 11, 12, 13, 14, 15, 16,
-        19, 20, 21, 22, 23, 24, 25,
-        28, 29, 30, 31, 32, 33, 34};
+        19, 20, 21, 22, 23, 24, 25};
+    private static final int[] GRADIENT_SLOTS = {
+        28, 29, 30, 31, 32, 33, 34,
+        37, 38, 39, 40, 41, 42, 43};
     private static final int PREVIEW_SLOT = 4;
-    private static final int RESET_SLOT = 40;
+    private static final int RESET_SLOT = 49;
 
     private final PlusChoice choice;
     private final Lang lang;
 
     public PlusMenu(PlusChoice choice) {
-        super(5, choice.lang().get("plus.menu.title"));
+        super(6, choice.lang().get("plus.menu.title"));
         this.choice = choice;
         this.lang = choice.lang();
     }
 
     static {
-        if (BLOCKS.size() != PlusColor.values().length || COLOR_SLOTS.length < PlusColor.values().length) {
+        long gradients = Arrays.stream(PlusColor.values()).filter(PlusColor::gradient).count();
+        if (BLOCKS.size() != PlusColor.values().length || GRADIENT_SLOTS.length < gradients
+                || PLAIN_SLOTS.length < PlusColor.values().length - gradients) {
             throw new IllegalStateException("PlusMenu needs a block and a slot for every PlusColor");
         }
     }
@@ -87,10 +100,11 @@ public final class PlusMenu extends Menu {
         set(PREVIEW_SLOT, Icons.icon(Material.NAME_TAG, lang.get("plus.menu.preview-name"),
                 List.of(lang.get("plus.menu.preview-lore", prefix(rank, shown)))));
 
-        PlusColor[] colors = PlusColor.values();
-        for (int i = 0; i < colors.length; i++) {
-            PlusColor c = colors[i];
-            set(COLOR_SLOTS[i], colorIcon(rank, c, c == shown && chosen != null),
+        int plain = 0;
+        int gradient = 0;
+        for (PlusColor c : PlusColor.values()) {
+            int slot = c.gradient() ? GRADIENT_SLOTS[gradient++] : PLAIN_SLOTS[plain++];
+            set(slot, colorIcon(rank, c, c == shown && chosen != null),
                     c.availableTo(rank) ? (p, click) -> pick(p, c) : null);
         }
         set(RESET_SLOT, Icons.icon(Material.BARRIER, lang.get("plus.menu.reset-name"),

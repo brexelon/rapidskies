@@ -159,9 +159,6 @@ public final class Catalog {
                 if (color == null) {
                     throw new IllegalArgumentException("'" + display + "' isn't a named chat color");
                 }
-                if (color == NamedTextColor.RED || color == NamedTextColor.DARK_RED) {
-                    throw new IllegalArgumentException("red and dark_red are reserved for staff");
-                }
             }
             case TRAIL, ARROW -> effect = effect(display);
             default -> {

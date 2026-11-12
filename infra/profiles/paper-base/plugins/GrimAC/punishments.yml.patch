@@ -1,0 +1,14 @@
+# Grim's default groups, with one change: every [alert] is also sent to the other backends
+# with [proxy] at the same threshold and interval, so staff anywhere see what staff on the
+# player's server see (Grim's defaults forward less often, and Combat/Autoclicker not at all).
+# [log] writes every flag to the shared violation history (database.yml → /grim history).
+# A list here replaces the whole list on the server.
+Punishments.Simulation.commands: ["100:40 [alert]", "1:1 [log]", "100:100 [webhook]", "100:40 [proxy]"]
+Punishments.Knockback.commands: ["5:5 [alert]", "1:1 [log]", "20:20 [webhook]", "5:5 [proxy]"]
+Punishments.Post.commands: ["20:20 [alert]", "1:1 [log]", "40:40 [webhook]", "20:20 [proxy]"]
+Punishments.BadPackets.commands: ["20:20 [alert]", "1:1 [log]", "40:40 [webhook]", "20:20 [proxy]"]
+Punishments.Reach.commands: ["1:1 [alert]", "1:1 [log]", "1:1 [webhook]", "1:1 [proxy]"]
+Punishments.Hitboxes.commands: ["5:3 [alert]", "1:1 [log]", "5:3 [webhook]", "5:3 [proxy]"]
+Punishments.Misc.commands: ["10:5 [alert]", "1:1 [log]", "20:10 [webhook]", "10:5 [proxy]"]
+Punishments.Combat.commands: ["20:40 [alert]", "1:1 [log]", "20:40 [proxy]"]
+Punishments.Autoclicker.commands: ["20:40 [alert]", "1:1 [log]", "20:40 [proxy]"]

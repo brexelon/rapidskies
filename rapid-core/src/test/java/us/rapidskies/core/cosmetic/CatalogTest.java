@@ -2,7 +2,6 @@ package us.rapidskies.core.cosmetic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -69,15 +68,15 @@ class CatalogTest {
     }
 
     @Test
-    void nameColorsNeverUseStaffReds() {
-        for (Cosmetic c : CATALOG.ofType(CosmeticType.NAME_COLOR)) {
-            assertNotEquals(NamedTextColor.RED, c.nameColor(), c.id());
-            assertNotEquals(NamedTextColor.DARK_RED, c.nameColor(), c.id());
-        }
+    void nameColorsIncludeTheReds() {
+        Set<NamedTextColor> colors = new HashSet<>();
+        CATALOG.ofType(CosmeticType.NAME_COLOR).forEach(c -> colors.add(c.nameColor()));
+        assertTrue(colors.contains(NamedTextColor.RED));
+        assertTrue(colors.contains(NamedTextColor.DARK_RED));
         assertThrows(IllegalArgumentException.class, () -> Catalog.parse(yaml("""
                 cosmetics:
                   namecolor:
-                    red: { name: Red, display: red, obtain: shop, price: 10 }
+                    rainbow: { name: Rainbow, display: rainbow, obtain: shop, price: 10 }
                 """)));
     }
 

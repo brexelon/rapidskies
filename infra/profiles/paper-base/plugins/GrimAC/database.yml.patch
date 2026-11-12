@@ -1,0 +1,8 @@
+# Violation history in one shared MariaDB schema (databases/mysql.yml), so /grim history
+# <player> on any backend lists sessions from every server, each tagged with its name.
+# Grim's default is a SQLite file per server, which only that server could read.
+database.routing.violation: mysql
+database.routing.session: mysql
+database.routing.player-identity: mysql
+database.routing.setting: mysql
+database.server-name: "${SERVER_NAME}"

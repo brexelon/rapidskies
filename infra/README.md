@@ -445,8 +445,12 @@ changes nothing. Transaction ids are everything before the first `:`, so keep th
 Paper) holding one small build, `profiles/limbo/rapid-limbo-spawn.schem`. That's
 `worlds/revamped/rapid-limbo-spawn.schem` (a 1.20.1 export) with its one `minecraft:chain`
 renamed to `minecraft:iron_chain`, the 1.21.9 name and the only one Limbo 26.3 doesn't know.
-After changing the build, export it for 26.x or apply the same rename to the new copy; a block
-Limbo doesn't know is left out of the world. rapid-proxy uses it two ways:
+The oak sign's lines also differ: the 1.20.1 export stores each as a JSON string
+(`{"text":"type /hub"}`), the Limbo copy as a plain string (`type /hub`), because Limbo sends
+the sign's NBT to clients as 26.3 data, where a string is the literal text, and ViaLimbo turns it
+back into JSON for older clients. After changing the build, export it for 26.x or apply the same
+rename and sign-text change to the new copy; a block Limbo doesn't know is left out of the world.
+rapid-proxy uses it two ways:
 
 - **No lobby up.** A player joining, or kicked off a server, while every hub is down lands in
   limbo instead of being disconnected. They wait in the lobby queue (the usual queue action
@@ -489,6 +493,50 @@ never treats it as a queue, party-follow or `/friend join` target. Without a `li
    the `limbo.no-lobby` line and the queue action bar; start a hub and you're moved within a few
    seconds. For AFK, set `limbo.afk.minutes` to 1 on the proxy for a test (rapid-core marks you
    AFK after its own `afk.idle-seconds` first), then turn your view in limbo to go back.
+
+## Anticheat (Grim)
+
+**Grim** runs on every Paper backend (paper-base plugin set), configured in
+`profiles/paper-base/plugins/GrimAC/`. Staff permissions are tiered in `luckperms/bootstrap.txt`
+(helpers get alerts and history; moderators `/grim verbose`; admins the rest).
+
+- **Alerts across servers.** A flagged player's backend forwards each alert to the others
+  (`[proxy]` in `punishments.yml`, at the same thresholds as `[alert]`) over Velocity's
+  BungeeCord channel. Forwarded lines start with the source server, e.g. `[smp-1]`. A backend
+  only shows them to staff with alerts on, and only if someone is online there to receive them.
+- **History across servers.** Every flag is logged (`[log]`) to one shared MariaDB schema,
+  `grim` (`database.yml`, `databases/mysql.yml`), so `/grim history <player>` on any backend
+  lists their sessions on every server, each tagged with the server's name. Staging keeps its
+  own SQLite history.
+- **Older clients.** Clients older than the server (1.20 – 26.2) reach the 26.3 backends through
+  ViaBackwards, which rewrites and adds packets for them (a teleport's velocity becomes a
+  separate motion packet; server rotations become a look-at plus a fake rotation packet; the
+  1.21.2+ tick-end and loaded packets are emulated). Grim reads packets before ViaBackwards
+  does, so it misses those, and says so at startup: *"ViaBackwards on a 1.21.2+ server … is
+  currently unsupported"*. The visible result was a 1.20.1 player failing Simulation (an
+  18-block jump, then four ticks of drift) and AimModulo360 on joining, and being pulled back,
+  while a 26.3 player didn't. rapid-core (`anticheat.older-client-grace` in its config)
+  drops Simulation, GroundSpoof and AimModulo360 flags for players on older clients for their
+  first 40 simulated movement ticks after joining, respawning or changing worlds. Every other
+  check, newer clients and everything after those 2 seconds are checked as usual. To see what it
+  drops, set rapid-core's logger to debug (`Dropped Grim … flag for …`).
+
+**Setting it up** (once):
+
+1. Create the schema like the others, and put its credentials in `secrets.env` as `GRIM_DB_*`:
+   `CREATE DATABASE grim CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
+   `GRANT ALL ON grim.* TO 'grim'@'<container subnet>' IDENTIFIED BY '...';`
+2. `rsdeploy.py apply <each Paper server> --restart` (Grim's files already exist on servers that
+   have run it; a new server needs one start first). Grim creates its tables on start; its
+   console should show the MySQL backend, not SQLite.
+3. Run the new Grim lines from `luckperms/bootstrap.txt` in the Velocity console.
+4. **Verify.** On a 1.20.1 client, join a hub with `/grim verbose` on from a staff account
+   (its flags are hidden from alerts below their thresholds): no Simulation or AimModulo360
+   lines, and no pull-back. Check a 26.3 client the same way. With staff on two backends, an
+   alert-level flag on one shows on the other with the server tag (Reach alerts on the first
+   flag, so a test client is the quickest way; `/grim sendalert` stays on its own server).
+   `/grim history <player>` on a different server than the one they played on lists that
+   session.
 
 ## Lang overrides
 

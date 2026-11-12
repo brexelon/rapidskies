@@ -84,7 +84,7 @@ Category description (shown above the three rank packages).
   </thead>
   <tbody>
     <tr><td>Price</td><td>$4.99/mo</td><td>$9.99/mo</td><td>$19.99/mo</td></tr>
-    <tr><td>Plus colors</td><td>6</td><td>11</td><td>14 + 7 gradients</td></tr>
+    <tr><td>Plus colors</td><td>7</td><td>13</td><td>14 + 14 gradients</td></tr>
     <tr><td>Bolts every 30 days</td><td>100</td><td>250</td><td>600</td></tr>
     <tr><td>Cosmetic set</td><td>Rapid+</td><td>+ Rapid++</td><td>+ Rapid+++</td></tr>
     <tr><td>Hub</td><td>Double-jump trail</td><td>+ Flight</td><td>+ Flight</td></tr>
@@ -109,7 +109,7 @@ Category description (shown above the three rank packages).
 <p><strong>RAPID+</strong> next to your name in chat, the tab list and above your head, with the + in a color you choose.</p>
 <h4>Your look</h4>
 <ul>
-  <li>6 plus colors with <strong>/plus</strong>: White, Yellow, Gold, Aqua, Green and Light Purple</li>
+  <li>7 plus colors with <strong>/plus</strong>: White, Yellow, Gold, Aqua, Green, Light Purple and Red</li>
   <li>The Rapid+ cosmetic set: the <strong>Swift</strong> title, the <strong>Spark ✦</strong> chat tag and the <strong>Sunbeam</strong> walking trail</li>
   <li>A particle trail on your hub double jump</li>
   <li>Horizons: <strong>/hat</strong> to wear the block you're holding</li>
@@ -130,7 +130,7 @@ Category description (shown above the three rank packages).
 <p><strong>RAPID++</strong> with a wider choice of colors, a bigger cosmetic set and flight in the hub. Includes everything in Rapid+.</p>
 <h4>Your look</h4>
 <ul>
-  <li>11 plus colors: the Rapid+ six, plus Blue, Dark Blue, Dark Aqua, Dark Green and Dark Purple</li>
+  <li>13 plus colors: the Rapid+ seven, plus Blue, Dark Blue, Dark Aqua, Dark Green, Dark Purple and Dark Red</li>
   <li>The Rapid++ cosmetic set, on top of Rapid+'s: the <strong>Storm</strong> title, the <strong>Twinkle ✧</strong> chat tag, the <strong>Dark Aqua</strong> name color, the <strong>Starlight</strong> walking trail and the <strong>Comet</strong> arrow trail</li>
   <li>Fly around the hub</li>
   <li>Hub double-jump trail and Horizons <strong>/hat</strong></li>
@@ -151,8 +151,8 @@ Category description (shown above the three rank packages).
 <p><strong>RAPID+++</strong> in bold, every plus color and gradient, the full cosmetic collection and the most Bolts. Includes everything in Rapid+ and Rapid++.</p>
 <h4>Your look</h4>
 <ul>
-  <li>Every plus color: all 11 from Rapid++, plus Gray, Dark Gray and Black</li>
-  <li>7 gradients for your +++: <strong>Sunset, Ocean, Aurora, Frost, Citrus, Twilight</strong> and <strong>Silver</strong></li>
+  <li>Every plus color: all 13 from Rapid++, plus Gray</li>
+  <li>14 gradients for your +++: <strong>Sunset, Ocean, Aurora, Frost, Citrus, Twilight, Silver, Crimson, Inferno, Rose, Peppermint, Berry, Firework</strong> and <strong>Volcano</strong></li>
   <li>The Rapid+++ cosmetic set, on top of Rapid+ and Rapid++'s: the <strong>Stormcaller</strong> title, the <strong>Supernova ✪</strong> chat tag, the <strong>Dark Purple</strong> name color and the <strong>Rapid Storm</strong> walking trail</li>
   <li>Hub flight, hub double-jump trail and Horizons <strong>/hat</strong></li>
 </ul>

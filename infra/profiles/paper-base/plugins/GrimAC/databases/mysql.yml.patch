@@ -1,0 +1,14 @@
+# Grim's MySQL backend, pointed at its own schema on the shared MariaDB (like LiteBans').
+# The driver is the MySQL Connector/J that Paper bundles; it talks to MariaDB fine.
+# Create the schema once (infra/README.md → Anticheat):
+#   CREATE DATABASE grim CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+#   GRANT ALL ON grim.* TO 'grim'@'<container subnet>' IDENTIFIED BY '...';
+mysql.host: "${DB_HOST}"
+# Grim reads the port as a number, so it's written here, not from secrets: keep it equal to DB_PORT.
+mysql.port: 3306
+mysql.database: "${GRIM_DB_NAME}"
+mysql.user: "${GRIM_DB_USER}"
+mysql.password: "${GRIM_DB_PASSWORD}"
+# Writes are batched once a second; a few connections per backend is plenty.
+mysql.pool-settings.maximum-pool-size: 3
+mysql.pool-settings.minimum-idle: 3

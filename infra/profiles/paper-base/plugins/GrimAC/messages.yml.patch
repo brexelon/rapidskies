@@ -1,0 +1,3 @@
+# An alert forwarded from another backend names the server it came from (Grim's default
+# just says [proxy]). It's rendered on that server, so ${SERVER_NAME} is the source.
+alerts-format-proxy: '%prefix% &8[&b${SERVER_NAME}&8] &f%player% &bfailed <hover:show_text:"&b%check_name%%experimental%<newline>&8Description: &f%description%">&f%check_name%%experimental%</hover> &f(x&c%vl%&f) &7%verbose%'
