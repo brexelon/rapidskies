@@ -1,17 +1,18 @@
-# rapid-skyrealms on the Trading Post (skyrealms_spawn, rapid-core's minecraft:overworld; the
-# rapid-core profile next door). Positions come from the map itself (its region files); fine-tune
-# in-game with /skyrealms here (prints a copyable line) and /skyrealms reload, then put the
-# final values here, or the next `rsdeploy.py apply` puts these back.
+# rapid-skyrealms on the SkyRealms spawn (skyrealms_spawn, rapid-core's minecraft:overworld;
+# the rapid-core profile next door; the build is worlds/revamped/skyrealms-spawn). Positions
+# come from the build itself; fine-tune in-game with /skyrealms here (prints a copyable line)
+# and /skyrealms reload, then put the final values here, or the next `rsdeploy.py apply` puts
+# these back.
 
-# NPCs in a ring round the compass rose (centre 28.5 -29.5, floor y 149), about seven blocks
-# out: inside the twelve oak pillars, clear of the rose's wool border. Each faces the rose;
-# they turn to look at players nearby. Players spawn on the rose facing west, so the two in
-# front come first: the Island Keeper (/is) front right, the Merchant (/shop) front left. Then
-# the Realm Warden to the north and the Expedition Captain to the south; behind, the Route
-# Master and the way back to the lobby.
-npcs.island.location: "minecraft:overworld, 22.5, 150, -33.5, -56, 0"
-npcs.shop.location: "minecraft:overworld, 22.5, 150, -25.5, -124, 0"
-npcs.realm.location: "minecraft:overworld, 28.5, 150, -36.5, 0, 0"
-npcs.expedition.location: "minecraft:overworld, 28.5, 150, -22.5, 180, 0"
-npcs.route.location: "minecraft:overworld, 34.5, 150, -33.5, 56, 0"
-npcs.hub.location: "minecraft:overworld, 34.5, 150, -25.5, 124, 0"
+# NPCs on the six 3x3 pads in a crescent round the meadow plaza's compass dais (0.5 -15.5),
+# 23 to 33 blocks north of the spawn, each at its own station. All face the spawn; they turn
+# to look at players nearby. West to east: the Expedition Captain at the dock, the Island
+# Keeper by the cherry tree and starter planters, the Realm Warden at the tier pillars, the
+# way back to the lobby in front of its arch, the Merchant at the market stall, and the Route
+# Master by the caravan.
+npcs.expedition.location: "minecraft:overworld, -20.5, 80, -15.5, -53, 0"
+npcs.island.location: "minecraft:overworld, -13.5, 80, -25.5, -28, 0"
+npcs.realm.location: "minecraft:overworld, -4.5, 80, -31.5, -9, 0"
+npcs.hub.location: "minecraft:overworld, 5.5, 80, -31.5, 9, 0"
+npcs.shop.location: "minecraft:overworld, 14.5, 80, -25.5, 28, 0"
+npcs.route.location: "minecraft:overworld, 17.5, 80, -15.5, 47, 0"

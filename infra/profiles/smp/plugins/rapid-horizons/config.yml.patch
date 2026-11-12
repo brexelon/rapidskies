@@ -1,29 +1,29 @@
-# rapid-horizons on the Horizons spawn (the CottageCore Lobby, rapidskies:spawn; rapid-core
-# profile next door). Positions come from the build itself; fine-tune in-game with
+# rapid-horizons on the Horizons spawn (worlds/revamped/horizons-smp-spawn, rapidskies:spawn;
+# rapid-core profile next door). Positions come from the build itself; fine-tune in-game with
 # /horizons here (prints copyable lines) and /horizons reload, then put the final values
 # here, or the next `rsdeploy.py apply` puts these back.
 
-# The way into the Heartland: an arch across the gravel path that leaves the round plaza to
-# the south, 12 blocks behind the spawn and facing it, between the path's mossy cobblestone
-# curbs (x -3 and 3). The opening is the path's full width (x -2..2), standing height y 72
-# (the path's top) to 76, one block thick at z 12. rapid-horizons builds the arch around it
-# (rtp.portal.build); the north, east and west roads off the plaza stay clear.
-rtp.portal.region: "rapidskies:spawn, -2, 72, 12, 2, 76, 12"
-rtp.portal.build: true
-# "The Heartland" floating in front of the arch: centred on the opening (x 0.5), a block and a
-# half out on the plaza side (z 10.5), its bottom at y 75 so it clears the heads of players
-# walking up the path and reads at eye level from the plaza.
-rtp.portal.hologram: "rapidskies:spawn, 0.5, 75, 10.5"
+# The way into the Heartland: the build's own gate, north of the plaza between the two
+# towers, 30 blocks ahead of the spawn and facing it. Its obsidian frame is filled with
+# nether portal blocks: x -5..5, y 80 (standing on the frame's sill) to 94, one block thick
+# at z -30. The region is exactly those blocks, so rapid-horizons keeps them from popping and
+# from ever leading to the Nether. The gate is hand-built, so rapid-horizons builds no arch.
+rtp.portal.region: "rapidskies:spawn, -5, 80, -30, 5, 94, -30"
+rtp.portal.build: false
+# "The Heartland" floating in front of the gate: centred on the opening (x 0.5), two blocks
+# out on the plaza side (z -27.5), its bottom at y 83 so it clears the heads of players
+# walking up to it and reads at eye level from the terrace.
+rtp.portal.hologram: "rapidskies:spawn, 0.5, 83, -27.5"
 
-# NPCs on the plaza's four raised pedestals (double slabs at y 73, on the diagonals 5.7
-# blocks from the spawn), each facing the centrepiece; they turn to look at players nearby.
-# Players spawn facing north, so the two in front come first: the Heartland Guide on the
-# right, the Land Surveyor (/claim help) on the left. Behind: the Trade Master on the right,
-# by the path to the arch, and the way back to the lobby on the left.
-npcs.heartland.location: "rapidskies:spawn, 4.5, 74, -3.5, 45, 0"
-npcs.land.location: "rapidskies:spawn, -3.5, 74, -3.5, -45, 0"
-npcs.trades.location: "rapidskies:spawn, 4.5, 74, 4.5, 135, 0"
-npcs.hub.location: "rapidskies:spawn, -3.5, 74, 4.5, -135, 0"
+# NPCs on the plaza's four corner pedestals round the spawn (chiseled stone bricks at y 78,
+# on the diagonals 10 blocks from the spawn), each facing the spawn pedestal; they turn to
+# look at players nearby. Players spawn facing north, so the two in front come first: the
+# Heartland Guide on the right, nearest the gate, the Land Surveyor (/claim help) on the
+# left. Behind: the Trade Master on the right and the way back to the lobby on the left.
+npcs.heartland.location: "rapidskies:spawn, 7.5, 79, -6.5, 45, 0"
+npcs.land.location: "rapidskies:spawn, -6.5, 79, -6.5, -45, 0"
+npcs.trades.location: "rapidskies:spawn, 7.5, 79, 7.5, 135, 0"
+npcs.hub.location: "rapidskies:spawn, -6.5, 79, 7.5, -135, 0"
 
 # All four Frontier modifiers in the rotation, the launch two first so a running rotation
 # carries on where it was (a live config written before Shattered Skies and Deep Dark lists

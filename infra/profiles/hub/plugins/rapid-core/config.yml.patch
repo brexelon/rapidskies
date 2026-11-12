@@ -1,10 +1,9 @@
-# Hub spawn and world (rapid-core WorldService). minecraft:overworld is the `hub` level.
-# The stone-slab marker on the build's axis (x -5.5) in the middle of the raised south
-# terrace, two blocks behind the ender chest, facing north over the courtyard to the stage
-# and the gate hall (the redstone-lamp towers at z -7). The slab is a half block, hence y 87.5.
-# Info.txt's "0 90 0" is the paste origin, not a spawn.
-# Tweak in-game with /setspawn, which prints the replacement line.
-spawn.location: "minecraft:overworld, -5.5, 87.5, 9.5, 180, 0"
+# Hub spawn and world (rapid-core WorldService). minecraft:overworld is the `hub` level, the
+# Rapid Lobby (worlds/revamped/rapid-lobby-spawn). The spawn is the yellow concrete at the
+# centre of the medallion on the raised south terrace (block 0 79 0), facing north over the
+# plaza to the lightning spire, with the SkyRealms bridgehead ahead left and Horizons ahead
+# right. Tweak in-game with /setspawn, which prints the replacement line.
+spawn.location: "minecraft:overworld, 0.5, 80, 0.5, 180, 0"
 spawn.on-join: "always"
 spawn.on-death: true
 worlds:
@@ -12,8 +11,8 @@ worlds:
     protect: true
     # The doors, gates, buttons and ender chests in the build are scenery: none of them open.
     usable-blocks: false
-    # The island's underside ends at y 76.
-    void-y: 60
+    # The lowest blocks (the dripstone tip under the island) are at y 37.
+    void-y: 20
     time: 6000
     clear-weather: true
     game-rules:

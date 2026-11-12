@@ -37,10 +37,10 @@ worlds.difficulty: NORMAL
 worlds.dimensions.nether.enabled: false
 worlds.dimensions.the_end.enabled: false
 
-# The Trading Post spawn (rapid-core's spawn.location in profiles/skyrealms/plugins/rapid-core:
+# The SkyRealms spawn (rapid-core's spawn.location in profiles/skyrealms/plugins/rapid-core:
 # world, x, y, z, yaw, pitch). rapid-core protects it and handles /build; SuperiorSkyblock2's own
 # spawn protection would block staff in build mode, so it's off.
-spawn.location: "skyrealms_spawn, 28.5, 150, -29.5, 90, 0"
+spawn.location: "skyrealms_spawn, 0.5, 80, 0.5, 180, 0"
 spawn.protection: false
 spawn.world-border: false
 spawn.players-damage: false

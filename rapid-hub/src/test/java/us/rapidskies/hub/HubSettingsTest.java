@@ -54,15 +54,22 @@ class HubSettingsTest {
         assertEquals("smp", smp.group());
         SpawnPoint left = skyrealms.npc().orElseThrow();
         SpawnPoint right = smp.npc().orElseThrow();
-        // On the stage's inner slab pedestals, facing south to the spawn terrace.
-        assertEquals(86.5, left.y());
-        assertEquals(0f, left.yaw());
+        // On the two bridgehead pedestals north of the spawn (0.5 80 0.5), mirrored across its
+        // axis, each turned toward the spawn (south, the SkyRealms one a little east).
+        assertEquals(79.0, left.y());
+        assertEquals(left.y(), right.y());
+        assertEquals(left.z(), right.z());
+        assertTrue(left.z() < 0, "ahead of the spawn, which faces north (-z)");
+        assertEquals(1.0, left.x() + right.x(), "mirrored across the spawn's x 0.5");
+        assertEquals(-right.yaw(), left.yaw());
+        assertTrue(left.yaw() < 0 && left.yaw() > -90, "facing south-east, back to the spawn");
         assertTrue(left.x() < right.x(), "SkyRealms on the left seen from the spawn (west is -x)");
 
         assertEquals("rapidskies:parkour", s.parkourWorld());
         var main = s.course("main").orElseThrow();
         assertEquals(150, main.length());
         assertEquals(2, main.checkpoints(), "checkpoints at 50 and 100");
+        assertTrue(main.entrance().isPresent(), "the pressure plate behind the spawn terrace");
         assertEquals(2, s.boards().size());
         assertEquals(1, s.boards().stream().filter(HubSettings.Board::weekly).count());
     }

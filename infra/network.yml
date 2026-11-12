@@ -49,7 +49,7 @@ servers:
     plugins: [paper-base, survival, skyrealms]
     schedules: [hourly-backup]
     vars: { LP_SERVER: skyrealms }
-    worlds: { skyrealms_spawn: trading-post }
+    worlds: { skyrealms_spawn: skyrealms-spawn }
 
   smp-1:
     ptero_id: "5440367e"
@@ -70,7 +70,7 @@ servers:
   staging:
     # Mirror of a game server for testing updates. Defaults to mirroring smp;
     # swap `smp` for `skyrealms` (profiles and plugin sets: [paper-base, survival, skyrealms])
-    # and the world (`skyrealms_spawn: trading-post`) when testing SkyRealms.
+    # and the world (`skyrealms_spawn: skyrealms-spawn`) when testing SkyRealms.
     ptero_id: ""
     profiles: [paper-base, survival, smp, staging]
     plugins: [paper-base, survival, smp, worldgen]
@@ -85,27 +85,29 @@ servers:
     worlds: { heartland/dimensions/rapidskies/spawn: horizons-spawn }
 
 # Pre-built worlds from the repo's worlds/ folder. Only chunk storage (region/, entities/,
-# poi/) is shipped: each
-# server writes its own world data on the next start, using the generator from its profile
-# (server.properties for the main world, rapid-core's `worlds` config for the rest), and
-# rapid-core sets the spawn point and game rules (profiles/*/plugins/rapid-core/). The
-# downloads' level.dat files are ignored on purpose: their spawns, generators (flat grass
-# under the sky island, a 1.8 village preset on the hub) and formats don't fit.
+# poi/) is shipped: each server writes its own world data on the next start, using the
+# generator from its profile (server.properties for the main world, rapid-core's `worlds`
+# config for the rest), and rapid-core sets the spawn point and game rules
+# (profiles/*/plugins/rapid-core/).
+#
+# The three spawns are genMC builds, converted from worlds/revamped/*.schem with
+# infra/schem2world.py (infra/README.md -> Worlds). Each is placed so its spawn marker is the
+# block at 0 79 0: the spawn is 0.5 80 0.5 facing north (yaw 180) in all three.
 #
 #   source   Folder holding the world's region/ (and entities/, poi/) directories.
 worlds:
-  # Free Lobby (Qualis Builds): sky-island hub. 1.8-era chunks; Paper upgrades them on first load.
-  # Spawn: the slab on the south terrace, -5.5 87.5 9.5 facing north to the gate hall.
+  # Rapid Lobby: the yellow medallion on the south spawn terrace, facing the plaza and the
+  # spire. Blocks x -99..91, y 37..165, z -151..20.
   hub:
-    source: "worlds/Free Lobby (Hub)/world"
-  # SkyBlock Spawn 150x150 (Mongen's Cave), 1.21.8. Spawn: the compass rose, 28.5 150 -29.5 facing west.
-  trading-post:
-    source: "worlds/TradingPost (SkyRealm)/TradingPost"
-  # CottageCore Lobby, 1.21.8: a floating island (x -206..161, z -209..175, y 42..155) with a
-  # moated village; barrier walls ring the edge. 108 item frames, 4 paintings and an armor
-  # stand live in its entities/. Spawn: the centrepiece of the round plaza, 0.5 74.1 0.5.
+    source: "worlds/revamped/rapid-lobby-spawn"
+  # SkyRealms Spawn: the spawn pad's chiseled centre, facing the meadow plaza, the NPC
+  # stations and the mountain. Blocks x -72..75, y 37..172, z -114..27.
+  skyrealms-spawn:
+    source: "worlds/revamped/skyrealms-spawn"
+  # Horizons SMP Spawn: the lodestone on the plaza pedestal, facing the portal gate.
+  # Blocks x -72..70, y 15..105, z -66..75.
   horizons-spawn:
-    source: "worlds/CottageCoreLobby (Horizons SMP)"
+    source: "worlds/revamped/horizons-smp-spawn"
 
 # Pterodactyl schedules (plan §3: hourly backups for skyrealms and smp, daily for the
 # rest). cron is "minute hour day-of-month month day-of-week" in the panel's timezone.
@@ -183,7 +185,7 @@ plugin_sets:
   skyrealms:
     - "SuperiorSkyblock2-*.jar"
     - "dist/rapid-skyrealms.jar"
-    # The NPCs round the Trading Post's compass rose (rapid-skyrealms builds them from its
+    # The NPCs round the spawn's meadow plaza (rapid-skyrealms builds them from its
     # config; Citizens never saves them).
     - "Citizens-*.jar"
 

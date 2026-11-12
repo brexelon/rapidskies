@@ -1,4 +1,5 @@
-# Hub: floating sky-island lobby (worlds/Free Lobby, shipped by `rsdeploy.py worlds`).
+# Hub: floating sky-island lobby (the Rapid Lobby, worlds/revamped/rapid-lobby-spawn,
+# shipped by `rsdeploy.py worlds`).
 # PvP, mobs, damage and the spawn are rapid-core's job (plugins/rapid-core/config.yml.patch).
 level-name: "hub"
 # Void around the island. Only read when the world data is created, i.e. on the first start

@@ -1,29 +1,34 @@
-# rapid-hub on the Free Lobby (worlds/Free Lobby). Positions come from the build itself;
-# fine-tune in-game with /rapidhub here (prints copyable lines) and /rapidhub reload, then
-# put the final values here, or the next `rsdeploy.py apply` puts these back.
+# rapid-hub on the Rapid Lobby (worlds/revamped/rapid-lobby-spawn). Positions come from the
+# build itself; fine-tune in-game with /rapidhub here (prints copyable lines) and
+# /rapidhub reload, then put the final values here, or the next `rsdeploy.py apply` puts these
+# back.
 
-# Mode NPCs on the stage in front of the gate hall: the semicircle under the birch arch,
-# floor y 86, with five stone-slab pedestals in an arc. SkyRealms and Horizons take the
-# inner pair (on the players' left and right, seen from the spawn), standing on the slabs
-# (y 86.5) and facing south to the spawn terrace; they turn to look at players nearby.
-# The centre pedestal (-6 86 -12) is left free for gamemode 3 (PLAN.md §5.4).
-modes.skyrealms.npc: "minecraft:overworld, -7.5, 86.5, -10.5, 0, 0"
-modes.smp.npc: "minecraft:overworld, -3.5, 86.5, -10.5, 0, 0"
+# Mode NPCs on the bridgehead pedestals at the plaza's north corners, by the black arches
+# where the bridges leave for the satellite islands: SkyRealms on the west one (ahead left,
+# seen from the spawn), Horizons on the east one (ahead right). Each stands on the pedestal's
+# chiseled blackstone centre (top y 78) and faces the spawn; they turn to look at players
+# nearby. The middle pedestal, at the gm3 bridge (0 78 -61), is left free for gamemode 3
+# (PLAN.md §5.4).
+modes.skyrealms.npc: "minecraft:overworld, -22.5, 79, -51.5, -24, 0"
+modes.smp.npc: "minecraft:overworld, 23.5, 79, -51.5, 24, 0"
 
 # The hub parkour: a random course per run, generated in its own void world
 # (rapidskies:parkour, created by rapid-core: profiles/hub/plugins/rapid-core). 150 blocks
-# with checkpoints at 50 and 100. To add an entrance plate in the courtyard, stand on it and
-# put /rapidhub here's block position in parkour.courses.main.entrance.
+# with checkpoints at 50 and 100. The entrance is the gold pressure plate under the parkour
+# gate, on the path south of the spawn terrace (straight behind the spawn).
 parkour.world: "rapidskies:parkour"
 parkour.courses.main.length: 150
 parkour.courses.main.checkpoint-every: 50
+parkour.courses.main.entrance: "0, 77, 13"
 
-# Leaderboards over the round floor emblems on either side of the courtyard, both in view
-# from the spawn: all time on the left (west), this week on the right (east).
-leaderboards.parkour-all.location: "minecraft:overworld, -16, 86, -1"
+# Leaderboards over the two gold-capped pylons at the spawn terrace's north edge, either side
+# of the steps down to the plaza, both in view from the spawn: all time on the left (west),
+# this week on the right (east). The bottom sits a block over the pylon (clear of its end rods).
+# The plaza's other four pylons are free for the gamemode boards.
+leaderboards.parkour-all.location: "minecraft:overworld, -7.5, 81, -8.5"
 leaderboards.parkour-all.course: "main"
 leaderboards.parkour-all.size: 10
-leaderboards.parkour-weekly.location: "minecraft:overworld, 5, 86, -1"
+leaderboards.parkour-weekly.location: "minecraft:overworld, 8.5, 81, -8.5"
 leaderboards.parkour-weekly.course: "main"
 leaderboards.parkour-weekly.weekly: true
 leaderboards.parkour-weekly.size: 10

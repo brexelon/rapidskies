@@ -1,11 +1,11 @@
 # SkyRealms: rapid-core serves Coins through Vault (SuperiorSkyblock2) and spends Tailwind here.
 server.gamemode: "skyrealms"
 
-# Spawn: centre of the Trading Post's compass rose (the mud block at 28 149 -30, as in the
-# map's README; block -30 spans z -30..-29, so its centre is -29.5), under the ring of oak
-# pillars, facing west across the rose to the pavilion. SuperiorSkyblock2's spawn.location is
-# the same point (profiles/skyrealms/plugins/SuperiorSkyblock2).
-spawn.location: "minecraft:overworld, 28.5, 150, -29.5, 90, 0"
+# Spawn: the chiseled stone brick at the centre of the spawn pad (block 0 79 0) on the south
+# edge of the meadow plaza (worlds/revamped/skyrealms-spawn), facing north up the plaza to the
+# NPC stations and the mountain. SuperiorSkyblock2's spawn.location is the same point
+# (profiles/skyrealms/plugins/SuperiorSkyblock2).
+spawn.location: "minecraft:overworld, 0.5, 80, 0.5, 180, 0"
 spawn.on-join: "first-join"
 # Deaths respawn on the player's island: SuperiorSkyblock2's player-respawn does that (and
 # sends islandless players here), so rapid-core leaves respawns alone.
@@ -13,8 +13,8 @@ spawn.on-death: false
 worlds:
   "minecraft:overworld":
     protect: true
-    # The island's underside ends at y 124.
-    void-y: 100
+    # The lowest blocks (the island's underside) are at y 37.
+    void-y: 20
     time: 6000
     clear-weather: true
     game-rules:
@@ -57,6 +57,6 @@ worlds:
 
 # The sidebar's World line (%rapid_world%) instead of the folder names.
 world-names:
-  "minecraft:overworld": "Trading Post"
+  "minecraft:overworld": "Spawn"
   "minecraft:skyrealms_islands": "Islands"
   "rapidskies:expeditions": "Expedition"

@@ -117,20 +117,31 @@ Re-run `diff` / `apply` whenever a profile changes; both are idempotent.
 
 ## Worlds
 
-The hub and the two spawns are pre-built maps in the repo's `worlds/` folder. `network.yml` →
-`worlds` names them, and each server's `worlds:` says where they go:
+The hub and the two spawns are genMC builds in the repo's `worlds/revamped/` folder: the
+`.schem` export and, next to it, the world folder converted from it. `network.yml` → `worlds`
+names them, and each server's `worlds:` says where they go. Each build is placed so its spawn
+marker is the block at `0 79 0`:
 
 | Server | World | Goes to | Spawn (`spawn.location` in the rapid-core profile) |
 |---|---|---|---|
-| hub-1, hub-2 | Free Lobby | `hub` (main world) | `-5.5 87.5 9.5`, facing north: the slab on the south terrace, over the courtyard to the stage and gate hall |
-| skyrealms-1 | Trading Post | `skyrealms_spawn` (main world) | `28.5 150 -29.5`, facing west: the centre of the compass rose, toward the pavilion |
-| smp-1, staging | CottageCore Lobby | `heartland/dimensions/rapidskies/spawn` (`rapidskies:spawn`) | `0.5 74.1 0.5`, facing north: the village plaza's centrepiece, toward the town hall |
+| hub-1, hub-2 | Rapid Lobby (`rapid-lobby-spawn`) | `hub` (main world) | `0.5 80 0.5`, facing north: the medallion on the south spawn terrace, over the plaza to the spire |
+| skyrealms-1 | SkyRealms Spawn (`skyrealms-spawn`) | `skyrealms_spawn` (main world) | `0.5 80 0.5`, facing north: the spawn pad at the meadow plaza's south edge, toward the NPC stations and the mountain |
+| smp-1, staging | Horizons SMP Spawn (`horizons-smp-spawn`) | `heartland/dimensions/rapidskies/spawn` (`rapidskies:spawn`) | `0.5 80 0.5`, facing north: the lodestone on the plaza pedestal, toward the portal gate |
 
 ```bash
 python infra/rsdeploy.py worlds --dry-run               # what would happen
 python infra/rsdeploy.py worlds hub-1 --replace         # server must be stopped
 ```
 
+- **Schematics to worlds:** `infra/schem2world.py` turns a `.schem` (genMC or WorldEdit) into a
+  `region/` folder for `worlds:`. `--anchor` places it: the build block on the left of the `=`
+  lands on the world block on the right, so put the spawn marker at `0,<y>,0`. The revamped
+  spawns in `worlds/revamped/` were made with these commands (rerun with `--force` after a new export):
+  ```bash
+  python infra/schem2world.py worlds/revamped/rapid-lobby-spawn.schem worlds/revamped/rapid-lobby-spawn --anchor 100,53,159=0,79,0
+  python infra/schem2world.py worlds/revamped/skyrealms-spawn.schem worlds/revamped/skyrealms-spawn --anchor 80,42,131=0,79,0
+  python infra/schem2world.py worlds/revamped/horizons-smp-spawn.schem worlds/revamped/horizons-smp-spawn --anchor 75,65,71=0,79,0
+  ```
 - **Only chunk storage is shipped:** `region/`, plus `entities/` (item frames, paintings, armor
   stands) and `poi/` where the map has them. On Paper 26.1+ every world lives inside the main
   save: the main world in `<level-name>/dimensions/minecraft/overworld/`, a world loaded by
@@ -141,12 +152,17 @@ python infra/rsdeploy.py worlds hub-1 --replace         # server must be stopped
   the generator comes from the profile (`level-type`/`generator-settings` in server.properties
   for the main world, so run `apply` first; `create:` in rapid-core's `worlds` for the rest),
   and rapid-core sets the spawn point, game rules, time, weather and border on every start.
-  The downloads' level.dat files had wrong spawns, flat grass under the Trading Post, vanilla
-  terrain around the CottageCore island and a 1.8 village preset under the hub.
-- **Old chunks are upgraded by Paper on first load.** The hub's chunks are from 1.8 (numeric
-  block IDs), the Trading Post's and the CottageCore Lobby's from 1.21.8. Walk the whole build once after the first start
-  and look for missing or wrong blocks; to upgrade everything up front instead, start the
-  server once with `--forceUpgrade` added to its startup command.
+- **Chunks are upgraded by Paper on first load.** schem2world writes 1.21.8 chunks (the
+  newest layout it knows) with no light, so Paper upgrades and lights each chunk the first
+  time it loads. Walk the whole build once after the first start and look for missing or wrong
+  blocks; to upgrade everything up front instead, start the server once with `--forceUpgrade`
+  added to its startup command.
+- **What a schematic doesn't carry:** genMC exports have no block entity data, so signs are
+  blank, banners plain and containers empty (schem2world gives each such block an empty block
+  entity, or chests and beds would be invisible), and there are no entities. Every chunk is
+  `minecraft:plains`, which sets the grass and leaf colours.
+- **The old maps** (Free Lobby, Trading Post, CottageCore Lobby) are still in `worlds/` but no
+  longer referenced; a server that ran them keeps them in `world-backups/` after `--replace`.
 - **Existing worlds are never overwritten** unless you pass `--replace`, and then they're
   moved to `world-backups/` (excluded from Pterodactyl backups; delete them once you're happy).
   Never use `--replace` on a world players have built in.
@@ -209,11 +225,11 @@ smp-1 and staging get the `smp` plugin set on top of `paper-base` and `survival`
   `staff_actions`); prices, upkeep and the Town Projects catalog are in its `config.yml`.
 - **QuickShop-Hikari** only allows shops inside claims where the creator is at least a Member
   (rapid-claims' hook); its own fake-break check is off (`profiles/smp/plugins/QuickShop-Hikari`).
-- **rapid-horizons** is the way from the spawn to the Heartland: `/rtp`, and a portal arch on
-  the path south of the spawn plaza (`rtp.portal.region` in
-  `profiles/smp/plugins/rapid-horizons`), which it builds from its config on every start, with
-  nether portal blocks that never lead to the Nether, and a hologram in front of it
-  (`rtp.portal.hologram`). Also opt-in `/pvp` (combat-tagged players can't use any
+- **rapid-horizons** is the way from the spawn to the Heartland: `/rtp`, and the build's portal
+  gate north of the spawn plaza (`rtp.portal.region` in `profiles/smp/plugins/rapid-horizons`
+  covers its nether portal blocks, which rapid-horizons keeps from popping and from ever
+  leading to the Nether; the gate is hand-built, so `rtp.portal.build` is off), with a
+  hologram in front of it (`rtp.portal.hologram`). Also opt-in `/pvp` (combat-tagged players can't use any
   rapid-essentials teleport, and `/back` after the portal returns to the spawn), Trades (`/trades`), and four Citizens NPCs on the plaza's pedestals (Heartland
   Guide, Land Surveyor, Trade Master, Lobby; rebuilt from the config each start, never saved by
   Citizens). `/horizons here` prints positions to paste into the profile and `/horizons reload`
@@ -314,7 +330,7 @@ Then run the SkyRealms block of `luckperms/bootstrap.txt`: SuperiorSkyblock2's i
 default to op, so everyone gets `superior.island.*` on skyrealms (minus its biome picker).
 
 - **SuperiorSkyblock2** owns islands, members, coops, warps, the island bank, upgrades and island
-  value, in its own world `skyrealms_islands`; its spawn is the Trading Post (same point as
+  value, in its own world `skyrealms_islands`; its spawn is the SkyRealms spawn (same point as
   rapid-core's). The skyrealms profile patches its `config.yml`, the island creation menu, the
   upgrades (`modules/upgrades/config.yml` and `menus/upgrades.yml`, re-priced in Coins and
   without the generator upgrade) and turns its missions off. `lang/en-US.yml` swaps its
@@ -331,9 +347,10 @@ default to op, so everyone gets `superior.island.*` on skyrealms (minus its biom
   (`/route`) and seasons (`/season`). Its tables are the `skyrealms` migration module.
   `/skyrealms reload` re-reads its config and messages and rebuilds the NPCs (layouts change
   on a restart).
-- Six Citizens NPCs stand in a ring round the Trading Post's compass rose, inside the oak
-  pillars: Island Keeper (`/is`), Merchant (`/shop`), Realm Warden (`/realm`), Expedition
-  Captain (`/expedition`), Route Master (`/route`) and Lobby (to the hub). rapid-skyrealms
+- Six Citizens NPCs stand on the pads in a crescent round the meadow plaza's compass dais,
+  each at its own station: Expedition Captain (`/expedition`) at the dock, Island Keeper (`/is`)
+  by the cherry tree, Realm Warden (`/realm`) at the tier pillars, Lobby (to the hub) at its
+  arch, Merchant (`/shop`) at the market stall and Route Master (`/route`) by the caravan. rapid-skyrealms
   builds them from its config on every start (never saved by Citizens); their positions are in
   `profiles/skyrealms/plugins/rapid-skyrealms/config.yml.patch`. `/skyrealms here` prints a
   position to paste there.
@@ -351,11 +368,11 @@ default to op, so everyone gets `superior.island.*` on skyrealms (minus its biom
 The hub servers get the `hub` plugin set on top of `paper-base`: Citizens and `rapid-hub`. Its
 positions live in `profiles/hub/plugins/rapid-hub/config.yml.patch`, like the spawn:
 
-| What | Where on the Free Lobby |
+| What | Where on the Rapid Lobby |
 |---|---|
-| Mode NPCs (SkyRealms, Horizons) | The stage's inner slab pedestals, `-7.5 86.5 -10.5` and `-3.5 86.5 -10.5`, facing the spawn. The centre pedestal is kept for gamemode 3. |
-| Leaderboards (parkour, all time / this week) | Over the floor emblems either side of the courtyard, `-16 86 -1` and `5 86 -1` |
-| Parkour course `main` | Generated per run in the `rapidskies:parkour` void world (rapid-core creates it from the hub profile), 150 blocks with checkpoints at 50 and 100. Started from the hotbar feather or `/parkour start`; an entrance plate in the courtyard is optional (`parkour.courses.main.entrance`) |
+| Mode NPCs (SkyRealms, Horizons) | The bridgehead pedestals at the plaza's north corners, `-22.5 79 -51.5` and `23.5 79 -51.5`, facing the spawn. The middle pedestal at the gm3 bridge (`0 78 -61`) is kept for gamemode 3. |
+| Leaderboards (parkour, all time / this week) | Over the two gold-capped pylons at the spawn terrace's north edge, `-7.5 81 -8.5` and `8.5 81 -8.5`. The plaza's other four pylons are free for gamemode boards. |
+| Parkour course `main` | Generated per run in the `rapidskies:parkour` void world (rapid-core creates it from the hub profile), 150 blocks with checkpoints at 50 and 100. Started from the hotbar feather, `/parkour start`, or the gold pressure plate under the parkour gate behind the spawn terrace (`0 77 13`, `parkour.courses.main.entrance`) |
 
 - **Nothing is saved into the world.** NPCs (an in-memory Citizens registry) and the floating
   labels (text displays) are built from the config on every start, so moving one is a config

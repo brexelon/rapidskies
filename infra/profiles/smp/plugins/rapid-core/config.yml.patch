@@ -1,14 +1,13 @@
 # Horizons: rapid-core serves Crowns through Vault (QuickShop) and spends Tailwind here.
 server.gamemode: "horizons"
 
-# Spawn: the CottageCore Lobby, its own world beside the Heartland (rapidskies:spawn,
-# stored in heartland/dimensions/rapidskies/spawn). Players appear on the carpeted
-# centrepiece of the round plaza in the middle of the village (the map's own spawn x/z; its
-# y 64 is inside the ground), facing north toward the town hall and the moat. New players
-# start here and deaths without a bed come back here; the way out to the Heartland is
-# rapid-horizons' job: the portal arch on the path south of the plaza, its NPCs and /rtp
-# (profiles/smp/plugins/rapid-horizons).
-spawn.location: "rapidskies:spawn, 0.5, 74.1, 0.5, 180, 0"
+# Spawn: the Horizons spawn island (worlds/revamped/horizons-smp-spawn), its own world beside
+# the Heartland (rapidskies:spawn, stored in heartland/dimensions/rapidskies/spawn). Players
+# appear on the lodestone atop the pedestal in the middle of the village plaza (block 0 79 0),
+# facing north to the portal gate between its two towers. New players start here and deaths
+# without a bed come back here; the way out to the Heartland is rapid-horizons' job: the
+# portal gate, its NPCs and /rtp (profiles/smp/plugins/rapid-horizons).
+spawn.location: "rapidskies:spawn, 0.5, 80, 0.5, 180, 0"
 spawn.on-join: "first-join"
 spawn.on-death: true
 worlds:
@@ -20,11 +19,11 @@ worlds:
       center-z: 0
       size: 10000
   "rapidskies:spawn":
-    # A sky island: void all around (the build's own edge has barrier walls).
+    # A sky island: void all around.
     create: void
     protect: true
-    # The island's underside ends at y 42.
-    void-y: 30
+    # The lowest blocks (the island's underside) are at y 15.
+    void-y: 0
     # Morning, as the builders froze it.
     time: 2000
     clear-weather: true
